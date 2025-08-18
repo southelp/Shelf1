@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useSessionContext, useUser } from '@supabase/auth-helpers-react';
-import { supabase } from '../lib/supabaseClient';
+// Corrected import path
+import { supabase } from './lib/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 
 // Candidate 타입 정의
