@@ -1,151 +1,133 @@
 // src/pages/Scan.tsx
-import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { useSessionContext } from '@supabase/auth-helpers-react'
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useSessionContext } from '@supabase/auth-helpers-react';
 
+// --- (Candidate, Draft 타입 정의는 기존과 동일) ---
 type Candidate = {
-  score: number
-  isbn13?: string | null
-  isbn10?: string | null
-  title?: string
-  authors?: string[]
-  publisher?: string
-  published_year?: number | null
-  cover_url?: string | null
-  google_books_id?: string
-  source?: 'kakao' | 'google' | 'gemini'
-}
+  score: number;
+  isbn13?: string | null;
+  isbn10?: string | null;
+  title?: string;
+  authors?: string[];
+  publisher?: string;
+  published_year?: number | null;
+  cover_url?: string | null;
+  google_books_id?: string;
+  source?: 'kakao' | 'google' | 'gemini';
+};
 
 type Draft = {
-  isbn: string
-  title: string
-  authors: string[]
-  publisher: string
-  published_year: number | null
-  cover_url: string | null
-}
+  isbn: string;
+  title: string;
+  authors: string[];
+  publisher: string;
+  published_year: number | null;
+  cover_url: string | null;
+};
+
 
 export default function Scan() {
-  const { session, isLoading: authLoading } = useSessionContext()
+  const { session, isLoading: authLoading } = useSessionContext();
 
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [stream, setStream] = useState<MediaStream | null>(null)
-  const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null)
-  const [isCapturing, setIsCapturing] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [candidates, setCandidates] = useState<Candidate[]>([])
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null); // stream을 ref로 관리
+  const [isCameraReady, setIsCameraReady] = useState(false);
+  const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
 
   // ===== Camera control =====
   const stopCamera = useCallback(() => {
-    try {
-      if (stream) stream.getTracks().forEach((t) => t.stop())
-    } catch {}
-    if (videoRef.current) {
-      videoRef.current.pause()
-      // @ts-ignore
-      videoRef.current.srcObject = null
-      videoRef.current.removeAttribute('src')
-      videoRef.current.load()
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
     }
-    setStream(null)
-  }, [stream])
+    streamRef.current = null;
+    setIsCameraReady(false);
+  }, []);
 
   const startCamera = useCallback(async () => {
-    // already live -> skip
-    if (stream && stream.getVideoTracks().some((t) => t.readyState === 'live')) {
-      return
-    }
-    setError(null)
+    if (streamRef.current) return; // 이미 실행 중이면 중복 실행 방지
+    setError(null);
     try {
-      const s = await navigator.mediaDevices.getUserMedia({
+      const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: 'environment' } },
         audio: false,
-      })
+      });
       if (videoRef.current) {
-        // @ts-ignore
-        videoRef.current.srcObject = s
-        videoRef.current.playsInline = true
-        videoRef.current.muted = true
-        await videoRef.current.play()
+        videoRef.current.srcObject = stream;
+        videoRef.current.playsInline = true;
+        videoRef.current.muted = true;
+        await videoRef.current.play();
+        streamRef.current = stream;
+        setIsCameraReady(true);
       }
-      setStream(s)
     } catch (e: any) {
-      setError(e?.message || 'Unable to access the camera.')
+      setError(e?.message || 'Unable to access the camera.');
     }
-  }, [stream])
+  }, []);
 
-  // Mount/Unmount
+  // Mount/Unmount 및 세션 변경 시 카메라 관리
   useEffect(() => {
-    if (!session) {
-      stopCamera()
-      return
+    if (session) {
+      startCamera();
+    } else {
+      stopCamera();
     }
-    startCamera()
-    return () => stopCamera()
-  }, [session, startCamera, stopCamera])
+    // 컴포넌트가 언마운트될 때 카메라 정리
+    return () => {
+      stopCamera();
+    };
+  }, [session, startCamera, stopCamera]);
 
-  // Visibility change
-  useEffect(() => {
-    if (!session) return
-    const onVis = () => {
-      if (document.visibilityState === 'visible') {
-        startCamera()
-      } else {
-        stopCamera()
-      }
-    }
-    document.addEventListener('visibilitychange', onVis)
-    return () => document.removeEventListener('visibilitychange', onVis)
-  }, [session, startCamera, stopCamera])
 
   // ===== Capture & Recognize =====
   const capture = async () => {
-    if (!videoRef.current || !canvasRef.current) return
-    setIsCapturing(true)
-    setError(null)
-    setCandidates([])
+    if (!videoRef.current || !canvasRef.current) return;
+    setIsCapturing(true);
+    setError(null);
+    setCandidates([]);
     try {
-      const video = videoRef.current
-      const canvas = canvasRef.current
-      const w = video.videoWidth
-      const h = video.videoHeight
-      canvas.width = w
-      canvas.height = h
-      const ctx = canvas.getContext('2d')
-      if (!ctx) throw new Error('Canvas not available.')
-      ctx.drawImage(video, 0, 0, w, h)
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.92)
-      setPreviewDataUrl(dataUrl)
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas not available.');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      setPreviewDataUrl(dataUrl);
 
-      stopCamera()
+      stopCamera();
 
-      setIsLoading(true)
+      setIsLoading(true);
       const r = await fetch('/api/gemini-cover-to-book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageBase64: dataUrl, maxCandidates: 5 }),
-      })
+      });
       if (!r.ok) {
-        const txt = await r.text().catch(() => '')
-        throw new Error(`Server error: ${r.status} ${txt}`)
+        const txt = await r.text().catch(() => '');
+        throw new Error(`Server error: ${r.status} ${txt}`);
       }
-      const j = await r.json()
-      setCandidates(Array.isArray(j?.candidates) ? j.candidates : [])
+      const j = await r.json();
+      setCandidates(Array.isArray(j?.candidates) ? j.candidates : []);
     } catch (e: any) {
-      setError(e?.message || 'Error during capture/recognition.')
+      setError(e?.message || 'Error during capture/recognition.');
     } finally {
-      setIsLoading(false)
-      setIsCapturing(false)
+      setIsLoading(false);
+      setIsCapturing(false);
     }
-  }
+  };
 
-  const retake = async () => {
-    setPreviewDataUrl(null)
-    setCandidates([])
-    setError(null)
-    await startCamera()
-  }
+  const retake = () => {
+    setPreviewDataUrl(null);
+    setCandidates([]);
+    setError(null);
+    startCamera();
+  };
 
   const selectCandidate = (c: Candidate) => {
     const draft: Draft = {
@@ -155,17 +137,18 @@ export default function Scan() {
       publisher: c.publisher || '',
       published_year: c.published_year ?? null,
       cover_url: c.cover_url ?? null,
-    }
-    console.log('SELECTED DRAFT', draft)
-  }
+    };
+    console.log('SELECTED DRAFT', draft);
+    // TODO: 이 데이터를 NewBook 페이지로 넘겨주는 로직 구현 필요
+  };
 
   // ===== Render =====
   if (authLoading) {
-    return <div className="p-6 text-center text-gray-600">Checking login...</div>
+    return <div className="p-6 text-center text-gray-600">Checking login...</div>;
   }
 
   if (!session) {
-    return <div className="p-6 text-center text-gray-600">Please log in to use the camera.</div>
+    return <div className="p-6 text-center text-gray-600">Please log in to use the camera.</div>;
   }
 
   return (
@@ -183,7 +166,7 @@ export default function Scan() {
           />
           <button
             onClick={capture}
-            disabled={isCapturing || !stream}
+            disabled={isCapturing || !isCameraReady}
             className="absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-3 rounded-full bg-white/90 text-black font-medium shadow"
           >
             {isCapturing ? 'Capturing...' : 'Capture'}
@@ -257,5 +240,5 @@ export default function Scan() {
 
       <canvas ref={canvasRef} className="hidden" />
     </div>
-  )
+  );
 }

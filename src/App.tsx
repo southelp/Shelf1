@@ -1,24 +1,39 @@
-import { Link, Routes, Route, useNavigate } from 'react-router-dom';
+// src/App.tsx
+
+import { useEffect } from 'react';
+import { Link, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
 import MyLibrary from './pages/MyLibrary';
 import NewBook from './pages/NewBook';
 import Scan from './pages/Scan';
 import GoogleSignInButton from './components/GoogleSignInButton';
-import { supabase } from './lib/supabaseClient';
-import { useSession } from '@supabase/auth-helpers-react'; // useSession 훅 가져오기
+import { supabase, allowedDomain } from './lib/supabaseClient';
+import { useSession } from '@supabase/auth-helpers-react';
 
 export default function App() {
-  const session = useSession(); // useSession 훅으로 세션 정보 가져오기
+  const session = useSession();
   const nav = useNavigate();
+  const location = useLocation(); // 현재 경로를 확인하기 위해 useLocation 훅 사용
+
+  useEffect(() => {
+    if (session?.user?.email && !session.user.email.toLowerCase().endsWith(`@${allowedDomain}`)) {
+      alert(`You can only sign in using a school email (@${allowedDomain}).`);
+      supabase.auth.signOut();
+    }
+  }, [session]);
 
   async function signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error signing out:', error);
-    }
-    // 로그아웃 후 홈페이지로 이동합니다.
+    await supabase.auth.signOut();
     nav('/');
   }
+
+  // 스캔 페이지 새로고침을 위한 클릭 핸들러
+  const handleScanLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (location.pathname === '/scan') {
+      e.preventDefault(); // 기본 링크 동작 방지
+      window.location.reload(); // 페이지 새로고침
+    }
+  };
 
   return (
     <>
@@ -28,7 +43,8 @@ export default function App() {
           <Link to="/">Books</Link>
           <Link to="/my">My Books</Link>
           <Link to="/books/new">Manual Entry</Link>
-          <Link to="/scan">Book Scanning</Link>
+          {/* "Book Scanning" 링크에 onClick 핸들러 추가 */}
+          <Link to="/scan" onClick={handleScanLinkClick}>Book Scanning</Link>
         </nav>
         <div style={{ marginLeft: 'auto' }}>
           {session ? (
