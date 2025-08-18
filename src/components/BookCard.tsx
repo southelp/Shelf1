@@ -24,24 +24,18 @@ export default function BookCard({
   const disabled = Boolean(activeLoan) || isOwner;
 
   async function requestLoan() {
-    // book.id가 존재하는지 먼저 확인
     if (!book.id) {
       alert('오류: 책의 ID를 찾을 수 없습니다.');
       return;
     }
 
     try {
-      console.log(`Requesting loan for book_id: ${book.id}`); // 디버깅을 위한 로그
-
+      // supabase.functions.invoke를 사용하여 body에 book_id를 담아 호출
       const { data, error } = await supabase.functions.invoke('request-loan', {
-        // body에 book_id를 JSON 형태로 담아서 보냅니다.
         body: { book_id: book.id },
       });
 
-      if (error) {
-        // invoke 함수 자체가 실패한 경우 (네트워크 등)
-        throw error;
-      }
+      if (error) throw error;
       
       // 함수가 반환한 데이터에 오류 메시지가 있는지 확인
       if (data && data.message && !data.ok) {
@@ -52,7 +46,6 @@ export default function BookCard({
       window.location.reload();
 
     } catch (err: any) {
-      // 이제 서버에서 보낸 구체적인 오류 메시지가 여기에 표시됩니다.
       console.error('Loan request failed:', err);
       alert(`요청 실패: ${err.message}`);
     }
