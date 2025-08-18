@@ -1,3 +1,5 @@
+// src/pages/Home.tsx
+
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import FilterBar from '../components/FilterBar';
@@ -43,6 +45,7 @@ export default function Home() {
         <FilterBar onSearch={setQ} onlyAvailable={onlyAvailable} onToggleAvailable={setOnlyAvailable} />
       </div>
       <div className="grid">
+        {/* BookCard에 userId prop 전달 */}
         {books.map(b => <BookCard key={b.id} book={b} activeLoan={loans[b.id] || null} userId={user?.id} />)}
       </div>
     </div>

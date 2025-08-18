@@ -1,4 +1,4 @@
-// src/components/BookCard.tsx (올바른 코드)
+// src/components/BookCard.tsx
 
 import { supabase } from '../lib/supabaseClient'
 import type { Book, Loan } from '../types'
