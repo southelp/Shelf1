@@ -64,6 +64,7 @@ export default function Scan() {
     } else {
       stopCamera();
     }
+    // 컴포넌트가 언마운트될 때 (페이지를 나갈 때) 카메라를 확실히 종료합니다.
     return () => stopCamera();
   }, [session, startCamera, stopCamera]);
 
