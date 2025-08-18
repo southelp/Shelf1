@@ -24,7 +24,8 @@ export default function Scan() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const [isFrozen, setIsFrozen] = useState(false); // 카메라 화면이 정지되었는지 여부
+  const [isFrozen, setIsFrozen] = useState(false);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null); // 캡처된 이미지 URL 저장
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -43,10 +44,6 @@ export default function Scan() {
   const startCamera = useCallback(async () => {
     if (streamRef.current) return;
     setError(null);
-    // 카메라를 다시 시작할 때 poster를 제거합니다.
-    if (videoRef.current) {
-      videoRef.current.poster = '';
-    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: 'environment' } },
@@ -93,13 +90,11 @@ export default function Scan() {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
     
-    // 1. 라이브 스트림을 중지합니다.
+    // 1. 캡처된 이미지 URL을 상태에 저장
+    setCapturedImage(dataUrl);
+    // 2. 라이브 스트림을 중지
     stopCamera();
-    // 2. 비디오 요소의 'poster' 속성을 캡처된 이미지로 설정합니다.
-    if (videoRef.current) {
-      videoRef.current.poster = dataUrl;
-    }
-    // 3. UI를 '정지' 상태로 변경합니다.
+    // 3. UI를 '정지' 상태로 변경
     setIsFrozen(true);
 
     try {
@@ -127,6 +122,7 @@ export default function Scan() {
 
   const handleRetake = () => {
     setIsFrozen(false);
+    setCapturedImage(null); // 캡처된 이미지 초기화
     setCandidates([]);
     setSelectedCandidate(null);
     setError(null);
@@ -175,16 +171,24 @@ export default function Scan() {
       <h1 className="text-xl font-semibold mb-3">Book Cover Scan</h1>
 
       <div className="rounded-lg overflow-hidden bg-black relative">
-        {/* 비디오 요소는 항상 화면에 표시되며, poster 속성으로 정지 화면을 보여줍니다. */}
-        <video
-          ref={videoRef}
-          className="w-full h-full object-contain bg-black"
-          playsInline
-          autoPlay
-          muted
-        />
+        {/* 정지 상태일 때는 캡처된 이미지를, 아닐 때는 비디오를 표시 */}
+        {isFrozen && capturedImage ? (
+          <img 
+            src={capturedImage} 
+            alt="Captured book cover"
+            className="w-full h-full object-contain bg-black"
+          />
+        ) : (
+          <video
+            ref={videoRef}
+            className="w-full h-full object-contain bg-black"
+            playsInline
+            autoPlay
+            muted
+          />
+        )}
         
-        {/* isFrozen 상태가 아닐 때만 캡처 버튼을 표시합니다. */}
+        {/* isFrozen 상태가 아닐 때만 캡처 버튼을 표시 */}
         {!isFrozen && (
           <button
             onClick={handleCapture}
@@ -196,7 +200,7 @@ export default function Scan() {
         )}
       </div>
 
-      {/* isFrozen 상태일 때만 결과 및 버튼들을 표시합니다. */}
+      {/* isFrozen 상태일 때만 결과 및 버튼들을 표시 */}
       {isFrozen && (
         <div className="mt-4 space-y-4">
           <div className="flex gap-2 justify-center">
