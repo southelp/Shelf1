@@ -3,7 +3,7 @@ import { useSessionContext, useUser } from '@supabase/auth-helpers-react';
 import { supabase } from '../lib/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 
-// Candidate, Draft 타입 정의 (기존과 동일)
+// Candidate 타입 정의
 type Candidate = {
   score: number;
   isbn13?: string | null;
@@ -24,7 +24,7 @@ export default function Scan() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const [isFrozen, setIsFrozen] = useState(false);
+  const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null); // 캡처 이미지 URL 상태 추가
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -87,10 +87,13 @@ export default function Scan() {
     }
     
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    video.pause();
-    setIsFrozen(true);
-
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+
+    // 1. 카메라 스트림을 완전히 중지합니다.
+    stopCamera();
+    
+    // 2. 캡처된 이미지 URL을 상태에 저장하여, video 태그를 img 태그로 교체합니다.
+    setPreviewDataUrl(dataUrl);
 
     try {
       const response = await fetch('/api/gemini-cover-to-book', {
@@ -116,13 +119,12 @@ export default function Scan() {
   };
 
   const handleRetake = () => {
-    if (videoRef.current) {
-      videoRef.current.play();
-    }
-    setIsFrozen(false);
+    // 캡처 이미지를 숨기고 카메라를 다시 시작합니다.
+    setPreviewDataUrl(null);
     setCandidates([]);
     setSelectedCandidate(null);
     setError(null);
+    startCamera();
   };
 
   const handleRegister = async () => {
@@ -150,7 +152,7 @@ export default function Scan() {
       alert('Failed to register book: ' + error.message);
     } else {
       alert('Book registered successfully!');
-      navigate('/my'); // 등록 후 'My Books' 페이지로 이동
+      navigate('/my');
     }
   };
 
@@ -167,15 +169,25 @@ export default function Scan() {
       <h1 className="text-xl font-semibold mb-3">Book Cover Scan</h1>
 
       <div className="rounded-lg overflow-hidden bg-black relative">
-        <video
-          ref={videoRef}
-          className="w-full h-full object-contain bg-black"
-          playsInline
-          autoPlay
-          muted
-          style={{ filter: isFrozen ? 'brightness(0.7)' : 'none' }} // 정지 시 화면을 약간 어둡게 처리
-        />
-        {!isFrozen && (
+        {/* previewDataUrl 유무에 따라 비디오 또는 이미지를 렌더링 */}
+        {!previewDataUrl ? (
+          <video
+            ref={videoRef}
+            className="w-full h-full object-contain bg-black"
+            playsInline
+            autoPlay
+            muted
+          />
+        ) : (
+          <img
+            src={previewDataUrl}
+            alt="Captured book cover"
+            className="w-full h-full object-contain bg-black"
+          />
+        )}
+        
+        {/* 캡처 전(previewDataUrl이 없을 때)에만 캡처 버튼 표시 */}
+        {!previewDataUrl && (
           <button
             onClick={handleCapture}
             disabled={isLoading}
@@ -186,9 +198,9 @@ export default function Scan() {
         )}
       </div>
 
-      {isFrozen && (
+      {/* 캡처 후(previewDataUrl이 있을 때)에만 결과 및 버튼 표시 */}
+      {previewDataUrl && (
         <div className="mt-4 space-y-4">
-          {/* 재촬영 / 등록 버튼 */}
           <div className="flex gap-2 justify-center">
             <button onClick={handleRetake} className="btn" style={{ background: '#6b7280' }} disabled={isLoading}>
               Retake
@@ -198,11 +210,9 @@ export default function Scan() {
             </button>
           </div>
 
-          {/* 로딩 및 오류 메시지 */}
           {isLoading && <div className="text-sm text-gray-600 text-center">Recognizing book information...</div>}
           {error && <div className="text-sm text-red-600 text-center">Error: {error}</div>}
           
-          {/* 검색 결과 */}
           {!isLoading && candidates.length > 0 && (
             <div>
               <h2 className="text-base font-semibold text-center mb-2">Select a book to register:</h2>
@@ -217,7 +227,7 @@ export default function Scan() {
                     }}
                     onClick={() => setSelectedCandidate(c)}
                   >
-                    {c.cover_url && <img src={c.cover_url} alt="" className="w-12 h-16 object-contain rounded bg-gray-100"/>}
+                    {c.cover_url && <img src={c.cover_url} alt={c.title} className="w-12 h-16 object-contain rounded bg-gray-100"/>}
                     <div className="min-w-0">
                       <div className="font-medium truncate">{c.title}</div>
                       <div className="text-sm text-gray-600 truncate">{(c.authors || []).join(', ')}</div>
