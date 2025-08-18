@@ -24,7 +24,7 @@ export default function Scan() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null); // 캡처 이미지 URL 상태 추가
+  const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -88,11 +88,8 @@ export default function Scan() {
     
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-
-    // 1. 카메라 스트림을 완전히 중지합니다.
-    stopCamera();
     
-    // 2. 캡처된 이미지 URL을 상태에 저장하여, video 태그를 img 태그로 교체합니다.
+    stopCamera();
     setPreviewDataUrl(dataUrl);
 
     try {
@@ -119,7 +116,6 @@ export default function Scan() {
   };
 
   const handleRetake = () => {
-    // 캡처 이미지를 숨기고 카메라를 다시 시작합니다.
     setPreviewDataUrl(null);
     setCandidates([]);
     setSelectedCandidate(null);
@@ -169,24 +165,22 @@ export default function Scan() {
       <h1 className="text-xl font-semibold mb-3">Book Cover Scan</h1>
 
       <div className="rounded-lg overflow-hidden bg-black relative">
-        {/* previewDataUrl 유무에 따라 비디오 또는 이미지를 렌더링 */}
-        {!previewDataUrl ? (
-          <video
-            ref={videoRef}
-            className="w-full h-full object-contain bg-black"
-            playsInline
-            autoPlay
-            muted
-          />
-        ) : (
-          <img
-            src={previewDataUrl}
-            alt="Captured book cover"
-            className="w-full h-full object-contain bg-black"
-          />
-        )}
+        {/* 비디오와 이미지를 항상 DOM에 두고, CSS로 표시 여부만 제어 */}
+        <video
+          ref={videoRef}
+          className="w-full h-full object-contain bg-black"
+          style={{ display: previewDataUrl ? 'none' : 'block' }}
+          playsInline
+          autoPlay
+          muted
+        />
+        <img
+          src={previewDataUrl || ''}
+          alt="Captured book cover"
+          className="w-full h-full object-contain bg-black"
+          style={{ display: previewDataUrl ? 'block' : 'none' }}
+        />
         
-        {/* 캡처 전(previewDataUrl이 없을 때)에만 캡처 버튼 표시 */}
         {!previewDataUrl && (
           <button
             onClick={handleCapture}
@@ -198,7 +192,6 @@ export default function Scan() {
         )}
       </div>
 
-      {/* 캡처 후(previewDataUrl이 있을 때)에만 결과 및 버튼 표시 */}
       {previewDataUrl && (
         <div className="mt-4 space-y-4">
           <div className="flex gap-2 justify-center">
