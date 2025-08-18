@@ -1,6 +1,6 @@
 // src/components/BookCard.tsx
 
-import { supabase } from '../lib/supabaseClient'
+import { supabase } from '../lib/supabaseClient' // supabase 클라이언트를 import 합니다.
 import type { Book, Loan } from '../types'
 
 /**
@@ -27,17 +27,19 @@ export default function BookCard({
 
   const disabled = Boolean(activeLoan) || isOwner
 
-  // ✨ 이 함수가 올바른 방식입니다.
+  // ✨ fetch를 supabase.functions.invoke로 변경합니다.
   async function requestLoan() {
     try {
-      // supabase.functions.invoke를 사용하여 인증 정보와 함께 함수를 호출
+      // supabase.functions.invoke를 사용하여 인증 정보와 함께 함수를 호출합니다.
       const { error } = await supabase.functions.invoke('request-loan', {
         body: { book_id: book.id },
       })
       if (error) throw error
-      alert('Loan request submitted.')
+      alert('대출 요청이 완료되었습니다. 소유자의 승인을 기다려주세요.')
+      // 성공 후 목록을 새로고침하는 로직을 추가하면 더 좋습니다.
+      window.location.reload(); 
     } catch (err: any) {
-      alert(err?.message || 'Failed to request loan.')
+      alert(`요청 실패: ${err?.message || '알 수 없는 오류가 발생했습니다.'}`)
     }
   }
 
