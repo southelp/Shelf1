@@ -1,14 +1,17 @@
 -- 타입
+-- supabase/sql/schema.sql
+-- 타입
 create type public.loan_status as enum ('reserved','loaned','returned','cancelled');
 
 -- profiles (Auth 연동)
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
-  email text unique not null,
+  email text unique, -- "not null" 제약조건 제거
   full_name text,
   role text default 'user',
   created_at timestamptz default now()
 );
+
 
 -- books
 create table public.books (
@@ -117,3 +120,19 @@ as $$
   where status = 'loaned'::public.loan_status
     and to_char(due_at at time zone 'UTC', 'YYYY-MM-DD') = ymd
 $$;
+-- ✨ 추가된 코드 시작
+-- auth.users 테이블에 새 유저가 추가되면 public.profiles 테이블에도 추가하는 함수
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, email, full_name)
+  values (new.id, new.email, new.raw_user_meta_data->>'full_name');
+  return new;
+end;
+$$ language plpgsql security definer;
+
+-- 위 함수를 호출하는 트리거
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+-- ✨ 추가된 코드 끝
