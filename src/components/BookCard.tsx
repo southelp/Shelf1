@@ -1,13 +1,10 @@
+// src/components/BookCard.tsx (올바른 코드)
+
 import { supabase } from '../lib/supabaseClient'
 import type { Book, Loan } from '../types'
 
 /**
  * Card component to display a book with status and actions.
- *
- * Props:
- *  - book: The book record to display.
- *  - activeLoan: The current active loan or reservation for this book, if any.
- *  - userId: The currently logged in user id, used to determine ownership.
  */
 export default function BookCard({
   book,
@@ -23,7 +20,6 @@ export default function BookCard({
   // Determine the badge text based on the current state of the book/loan
   let badge = 'Available'
   if (activeLoan) {
-    // loan.status can be 'reserved' or 'loaned' according to schema
     badge = activeLoan.status === 'loaned' ? 'Borrowed' : 'Reserved'
   } else if (!book.available) {
     badge = 'Unavailable'
@@ -31,8 +27,10 @@ export default function BookCard({
 
   const disabled = Boolean(activeLoan) || isOwner
 
+  // ✨ 이 함수가 올바른 방식입니다.
   async function requestLoan() {
     try {
+      // supabase.functions.invoke를 사용하여 인증 정보와 함께 함수를 호출
       const { error } = await supabase.functions.invoke('request-loan', {
         body: { book_id: book.id },
       })
@@ -59,20 +57,16 @@ export default function BookCard({
           }}
         />
       )}
-      {/* Status badge */}
       <div className="badge gray" style={{ marginBottom: 8 }}>
         {badge}
       </div>
-      {/* Title */}
       <div style={{ fontWeight: 700, marginBottom: 6 }}>{book.title}</div>
-      {/* Authors */}
       {book.authors && (
         <div className="label" style={{ marginBottom: 8 }}>
           {book.authors.join(', ')}
         </div>
       )}
       <div className="row" style={{ justifyContent: 'space-between' }}>
-        {/* If user is the owner, indicate this. Otherwise show the loan button */}
         {isOwner ? (
           <div className="btn" style={{ background: '#10b981', cursor: 'default' }}>
             My Book
