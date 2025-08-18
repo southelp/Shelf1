@@ -1,5 +1,3 @@
-// src/App.tsx
-
 import { useEffect } from 'react';
 import { Link, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
@@ -13,7 +11,7 @@ import { useSession } from '@supabase/auth-helpers-react';
 export default function App() {
   const session = useSession();
   const nav = useNavigate();
-  const location = useLocation(); // 현재 경로를 확인하기 위해 useLocation 훅 사용
+  const location = useLocation();
 
   useEffect(() => {
     if (session?.user?.email && !session.user.email.toLowerCase().endsWith(`@${allowedDomain}`)) {
@@ -27,11 +25,10 @@ export default function App() {
     nav('/');
   }
 
-  // 스캔 페이지 새로고침을 위한 클릭 핸들러
   const handleScanLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (location.pathname === '/scan') {
-      e.preventDefault(); // 기본 링크 동작 방지
-      window.location.reload(); // 페이지 새로고침
+      e.preventDefault();
+      window.location.reload();
     }
   };
 
@@ -42,9 +39,9 @@ export default function App() {
         <nav className="nav">
           <Link to="/">Books</Link>
           <Link to="/my">My Books</Link>
-          <Link to="/books/new">Manual Entry</Link>
-          {/* "Book Scanning" 링크에 onClick 핸들러 추가 */}
+          {/* 순서 변경: Book Scanning이 Manual Entry 앞으로 이동 */}
           <Link to="/scan" onClick={handleScanLinkClick}>Book Scanning</Link>
+          <Link to="/books/new">Manual Entry</Link>
         </nav>
         <div style={{ marginLeft: 'auto' }}>
           {session ? (

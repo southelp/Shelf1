@@ -23,22 +23,8 @@ export async function fetchKakaoBooks(isbn: string): Promise<BookMeta|undefined>
   }
 }
 
-export async function fetchNaverBooks(isbn: string): Promise<BookMeta|undefined> {
-  const id = import.meta.env.VITE_NAVER_CLIENT_ID; const secret = import.meta.env.VITE_NAVER_CLIENT_SECRET; if (!id || !secret) return undefined;
-  const res = await fetch(`https://openapi.naver.com/v1/search/book.json?d_isbn=${isbn}`, { headers: { 'X-Naver-Client-Id': id, 'X-Naver-Client-Secret': secret } })
-  if (!res.ok) return undefined; const json = await res.json(); const d = json.items?.[0]; if (!d) return undefined;
-  return { title: d.title?.replace(/<[^>]+>/g,''), authors: d.author? d.author.split('|') : undefined, publisher: d.publisher, year: d.pubdate ? Number(d.pubdate.slice(0,4)) : undefined, cover: d.image }
-}
-
-export async function fetchBookMeta(isbn: string, prefer: 'domestic'|'foreign'|'auto'='auto'): Promise<BookMeta|undefined> {
-  if (prefer === 'domestic') {
-    // 국내 = Kakao → Google Books
-    return (await fetchKakaoBooks(isbn)) || (await fetchGoogleBooks(isbn));
-  } else if (prefer === 'foreign') {
-    // 해외 = Google Books → Kakao
-    return (await fetchGoogleBooks(isbn)) || (await fetchKakaoBooks(isbn));
-  } else {
-    // auto: 국내 우선 → 해외 폴백 (Kakao → Google Books)
-    return (await fetchKakaoBooks(isbn)) || (await fetchGoogleBooks(isbn));
-  }
+// 데이터 소스 선택 옵션을 제거하고, 항상 카카오 -> 구글 순으로 조회하도록 로직을 고정합니다.
+export async function fetchBookMeta(isbn: string): Promise<BookMeta|undefined> {
+  // 카카오 API를 먼저 시도하고, 결과가 없으면 구글 Books API로 넘어갑니다.
+  return (await fetchKakaoBooks(isbn)) || (await fetchGoogleBooks(isbn));
 }
