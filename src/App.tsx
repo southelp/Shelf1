@@ -35,7 +35,7 @@ export default function App() {
   return (
     <>
       <header className="header">
-        <div className="brand">sibal2</div>
+        <div className="brand">sibaal</div>
         <nav className="nav">
           <Link to="/">Books</Link>
           <Link to="/my">My Books</Link>
