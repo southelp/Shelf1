@@ -20,6 +20,7 @@
   "devDependencies": {
     "@types/react": "^18.2.74",
     "@types/react-dom": "^18.2.24",
+    "@vercel/node": "^3.2.0",
     "@vitejs/plugin-react": "^5.0.0",
     "typescript": "^5.5.4",
     "vite": "^5.3.4"
