@@ -1,0 +1,15 @@
+[functions]
+
+[functions.request-loan]
+verify_jwt = true
+
+[functions.approve-loan]
+verify_jwt = false
+
+[functions.return-loan]
+verify_jwt = true
+
+[functions.due-reminder-cron]
+verify_jwt = false
+# 배포 시 스케줄 설정(예: 매일 09:00 KST = 00:00 UTC)
+# CLI 예시: supabase functions deploy due-reminder-cron --no-verify-jwt --schedule "0 0 * * *"
