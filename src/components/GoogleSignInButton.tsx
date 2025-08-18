@@ -5,7 +5,7 @@ export default function GoogleSignInButton(){
     const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })
     if (error) alert(error.message)
   }
-
+// endsWith(`@${allowedDomain}`))
   const checkDomain = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     const email = user?.email?.toLowerCase();
