@@ -24,9 +24,7 @@ export default function Scan() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // 'live' (카메라) 또는 'preview' (캡처 이미지) 모드를 관리하는 상태
-  const [viewMode, setViewMode] = useState<'live' | 'preview'>('live');
-  const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null);
+  const [isFrozen, setIsFrozen] = useState(false); // 카메라 화면이 정지되었는지 여부
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -45,6 +43,10 @@ export default function Scan() {
   const startCamera = useCallback(async () => {
     if (streamRef.current) return;
     setError(null);
+    // 카메라를 다시 시작할 때 poster를 제거합니다.
+    if (videoRef.current) {
+      videoRef.current.poster = '';
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: 'environment' } },
@@ -62,16 +64,12 @@ export default function Scan() {
 
   useEffect(() => {
     if (session) {
-      // 'live' 모드일 때만 카메라를 시작합니다.
-      if (viewMode === 'live') {
-        startCamera();
-      }
+      startCamera();
     } else {
       stopCamera();
     }
-    // 컴포넌트가 언마운트될 때 카메라를 확실히 종료합니다.
     return () => stopCamera();
-  }, [session, viewMode, startCamera, stopCamera]);
+  }, [session, startCamera, stopCamera]);
 
   const handleCapture = async () => {
     if (!videoRef.current || !canvasRef.current || isLoading) return;
@@ -95,11 +93,14 @@ export default function Scan() {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
     
-    // 1. 카메라 스트림을 완전히 중지합니다.
+    // 1. 라이브 스트림을 중지합니다.
     stopCamera();
-    // 2. 캡처된 이미지 URL을 설정하고, viewMode를 'preview'로 변경합니다.
-    setPreviewDataUrl(dataUrl);
-    setViewMode('preview');
+    // 2. 비디오 요소의 'poster' 속성을 캡처된 이미지로 설정합니다.
+    if (videoRef.current) {
+      videoRef.current.poster = dataUrl;
+    }
+    // 3. UI를 '정지' 상태로 변경합니다.
+    setIsFrozen(true);
 
     try {
       const response = await fetch('/api/gemini-cover-to-book', {
@@ -125,12 +126,11 @@ export default function Scan() {
   };
 
   const handleRetake = () => {
-    // 상태를 초기화하고 viewMode를 'live'로 변경하여 카메라를 다시 시작합니다.
-    setPreviewDataUrl(null);
+    setIsFrozen(false);
     setCandidates([]);
     setSelectedCandidate(null);
     setError(null);
-    setViewMode('live');
+    startCamera();
   };
 
   const handleRegister = async () => {
@@ -175,35 +175,29 @@ export default function Scan() {
       <h1 className="text-xl font-semibold mb-3">Book Cover Scan</h1>
 
       <div className="rounded-lg overflow-hidden bg-black relative">
-        {/* viewMode에 따라 비디오 또는 이미지를 조건부로 렌더링합니다. */}
-        {viewMode === 'live' ? (
-          <>
-            <video
-              ref={videoRef}
-              className="w-full h-full object-contain bg-black"
-              playsInline
-              autoPlay
-              muted
-            />
-            <button
-              onClick={handleCapture}
-              disabled={isLoading}
-              className="absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-3 rounded-full bg-white/90 text-black font-medium shadow"
-            >
-              {isLoading ? 'Processing...' : 'Capture'}
-            </button>
-          </>
-        ) : (
-          <img
-            src={previewDataUrl!}
-            alt="Captured book cover"
-            className="w-full h-full object-contain bg-black"
-          />
+        {/* 비디오 요소는 항상 화면에 표시되며, poster 속성으로 정지 화면을 보여줍니다. */}
+        <video
+          ref={videoRef}
+          className="w-full h-full object-contain bg-black"
+          playsInline
+          autoPlay
+          muted
+        />
+        
+        {/* isFrozen 상태가 아닐 때만 캡처 버튼을 표시합니다. */}
+        {!isFrozen && (
+          <button
+            onClick={handleCapture}
+            disabled={isLoading}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-3 rounded-full bg-white/90 text-black font-medium shadow"
+          >
+            {isLoading ? 'Processing...' : 'Capture'}
+          </button>
         )}
       </div>
 
-      {/* 캡처 후(viewMode가 'preview'일 때)에만 결과 및 버튼을 표시합니다. */}
-      {viewMode === 'preview' && (
+      {/* isFrozen 상태일 때만 결과 및 버튼들을 표시합니다. */}
+      {isFrozen && (
         <div className="mt-4 space-y-4">
           <div className="flex gap-2 justify-center">
             <button onClick={handleRetake} className="btn" style={{ background: '#6b7280' }} disabled={isLoading}>
