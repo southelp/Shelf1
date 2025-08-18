@@ -24,7 +24,9 @@ export default function Scan() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const [isFrozen, setIsFrozen] = useState(false); // 카메라가 정지되었는지 여부를 관리하는 상태
+  // 'live' (카메라) 또는 'preview' (캡처 이미지) 모드를 관리하는 상태
+  const [viewMode, setViewMode] = useState<'live' | 'preview'>('live');
+  const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -60,12 +62,16 @@ export default function Scan() {
 
   useEffect(() => {
     if (session) {
-      startCamera();
+      // 'live' 모드일 때만 카메라를 시작합니다.
+      if (viewMode === 'live') {
+        startCamera();
+      }
     } else {
       stopCamera();
     }
+    // 컴포넌트가 언마운트될 때 카메라를 확실히 종료합니다.
     return () => stopCamera();
-  }, [session, startCamera, stopCamera]);
+  }, [session, viewMode, startCamera, stopCamera]);
 
   const handleCapture = async () => {
     if (!videoRef.current || !canvasRef.current || isLoading) return;
@@ -86,12 +92,14 @@ export default function Scan() {
       return;
     }
     
-    // 1. 캔버스에 현재 비디오 프레임을 그리고, 비디오를 일시정지합니다.
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    video.pause();
-    setIsFrozen(true);
-
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    
+    // 1. 카메라 스트림을 완전히 중지합니다.
+    stopCamera();
+    // 2. 캡처된 이미지 URL을 설정하고, viewMode를 'preview'로 변경합니다.
+    setPreviewDataUrl(dataUrl);
+    setViewMode('preview');
 
     try {
       const response = await fetch('/api/gemini-cover-to-book', {
@@ -117,14 +125,12 @@ export default function Scan() {
   };
 
   const handleRetake = () => {
-    // 비디오를 다시 재생하고 상태를 초기화합니다.
-    if (videoRef.current) {
-      videoRef.current.play();
-    }
-    setIsFrozen(false);
+    // 상태를 초기화하고 viewMode를 'live'로 변경하여 카메라를 다시 시작합니다.
+    setPreviewDataUrl(null);
     setCandidates([]);
     setSelectedCandidate(null);
     setError(null);
+    setViewMode('live');
   };
 
   const handleRegister = async () => {
@@ -169,29 +175,35 @@ export default function Scan() {
       <h1 className="text-xl font-semibold mb-3">Book Cover Scan</h1>
 
       <div className="rounded-lg overflow-hidden bg-black relative">
-        {/* 비디오 요소는 항상 화면에 표시됩니다. */}
-        <video
-          ref={videoRef}
-          className="w-full h-full object-contain bg-black"
-          playsInline
-          autoPlay
-          muted
-        />
-        
-        {/* isFrozen 상태에 따라 캡처 또는 재촬영 버튼을 표시합니다. */}
-        {!isFrozen ? (
-          <button
-            onClick={handleCapture}
-            disabled={isLoading}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-3 rounded-full bg-white/90 text-black font-medium shadow"
-          >
-            {isLoading ? 'Processing...' : 'Capture'}
-          </button>
-        ) : null}
+        {/* viewMode에 따라 비디오 또는 이미지를 조건부로 렌더링합니다. */}
+        {viewMode === 'live' ? (
+          <>
+            <video
+              ref={videoRef}
+              className="w-full h-full object-contain bg-black"
+              playsInline
+              autoPlay
+              muted
+            />
+            <button
+              onClick={handleCapture}
+              disabled={isLoading}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-3 rounded-full bg-white/90 text-black font-medium shadow"
+            >
+              {isLoading ? 'Processing...' : 'Capture'}
+            </button>
+          </>
+        ) : (
+          <img
+            src={previewDataUrl!}
+            alt="Captured book cover"
+            className="w-full h-full object-contain bg-black"
+          />
+        )}
       </div>
 
-      {/* 카메라가 정지된 상태일 때만 결과 및 버튼을 표시합니다. */}
-      {isFrozen && (
+      {/* 캡처 후(viewMode가 'preview'일 때)에만 결과 및 버튼을 표시합니다. */}
+      {viewMode === 'preview' && (
         <div className="mt-4 space-y-4">
           <div className="flex gap-2 justify-center">
             <button onClick={handleRetake} className="btn" style={{ background: '#6b7280' }} disabled={isLoading}>
