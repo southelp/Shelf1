@@ -6,7 +6,7 @@ create type public.loan_status as enum ('reserved','loaned','returned','cancelle
 -- profiles (Auth 연동)
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
-  email text unique, -- "not null" 제약조건 제거
+  email text, -- "unique" 와 "not null" 제약조건 모두 제거
   full_name text,
   role text default 'user',
   created_at timestamptz default now()
@@ -125,8 +125,10 @@ $$;
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
+  -- "on conflict" 구문 추가: id가 이미 존재하면(충돌하면) 아무것도 하지 않음
   insert into public.profiles (id, email, full_name)
-  values (new.id, new.email, new.raw_user_meta_data->>'full_name');
+  values (new.id, new.email, new.raw_user_meta_data->>'full_name')
+  on conflict (id) do nothing;
   return new;
 end;
 $$ language plpgsql security definer;
