@@ -1,6 +1,6 @@
 // src/components/BookCard.tsx
 
-import { supabase } from '../lib/supabaseClient'; // supabase 클라이언트 import
+import { supabase } from '../lib/supabaseClient';
 import type { Book, Loan } from '../types';
 
 export default function BookCard({
@@ -23,18 +23,37 @@ export default function BookCard({
 
   const disabled = Boolean(activeLoan) || isOwner;
 
-  // ✨ 이 부분을 수정해야 합니다.
   async function requestLoan() {
+    // book.id가 존재하는지 먼저 확인
+    if (!book.id) {
+      alert('오류: 책의 ID를 찾을 수 없습니다.');
+      return;
+    }
+
     try {
-      // supabase.functions.invoke를 사용하여 인증 정보와 함께 함수를 호출
-      const { error } = await supabase.functions.invoke('request-loan', {
+      console.log(`Requesting loan for book_id: ${book.id}`); // 디버깅을 위한 로그
+
+      const { data, error } = await supabase.functions.invoke('request-loan', {
+        // body에 book_id를 JSON 형태로 담아서 보냅니다.
         body: { book_id: book.id },
       });
-      if (error) throw error;
-      alert('대출 요청이 완료되었습니다. 소유자의 승인을 기다려주세요.');
-      window.location.reload(); // 성공 후 페이지 새로고침
+
+      if (error) {
+        // invoke 함수 자체가 실패한 경우 (네트워크 등)
+        throw error;
+      }
+      
+      // 함수가 반환한 데이터에 오류 메시지가 있는지 확인
+      if (data && data.message && !data.ok) {
+        throw new Error(data.message);
+      }
+      
+      alert('대출 요청이 성공적으로 전송되었습니다.');
+      window.location.reload();
+
     } catch (err: any) {
-      // 오류 메시지를 더 구체적으로 보여줍니다.
+      // 이제 서버에서 보낸 구체적인 오류 메시지가 여기에 표시됩니다.
+      console.error('Loan request failed:', err);
       alert(`요청 실패: ${err.message}`);
     }
   }
