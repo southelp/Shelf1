@@ -171,22 +171,25 @@ export default function Scan() {
       <h1 className="text-xl font-semibold mb-3">Book Cover Scan</h1>
 
       <div className="rounded-lg overflow-hidden bg-black relative">
-        {/* 정지 상태일 때는 캡처된 이미지를, 아닐 때는 비디오를 표시 */}
-        {isFrozen && capturedImage ? (
+        {/* 캡처된 이미지 */}
+        {isFrozen && capturedImage && (
           <img 
             src={capturedImage} 
             alt="Captured book cover"
             className="w-full h-full object-contain bg-black"
-          />
-        ) : (
-          <video
-            ref={videoRef}
-            className="w-full h-full object-contain bg-black"
-            playsInline
-            autoPlay
-            muted
+            style={{ position: 'absolute', top: 0, left: 0, zIndex: 10 }}
           />
         )}
+        
+        {/* 비디오 - 정지 상태일 때 숨김 */}
+        <video
+          ref={videoRef}
+          className="w-full h-full object-contain bg-black"
+          style={{ display: isFrozen ? 'none' : 'block' }}
+          playsInline
+          autoPlay
+          muted
+        />
         
         {/* isFrozen 상태가 아닐 때만 캡처 버튼을 표시 */}
         {!isFrozen && (
