@@ -1,42 +1,43 @@
-import { useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
-import { fetchBookMeta } from '../lib/bookApis'
+import { useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { fetchBookMeta } from '../lib/bookApis';
+import { useUser } from '@supabase/auth-helpers-react'; // useUser 훅 가져오기
 
 export default function NewBook() {
-  const [isbn, setIsbn] = useState('')
-  const [title, setTitle] = useState('')
-  const [authors, setAuthors] = useState('')
-  const [publisher, setPublisher] = useState('')
-  const [publishedYear, setPublishedYear] = useState<number | ''>('')
-  const [cover, setCover] = useState('')
-  const [source, setSource] = useState<'auto' | 'domestic' | 'foreign'>('auto')
+  const [isbn, setIsbn] = useState('');
+  const [title, setTitle] = useState('');
+  const [authors, setAuthors] = useState('');
+  const [publisher, setPublisher] = useState('');
+  const [publishedYear, setPublishedYear] = useState<number | ''>('');
+  const [cover, setCover] = useState('');
+  const [source, setSource] = useState<'auto' | 'domestic' | 'foreign'>('auto');
+  const user = useUser(); // 훅으로 사용자 정보 가져오기
 
   async function autoFill() {
-    const meta = await fetchBookMeta(isbn, source)
+    const meta = await fetchBookMeta(isbn, source);
     if (!meta) {
-      alert('Unable to find metadata for the given ISBN.')
-      return
+      alert('Unable to find metadata for the given ISBN.');
+      return;
     }
-    setTitle(meta.title || '')
-    setAuthors((meta.authors || []).join(', '))
-    setPublisher(meta.publisher || '')
-    setPublishedYear(meta.year || '')
-    setCover(meta.cover || '')
+    setTitle(meta.title || '');
+    setAuthors((meta.authors || []).join(', '));
+    setPublisher(meta.publisher || '');
+    setPublishedYear(meta.year || '');
+    setCover(meta.cover || '');
   }
 
   async function save() {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      alert('You must be logged in to register a book.')
-      return
+    if (!user) { // 훅에서 가져온 user 사용
+      alert('You must be logged in to register a book.');
+      return;
     }
 
     // 책을 저장하기 전에, 내 프로필이 존재하는지 확인하고 없으면 생성합니다.
-    const { error: profileError } = await supabase.rpc('create_profile_if_not_exists')
+    const { error: profileError } = await supabase.rpc('create_profile_if_not_exists');
     if (profileError) {
-      console.error('Profile check failed:', profileError)
-      alert('An error occurred while checking your profile: ' + profileError.message)
-      return
+      console.error('Profile check failed:', profileError);
+      alert('An error occurred while checking your profile: ' + profileError.message);
+      return;
     }
 
     const payload = {
@@ -48,26 +49,27 @@ export default function NewBook() {
       published_year: publishedYear || null,
       cover_url: cover,
       available: true,
-    }
+    };
 
-    const { error } = await supabase.from('books').insert(payload)
+    const { error } = await supabase.from('books').insert(payload);
 
     if (error) {
-      alert('Failed to save book: ' + error.message)
-      return
+      alert('Failed to save book: ' + error.message);
+      return;
     }
 
-    alert('Book registered successfully.')
-    setIsbn('')
-    setTitle('')
-    setAuthors('')
-    setPublisher('')
-    setPublishedYear('')
-    setCover('')
+    alert('Book registered successfully.');
+    setIsbn('');
+    setTitle('');
+    setAuthors('');
+    setPublisher('');
+    setPublishedYear('');
+    setCover('');
   }
 
   return (
     <div className="container">
+      {/* JSX 내용은 동일하므로 생략 */}
       <div className="card">
         <div className="row" style={{ gap: 12, alignItems: 'flex-end' }}>
           <div style={{ flex: 1 }}>
@@ -121,5 +123,5 @@ export default function NewBook() {
         </div>
       </div>
     </div>
-  )
+  );
 }

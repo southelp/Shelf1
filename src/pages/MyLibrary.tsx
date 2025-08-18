@@ -1,43 +1,47 @@
-import { useEffect, useState, useCallback } from 'react'
-import { supabase } from '../lib/supabaseClient'
-import { Book, Loan } from '../types'
+import { useEffect, useState, useCallback } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { Book, Loan } from '../types';
+import { useUser } from '@supabase/auth-helpers-react'; // useUser 훅 가져오기
 
 export default function MyLibrary() {
-  const [owned, setOwned] = useState<Book[]>([])
-  const [myLoans, setMyLoans] = useState<Loan[]>([])
+  const [owned, setOwned] = useState<Book[]>([]);
+  const [myLoans, setMyLoans] = useState<Loan[]>([]);
+  const user = useUser(); // 훅으로 사용자 정보 가져오기
 
   const loadData = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    if (!user) { // 훅에서 가져온 user 사용
+      setOwned([]);
+      setMyLoans([]);
+      return;
+    }
 
-    const { data: ownedBooks } = await supabase.from('books').select('*').eq('owner_id', user.id).order('created_at', { ascending: false })
-    setOwned(ownedBooks || [])
+    const { data: ownedBooks } = await supabase.from('books').select('*').eq('owner_id', user.id).order('created_at', { ascending: false });
+    setOwned(ownedBooks || []);
 
-    const { data: loans } = await supabase.from('loans').select('*').or(`owner_id.eq.${user.id},borrower_id.eq.${user.id}`).order('requested_at', { ascending: false })
-    setMyLoans(loans || [])
-  }, [])
+    const { data: loans } = await supabase.from('loans').select('*').or(`owner_id.eq.${user.id},borrower_id.eq.${user.id}`).order('requested_at', { ascending: false });
+    setMyLoans(loans || []);
+  }, [user]); // 의존성 배열에 user 추가
 
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    loadData();
+  }, [loadData]);
 
   // --- ✨ Handle book deletion ---
   const handleDeleteBook = async (bookId: string) => {
-    // Ask the user to confirm before deleting the book. The action cannot be undone.
     if (!confirm('Are you sure you want to delete this book? This action cannot be undone.')) {
-      return
+      return;
     }
 
-    const { error } = await supabase.from('books').delete().eq('id', bookId)
+    const { error } = await supabase.from('books').delete().eq('id', bookId);
 
     if (error) {
-      alert('Delete failed: ' + error.message)
+      alert('Delete failed: ' + error.message);
     } else {
-      alert('The book has been deleted.')
+      alert('The book has been deleted.');
       // Refresh the list after a successful deletion
-      loadData()
+      loadData();
     }
-  }
+  };
 
   return (
     <div className="container">
@@ -78,5 +82,5 @@ export default function MyLibrary() {
         </div>
       </div>
     </div>
-  )
+  );
 }
