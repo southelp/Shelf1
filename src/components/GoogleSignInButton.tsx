@@ -9,7 +9,7 @@ export default function GoogleSignInButton(){
   const checkDomain = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     const email = user?.email?.toLowerCase();
-    if (email && !email.endsWith(`@${allowedDomain}`)) {
+    if (email && !email.endsWith(`${allowedDomain}`)) {
       await supabase.auth.signOut();
       alert(`You can only sign in using a school email (@${allowedDomain}).`)
     }
