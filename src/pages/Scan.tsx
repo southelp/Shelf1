@@ -1,3 +1,4 @@
+// src/pages/Scan.tsx
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useSessionContext, useUser } from '@supabase/auth-helpers-react';
 import { supabase } from '../lib/supabaseClient';
@@ -29,11 +30,6 @@ export default function Scan() {
   const [error, setError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
-
-  // 디버깅을 위한 useEffect 추가
-  useEffect(() => {
-    console.log('capturedImage state:', capturedImage ? 'HAS_IMAGE' : 'NO_IMAGE');
-  }, [capturedImage]);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -91,16 +87,10 @@ export default function Scan() {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
     
-    // 먼저 카메라를 중지하고 이미지를 설정
+    // 1. 카메라 스트림 중지
     stopCamera();
     
-    // 비디오 요소 완전히 정리
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-      videoRef.current.src = '';
-    }
-    
-    // 상태 업데이트를 강제로 동기화
+    // 2. React가 DOM을 업데이트하도록 상태만 변경
     setCapturedImage(dataUrl); 
 
     try {
@@ -127,20 +117,12 @@ export default function Scan() {
   };
 
   const handleRetake = () => {
-    // 모든 상태를 명시적으로 초기화
     setCapturedImage(null);
     setCandidates([]);
     setSelectedCandidate(null);
     setError(null);
     setIsLoading(false);
     
-    // 비디오 요소 완전히 정리
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-      videoRef.current.src = '';
-    }
-    
-    // 약간의 지연 후 카메라 재시작
     setTimeout(() => {
       startCamera();
     }, 100);
@@ -187,17 +169,15 @@ export default function Scan() {
     <div className="p-4 max-w-xl mx-auto">
       <h1 className="text-xl font-semibold mb-3">Book Cover Scan</h1>
 
-      {/* 적절한 가로세로 비율을 가진 카메라/이미지 컨테이너 */}
       <div 
         className="rounded-lg overflow-hidden bg-black relative mx-auto"
         style={{
           width: '100%',
-          maxWidth: '400px', // 최대 너비 제한
-          aspectRatio: '3/4', // 책 표지에 적합한 3:4 비율
+          maxWidth: '400px',
+          aspectRatio: '3/4',
         }}
       >
         {capturedImage ? (
-          // 캡처된 이미지만 표시
           <img 
             src={capturedImage} 
             alt="Captured book cover"
@@ -206,19 +186,15 @@ export default function Scan() {
               height: '100%',
               objectFit: 'contain',
               backgroundColor: 'black',
-              display: 'block' // 명시적으로 블록 요소로 설정
             }}
           />
         ) : (
-          // 비디오만 표시
           <video
             ref={videoRef}
             style={{
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              backgroundColor: 'black',
-              display: 'block' // 명시적으로 블록 요소로 설정
             }}
             playsInline
             autoPlay
@@ -226,7 +202,6 @@ export default function Scan() {
           />
         )}
         
-        {/* 캡처 버튼 - 로딩 중일 때는 비활성화 */}
         {!capturedImage && (
           <button
             onClick={handleCapture}
@@ -242,33 +217,13 @@ export default function Scan() {
               background: isLoading ? '#9ca3af' : 'rgba(255, 255, 255, 0.95)',
               color: isLoading ? '#fff' : '#000',
               fontWeight: '600',
-              fontSize: '14px',
               cursor: isLoading ? 'not-allowed' : 'pointer',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-              transition: 'all 0.2s ease',
-              minWidth: '120px'
-            }}
-            onMouseDown={(e) => {
-              if (!isLoading) {
-                e.currentTarget.style.transform = 'translateX(-50%) scale(0.95)';
-              }
-            }}
-            onMouseUp={(e) => {
-              if (!isLoading) {
-                e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isLoading) {
-                e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
-              }
             }}
           >
-            {isLoading ? '처리 중...' : 'Capture'}
+            {isLoading ? 'Processing...' : 'Capture'}
           </button>
         )}
 
-        {/* 로딩 상태를 오버레이로 표시 */}
         {isLoading && capturedImage && (
           <div 
             style={{
@@ -280,20 +235,12 @@ export default function Scan() {
               background: 'rgba(0, 0, 0, 0.7)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              color: 'white',
+              fontSize: '1.2em'
             }}
           >
-            <div 
-              style={{
-                background: 'rgba(255, 255, 255, 0.95)',
-                padding: '16px 24px',
-                borderRadius: '12px',
-                textAlign: 'center'
-              }}
-            >
-              <div style={{ fontWeight: '600', marginBottom: '8px' }}>책 정보를 분석 중입니다...</div>
-              <div style={{ fontSize: '14px', color: '#666' }}>잠시만 기다려주세요</div>
-            </div>
+            Analyzing...
           </div>
         )}
       </div>
@@ -321,7 +268,6 @@ export default function Scan() {
                     className="p-3 rounded-lg border hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors"
                     style={{
                       outline: selectedCandidate?.title === c.title ? '2px solid var(--purple)' : 'none',
-                      background: selectedCandidate?.title === c.title ? '#f3f0ff' : 'white'
                     }}
                     onClick={() => setSelectedCandidate(c)}
                   >
@@ -335,10 +281,6 @@ export default function Scan() {
                     <div className="min-w-0 flex-1">
                       <div className="font-medium truncate">{c.title}</div>
                       <div className="text-sm text-gray-600 truncate">{(c.authors || []).join(', ')}</div>
-                      <div className="text-xs text-gray-500">
-                        {c.publisher || ''}
-                        {c.published_year ? ` · ${c.published_year}` : ''}
-                      </div>
                     </div>
                   </li>
                 ))}
