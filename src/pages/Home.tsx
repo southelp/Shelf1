@@ -17,7 +17,7 @@ export default function Home() {
   const load = useCallback(async () => {
     // supabase.auth.getUser()를 직접 호출할 필요가 없습니다.
 
-    let query = supabase.from('books').select('*').order('created_at', { ascending: false });
+    let query = supabase.from('books').select('*, profiles(full_name)').order('created_at', { ascending: false });
     if (onlyAvailable) query = query.eq('available', true);
     if (q) query = query.or(`title.ilike.%${q}%,authors.cs.{${q}},isbn.ilike.%${q}%`);
     const { data } = await query;

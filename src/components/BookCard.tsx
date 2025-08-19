@@ -53,19 +53,36 @@ export default function BookCard({
 
   return (
     <div className="card">
-      {book.cover_url && (
+      {book.cover_url ? (
         <img
           src={book.cover_url}
           alt={book.title}
           style={{
             width: '100%',
-            maxHeight: 240,
+            height: '240px',
             objectFit: 'contain',
-            borderRadius: 12,
-            marginBottom: 8,
-            background: '#f9fafb',
+            borderRadius: '12px',
+            marginBottom: '8px',
+            backgroundColor: '#f9fafb',
           }}
         />
+      ) : (
+        <div
+          style={{
+            width: '100%',
+            height: '240px',
+            borderRadius: '12px',
+            marginBottom: '8px',
+            backgroundColor: '#f0f2f5',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#a0aec0',
+            fontSize: '14px',
+          }}
+        >
+          <span>No Image</span>
+        </div>
       )}
       <div className="badge gray" style={{ marginBottom: 8 }}>
         {badge}
@@ -86,7 +103,10 @@ export default function BookCard({
             {activeLoan ? badge : 'Request Loan'}
           </button>
         )}
-        <div className="label">ISBN {book.isbn || '-'}</div>
+        <div className="label" style={{ textAlign: 'right', lineHeight: 1.4 }}>
+          <div>{new Date(book.created_at).toLocaleDateString()}</div>
+          <div>{book.profiles?.full_name || '...'}</div>
+        </div>
       </div>
     </div>
   );
