@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import MyLibrary from './pages/MyLibrary';
 import NewBook from './pages/NewBook';
 import Scan from './pages/Scan';
+import UserLibrary from './pages/UserLibrary'; // ✨ 페이지 임포트
 import GoogleSignInButton from './components/GoogleSignInButton';
 import { supabase, allowedDomain } from './lib/supabaseClient';
 
@@ -78,6 +79,7 @@ export default function App() {
         <Route path="/my" element={<MyLibrary />} />
         <Route path="/books/new" element={<NewBook />} />
         <Route path="/scan" element={<Scan />} />
+        <Route path="/users/:userId" element={<UserLibrary />} /> {/* ✨ 새 경로 추가 */}
       </Routes>
     </>
   );
