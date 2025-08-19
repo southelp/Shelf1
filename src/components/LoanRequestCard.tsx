@@ -1,5 +1,5 @@
-import { supabase } from '../lib/supabaseClient';
-import type { Loan } from '../types';
+import { supabase } from '../lib/supabaseClient.ts';
+import type { Loan } from '../types.ts';
 
 // 이름에서 불필요한 문구를 제거하는 함수
 const formatName = (name: string | null | undefined) => {
@@ -10,7 +10,8 @@ const formatName = (name: string | null | undefined) => {
 export default function LoanRequestCard({ loan, onComplete }: { loan: Loan; onComplete: () => void; }) {
   
   const handleAction = async (action: 'approve' | 'reject') => {
-    if (!confirm(`Are you sure you want to ${action} this request?`)) return;
+    // `confirm` 대신 사용자 정의 모달을 사용해야 합니다.
+    if (!window.confirm(`Are you sure you want to ${action} this request?`)) return;
 
     try {
       const { error, data } = await supabase.functions.invoke('manage-loan-request', {
@@ -18,18 +19,18 @@ export default function LoanRequestCard({ loan, onComplete }: { loan: Loan; onCo
       });
       
       if (error) throw new Error(`Function error: ${error.message}`);
-      if (data && data.message && !data.ok) throw new Error(data.message);
+      if (data.message && !data.ok) throw new Error(data.message);
 
-
-      alert(`Request has been successfully ${action}d.`);
+      // `alert` 대신 사용자 정의 메시지 박스를 사용해야 합니다.
+      window.alert(`Request has been successfully ${action}d.`);
       onComplete();
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      // `alert` 대신 사용자 정의 메시지 박스를 사용해야 합니다.
+      window.alert(`Error: ${err.message}`);
       console.error(err);
     }
   };
   
-  // ✨ 'A user' 대신 loan.profiles 객체에서 요청자 이름을 가져옵니다.
   const borrowerName = formatName(loan.profiles?.full_name);
 
   return (
