@@ -161,31 +161,59 @@ export default function Scan() {
     <div className="p-4 max-w-xl mx-auto">
       <h1 className="text-xl font-semibold mb-3">Book Cover Scan</h1>
 
-      <div className="rounded-lg overflow-hidden bg-black relative">
+      {/* 고정 높이와 적절한 스타일링을 가진 카메라/이미지 컨테이너 */}
+      <div 
+        className="rounded-lg overflow-hidden bg-black relative"
+        style={{
+          width: '100%',
+          height: '400px', // 고정 높이 설정
+          maxHeight: '60vh' // 최대 높이 제한
+        }}
+      >
         {capturedImage ? (
           <img 
             src={capturedImage} 
             alt="Captured book cover"
-            className="w-full h-full object-contain bg-black"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              backgroundColor: 'black'
+            }}
           />
         ) : (
           <video
             ref={videoRef}
-            className="w-full h-full object-contain bg-black"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              backgroundColor: 'black'
+            }}
             playsInline
             autoPlay
             muted
           />
         )}
         
-        {!capturedImage && (
+        {/* 캡처 버튼은 이미지가 없을 때만 표시 */}
+        {!capturedImage && !isLoading && (
           <button
             onClick={handleCapture}
             disabled={isLoading}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-3 rounded-full bg-white/90 text-black font-medium shadow"
+            className="absolute bottom-4 left-1/2 transform -translate-x-1/2 px-5 py-3 rounded-full bg-white/90 text-black font-medium shadow-lg hover:bg-white transition-colors"
           >
-            {isLoading ? 'Processing...' : 'Capture'}
+            Capture
           </button>
+        )}
+
+        {/* 로딩 상태를 오버레이로 표시 */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <div className="bg-white/90 px-4 py-2 rounded-lg">
+              <div className="text-black font-medium">Processing...</div>
+            </div>
+          </div>
         )}
       </div>
 
@@ -200,7 +228,6 @@ export default function Scan() {
             </button>
           </div>
 
-          {isLoading && <div className="text-sm text-gray-600 text-center">Recognizing book information...</div>}
           {error && <div className="text-sm text-red-600 text-center">Error: {error}</div>}
           
           {!isLoading && candidates.length > 0 && (
@@ -210,15 +237,21 @@ export default function Scan() {
                 {candidates.map((c, idx) => (
                   <li
                     key={`${c.isbn13 || c.title}-${idx}`}
-                    className="p-3 rounded-lg border hover:bg-gray-50 cursor-pointer flex items-center gap-3"
+                    className="p-3 rounded-lg border hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors"
                     style={{
                       outline: selectedCandidate?.title === c.title ? '2px solid var(--purple)' : 'none',
                       background: selectedCandidate?.title === c.title ? '#f3f0ff' : 'white'
                     }}
                     onClick={() => setSelectedCandidate(c)}
                   >
-                    {c.cover_url && <img src={c.cover_url} alt={c.title} className="w-12 h-16 object-contain rounded bg-gray-100"/>}
-                    <div className="min-w-0">
+                    {c.cover_url && (
+                      <img 
+                        src={c.cover_url} 
+                        alt={c.title} 
+                        className="w-12 h-16 object-contain rounded bg-gray-100 flex-shrink-0"
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
                       <div className="font-medium truncate">{c.title}</div>
                       <div className="text-sm text-gray-600 truncate">{(c.authors || []).join(', ')}</div>
                       <div className="text-xs text-gray-500">
