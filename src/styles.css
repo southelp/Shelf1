@@ -8,10 +8,8 @@ a{color:var(--purple);text-decoration:none}
 .header{display:flex;gap:16px;align-items:center;padding:16px 20px;background:white;border-bottom:1px solid #eee;position:sticky;top:0;z-index:10}
 .brand{font-weight:700;font-size:18px;color:#3a2cb7}
 .nav{display:flex;gap:4px;align-items:center}
-.nav a{color:var(--text);text-decoration:none;display:inline-block;padding:10px 14px;border-radius:10px;font-weight:600}
-.nav a:hover{background-color:var(--bg)}
-.nav a.active{background-color:var(--bg)}
-/* ✨ 이전 .nav a 스타일을 주석 처리하거나 삭제합니다. */
+/* ✨ .nav a에 position: relative 추가 */
+.nav a{color:var(--text);text-decoration:none;position:relative}
 
 .container{max-width:980px;margin:20px auto;padding:0 16px}
 .btn{border:none;padding:10px 14px;border-radius:10px;background:var(--purple);color:white;cursor:pointer;font-weight:600}
@@ -24,4 +22,3 @@ a{color:var(--purple);text-decoration:none}
 .row{display:flex;gap:8px;align-items:center}
 .label{font-size:12px;color:var(--muted)}
 .section{margin:20px 0}
-
