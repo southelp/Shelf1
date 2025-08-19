@@ -1,37 +1,36 @@
-// src/components/LoanRequestCard.tsx
-
 import { supabase } from '../lib/supabaseClient';
 import type { Loan } from '../types';
 
-// 이름 포맷팅 함수
-const formatOwnerName = (name: string | null | undefined) => {
-  if (!name) return '...';
+// 이름에서 불필요한 문구를 제거하는 함수
+const formatName = (name: string | null | undefined) => {
+  if (!name) return 'Unknown User';
   return name.replace('(School of Innovation Foundations)', '').trim();
 };
 
 export default function LoanRequestCard({ loan, onComplete }: { loan: Loan; onComplete: () => void; }) {
+  
   const handleAction = async (action: 'approve' | 'reject') => {
     if (!confirm(`Are you sure you want to ${action} this request?`)) return;
 
     try {
-      const { error } = await supabase.functions.invoke('manage-loan-request', {
+      const { error, data } = await supabase.functions.invoke('manage-loan-request', {
         body: { loan_id: loan.id, action },
       });
-      if (error) throw new Error(error.message);
+      
+      if (error) throw new Error(`Function error: ${error.message}`);
+      if (data && data.message && !data.ok) throw new Error(data.message);
+
 
       alert(`Request has been successfully ${action}d.`);
-      onComplete(); // 부모 컴포넌트에 알려 목록을 새로고침하게 함
+      onComplete();
     } catch (err: any) {
       alert(`Error: ${err.message}`);
+      console.error(err);
     }
   };
   
-  // 대출을 요청한 사람(borrower)의 프로필 정보를 가져와야 합니다.
-  // 이 부분은 Loan 타입 정의와 MyLibrary의 쿼리가 borrower의 profile을 포함하도록 수정되어야 합니다.
-  // 현재 타입 정의상 borrower의 이름은 loan.books.profiles.full_name 으로 잘못 연결되어 있을 수 있습니다.
-  // 정확한 borrower의 이름을 표시하려면 MyLibrary에서 loan 조회 시 borrower의 profile을 join해야 합니다.
-  // 임시로 'A user'로 표시합니다.
-  const borrowerName = 'A user'; // TODO: Fix this by fetching borrower profile
+  // ✨ 'A user' 대신 loan.profiles 객체에서 요청자 이름을 가져옵니다.
+  const borrowerName = formatName(loan.profiles?.full_name);
 
   return (
     <div className="card">
