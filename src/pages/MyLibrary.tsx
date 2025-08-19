@@ -2,61 +2,81 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { Book, Loan } from '../types';
 import { useUser } from '@supabase/auth-helpers-react';
-import BookCard from '../components/BookCard'; // BookCard 컴포넌트를 재사용합니다.
+import BookCard from '../components/BookCard';
+import LoanRequestCard from '../components/LoanRequestCard'; // ✨ 새 컴포넌트 임포트
 
 export default function MyLibrary() {
   const [owned, setOwned] = useState<Book[]>([]);
   const [myLoans, setMyLoans] = useState<Loan[]>([]);
+  const [incomingRequests, setIncomingRequests] = useState<Loan[]>([]); // ✨ 대출 요청 상태 추가
   const user = useUser();
 
   const loadData = useCallback(async () => {
     if (!user) {
       setOwned([]);
       setMyLoans([]);
+      setIncomingRequests([]);
       return;
     }
 
-    // 1. 내가 소유한 책 목록을 가져옵니다.
+    // 내 소유 도서 목록
     const { data: ownedBooks } = await supabase
-      .from('books')
-      .select('*, profiles(id, full_name)')
-      .eq('owner_id', user.id)
-      .order('created_at', { ascending: false });
+      .from('books').select('*, profiles(id, full_name)').eq('owner_id', user.id).order('created_at', { ascending: false });
     setOwned(ownedBooks || []);
 
-    // 2. 나의 대출/예약 현황을 관련 책 정보와 함께 가져옵니다.
+    // 내가 빌린/빌려준 현황 (진행 중)
     const { data: loans } = await supabase
-      .from('loans')
-      .select('*, books(*, profiles(id, full_name))') // books 테이블과 그 안의 profiles 정보까지 JOIN
-      .or(`owner_id.eq.${user.id},borrower_id.eq.${user.id}`)
-      .in('status', ['reserved', 'loaned']) // 현재 진행 중인 대출/예약만 필터링
-      .order('requested_at', { ascending: false });
-      
+      .from('loans').select('*, books(*, profiles(id, full_name))').or(`borrower_id.eq.${user.id}`).in('status', ['reserved', 'loaned']).order('requested_at', { ascending: false });
     setMyLoans(loans || []);
+      
+    // ✨ 나에게 들어온 대출 요청 목록 (예약 중)
+    const { data: requests } = await supabase
+      .from('loans').select('*, books(*, profiles(id, full_name))').eq('owner_id', user.id).eq('status', 'reserved').order('requested_at', { ascending: false });
+    setIncomingRequests(requests || []);
+
   }, [user]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // 책 삭제 핸들러
+  // (handleDeleteBook 함수는 동일)
   const handleDeleteBook = async (bookId: string) => {
-    if (!confirm('Are you sure you want to delete this book? This action cannot be undone.')) {
-      return;
-    }
-
+    if (!confirm('Are you sure you want to delete this book? This action cannot be undone.')) return;
     const { error } = await supabase.from('books').delete().eq('id', bookId);
-
     if (error) {
       alert('Delete failed: ' + error.message);
     } else {
       alert('The book has been deleted.');
-      loadData(); // 성공적으로 삭제 후 목록을 새로고침합니다.
+      loadData();
     }
   };
 
   return (
     <div className="container">
+      {/* ✨ 새로운 대출 요청 섹션 */}
+      {incomingRequests.length > 0 && (
+        <div className="section">
+          <h2>Incoming Loan Requests</h2>
+          <div className="grid">
+            {incomingRequests.map(req => (
+              <LoanRequestCard key={req.id} loan={req} onComplete={loadData} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="section">
+        <h2>My Loan/Reservation Status</h2>
+        <div className="grid">
+          {myLoans.map(loan => 
+            loan.books ? (
+              <BookCard key={loan.id} book={loan.books} activeLoan={loan} userId={user?.id} />
+            ) : null
+          )}
+        </div>
+      </div>
+
       <div className="section">
         <h2>My Owned Books</h2>
         <div className="grid">{owned.map(b => (
@@ -64,35 +84,11 @@ export default function MyLibrary() {
             <div>
               <div style={{ fontWeight: 700 }}>{b.title}</div>
               <div className="label">{b.authors?.join(', ')}</div>
-              <div className="label">
-                Status: {b.available ? 'Available' : 'Borrowed/Reserved'}
-              </div>
+              <div className="label">Status: {b.available ? 'Available' : 'Borrowed/Reserved'}</div>
             </div>
-            <button
-              className="btn"
-              onClick={() => handleDeleteBook(b.id)}
-              style={{ background: '#ef4444', marginTop: '12px' }}
-            >
-              Delete
-            </button>
+            <button className="btn" onClick={() => handleDeleteBook(b.id)} style={{ background: '#ef4444', marginTop: '12px' }}>Delete</button>
           </div>
         ))}</div>
-      </div>
-      <div className="section">
-        <h2>Loan/Reservation Status</h2>
-        <div className="grid">
-          {myLoans.map(loan => 
-            // 3. loan 객체에 포함된 book 데이터로 BookCard를 렌더링합니다.
-            loan.books ? (
-              <BookCard 
-                key={loan.id} 
-                book={loan.books} 
-                activeLoan={loan} // activeLoan prop에는 loan 객체 전체를 전달합니다.
-                userId={user?.id} 
-              />
-            ) : null
-          )}
-        </div>
       </div>
     </div>
   );

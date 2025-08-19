@@ -21,10 +21,11 @@ serve(async () => {
       const { data: book } = await client.from('books').select('title').eq('id', l.book_id).single();
       const { data: borrower } = await client.from('profiles').select('email').eq('id', l.borrower_id).single();
       if (book && borrower) {
-        await sendEmail(borrower.email, \`[반납 알림] ${book.title}\`,
-          \`<p>도서 <b>${book.title}</b> 반납 예정일이 임박했습니다.</p>
-           <p>반납 예정일: ${l.due_at?.slice(0,10)}</p>\`)
-        await client.from('notifications').insert({ loan_id: l.id, kind: t.label })
+        // ✨ 여기서 불필요한 \ 문자 제거
+        await sendEmail(borrower.email, `[반납 알림] ${book.title}`,
+          `<p>도서 <b>${book.title}</b> 반납 예정일이 임박했습니다.</p>
+           <p>반납 예정일: ${l.due_at?.slice(0,10)}</p>`);
+        await client.from('notifications').insert({ loan_id: l.id, kind: t.label });
       }
     }
   }
