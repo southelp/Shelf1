@@ -23,6 +23,23 @@ export default function BookCard({
 
   const disabled = Boolean(activeLoan) || isOwner;
 
+  // Function to format the owner's name
+  const formatOwnerName = (name: string | null | undefined) => {
+    if (!name) return '...';
+    return name.replace('(School of Innovation Foundations)', '').trim();
+  };
+  
+  // Function to format the date to KST (GMT+9)
+  const formatKSTDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ko-KR', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
   async function requestLoan() {
     if (!book.id) {
       alert('오류: 책의 ID를 찾을 수 없습니다.');
@@ -104,8 +121,8 @@ export default function BookCard({
           </button>
         )}
         <div className="label" style={{ textAlign: 'right', lineHeight: 1.4 }}>
-          <div>{new Date(book.created_at).toLocaleDateString()}</div>
-          <div>{book.profiles?.full_name || '...'}</div>
+          <div>{formatKSTDate(book.created_at)}</div>
+          <div>{formatOwnerName(book.profiles?.full_name)}</div>
         </div>
       </div>
     </div>
