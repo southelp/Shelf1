@@ -95,20 +95,9 @@ export default function NewBook() {
       return;
     }
 
-    // ✨ 현재 사용자의 프로필에서 이름 가져오기
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('full_name')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError) {
-      return alert('Error fetching your profile: ' + profileError.message);
-    }
-    
     const payload = {
       owner_id: user.id,
-      owner_name: profile.full_name, // ✨ 가져온 이름 추가
+      // ✨ owner_name 관련 코드를 완전히 제거했습니다.
       isbn: isbn || null,
       title,
       authors: authors ? authors.split(',').map(s => s.trim()) : null,
@@ -117,8 +106,9 @@ export default function NewBook() {
       cover_url: cover || null,
       available: true,
     };
-    
+
     const { error } = await supabase.from('books').insert(payload);
+
     if (error) {
       alert('Failed to save book: ' + error.message);
     } else {

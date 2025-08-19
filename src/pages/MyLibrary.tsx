@@ -3,12 +3,12 @@ import { supabase } from '../lib/supabaseClient';
 import { Book, Loan } from '../types';
 import { useUser } from '@supabase/auth-helpers-react';
 import BookCard from '../components/BookCard';
-import LoanRequestCard from '../components/LoanRequestCard'; // ✨ 새 컴포넌트 임포트
+import LoanRequestCard from '../components/LoanRequestCard';
 
 export default function MyLibrary() {
   const [owned, setOwned] = useState<Book[]>([]);
   const [myLoans, setMyLoans] = useState<Loan[]>([]);
-  const [incomingRequests, setIncomingRequests] = useState<Loan[]>([]); // ✨ 대출 요청 상태 추가
+  const [incomingRequests, setIncomingRequests] = useState<Loan[]>([]);
   const user = useUser();
 
   const loadData = useCallback(async () => {
@@ -19,19 +19,31 @@ export default function MyLibrary() {
       return;
     }
 
-    // 내 소유 도서 목록
+    // 내가 소유한 책 목록
     const { data: ownedBooks } = await supabase
-      .from('books').select('*, profiles(id, full_name)').eq('owner_id', user.id).order('created_at', { ascending: false });
+      .from('books')
+      .select('*, profiles(id, full_name)')
+      .eq('owner_id', user.id)
+      .order('created_at', { ascending: false });
     setOwned(ownedBooks || []);
 
-    // 내가 빌린/빌려준 현황 (진행 중)
+    // 내가 빌린 책/예약 현황
     const { data: loans } = await supabase
-      .from('loans').select('*, books(*, profiles(id, full_name))').or(`borrower_id.eq.${user.id}`).in('status', ['reserved', 'loaned']).order('requested_at', { ascending: false });
+      .from('loans')
+      .select('*, books(*, profiles(id, full_name))')
+      .eq('borrower_id', user.id)
+      .in('status', ['reserved', 'loaned'])
+      .order('requested_at', { ascending: false });
     setMyLoans(loans || []);
       
-    // ✨ 나에게 들어온 대출 요청 목록 (예약 중)
+    // ✨ 나에게 들어온 대출 요청 목록 (쿼리 수정)
     const { data: requests } = await supabase
-      .from('loans').select('*, books(*, profiles(id, full_name))').eq('owner_id', user.id).eq('status', 'reserved').order('requested_at', { ascending: false });
+      .from('loans')
+      // Supabase의 관계 조인 문법을 사용하여 borrower_id와 일치하는 profiles 레코드를 가져옵니다.
+      .select('*, books(*), profiles:borrower_id(id, full_name)')
+      .eq('owner_id', user.id)
+      .eq('status', 'reserved')
+      .order('requested_at', { ascending: false });
     setIncomingRequests(requests || []);
 
   }, [user]);
@@ -40,7 +52,7 @@ export default function MyLibrary() {
     loadData();
   }, [loadData]);
 
-  // (handleDeleteBook 함수는 동일)
+  // 책 삭제 핸들러
   const handleDeleteBook = async (bookId: string) => {
     if (!confirm('Are you sure you want to delete this book? This action cannot be undone.')) return;
     const { error } = await supabase.from('books').delete().eq('id', bookId);
@@ -54,7 +66,7 @@ export default function MyLibrary() {
 
   return (
     <div className="container">
-      {/* ✨ 새로운 대출 요청 섹션 */}
+      {/* 나에게 들어온 대출 요청 섹션 */}
       {incomingRequests.length > 0 && (
         <div className="section">
           <h2>Incoming Loan Requests</h2>
@@ -66,8 +78,9 @@ export default function MyLibrary() {
         </div>
       )}
 
+      {/* 나의 대출/예약 현황 섹션 (내가 빌린 책들) */}
       <div className="section">
-        <h2>My Loan/Reservation Status</h2>
+        <h2>My Loans & Reservations</h2>
         <div className="grid">
           {myLoans.map(loan => 
             loan.books ? (
@@ -77,6 +90,7 @@ export default function MyLibrary() {
         </div>
       </div>
 
+      {/* 내가 소유한 책 섹션 */}
       <div className="section">
         <h2>My Owned Books</h2>
         <div className="grid">{owned.map(b => (
