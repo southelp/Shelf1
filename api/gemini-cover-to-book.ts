@@ -1,7 +1,7 @@
 // api/gemini-cover-to-book.ts
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
-// 프런트가 기대하는 후보 타입과 동일하게 정리
+// 프론트엔드가 기대하는 후보 타입
 type Candidate = {
   score: number
   isbn13?: string | null
@@ -20,11 +20,13 @@ function cors(res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 }
 
+// Data URL에서 Base64 데이터만 추출하는 함수
 function stripDataUrl(b64: string) {
   const i = b64.indexOf('base64,')
   return i >= 0 ? b64.slice(i + 'base64,'.length) : b64
 }
 
+// 날짜 문자열에서 연도만 추출하는 함수
 const yearFrom = (s?: string) => {
   if (!s) return null
   const m = s.match(/\d{4}/)
@@ -39,7 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY
     const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY
-    const GOOGLE_BOOKS_API_KEY = process.env.GOOGLE_BOOKS_API_KEY || '' // 없어도 동작
+    const GOOGLE_BOOKS_API_KEY = process.env.GOOGLE_BOOKS_API_KEY || ''
 
     if (!GEMINI_API_KEY) {
       return res.status(500).json({ error: 'Missing GEMINI_API_KEY' })
@@ -52,7 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     imageBase64 = stripDataUrl(imageBase64)
 
-    // 1) Gemini에 표지 이미지 + 프롬프트 전달 → 제목/저자/언어 JSON으로 받기
+    // 1. Gemini API 호출: 책 표지 이미지에서 정보 추론
     const prompt =
       `이 이미지는 책 표지입니다. 이미지에서 책 제목, 저자, 그리고 이 책의 언어를 "Korean" 또는 "Foreign"으로 추론하여 JSON 형식으로 추출해주세요.
 출력 예시: [{"title":"...","author":"...","language":"Korean"}]`
@@ -105,7 +107,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ candidates: [], debug: { extracted } })
     }
 
-    // 2) 언어별로 Kakao/Google Books에서 메타 보강
+    // 2. 언어에 따라 Kakao/Google Books API에서 메타데이터 보강
     const out: Candidate[] = []
     const seen = new Set<string>()
 
@@ -134,11 +136,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           item = gj?.items?.[0] || null
         }
       } catch (e) {
-        // 개별 실패는 넘어가고 다음 후보 진행
+        // 개별 API 호출 실패는 무시하고 다음 후보로 진행
         item = null
       }
 
-      // 3) Candidate 구성
+      // 3. 최종 후보(Candidate) 데이터 구성
       let cand: Candidate | null = null
       if (byKakao && item) {
         cand = {
@@ -167,7 +169,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           google_books_id: item.id,
         }
       } else {
-        // API 매칭 실패: Gemini 결과만이라도 반영
+        // API 매칭 실패 시, Gemini 결과만이라도 반영
         cand = {
           score: 0.5,
           isbn13: null,
@@ -180,7 +182,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
 
-      // 스코어 보정
+      // 스코어 보정 및 중복 제거
       if (cand) {
         if (cand.isbn13 || cand.isbn10) cand.score += 1
         if (cand.cover_url) cand.score += 0.5
