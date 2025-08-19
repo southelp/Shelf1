@@ -36,7 +36,7 @@ export default function BookCard({
   };
 
   const formatOwnerName = (name: string | null | undefined) => {
-    if (!name) return '...';
+    if (!name) return 'User';
     return name.replace('(School of Innovation Foundations)', '').trim();
   };
 
@@ -87,7 +87,7 @@ export default function BookCard({
               borderRadius: '12px',
               marginBottom: '8px',
               backgroundColor: '#f9fafb',
-              opacity: badgeText !== 'Available' ? 0.7 : 1,
+              opacity: badgeText !== 'Available' ? 0.2 : 1,
             }}
           />
         ) : (
@@ -103,7 +103,7 @@ export default function BookCard({
               justifyContent: 'center',
               color: '#a0aec0',
               fontSize: '14px',
-              opacity: badgeText !== 'Available' ? 0.7 : 1,
+              opacity: badgeText !== 'Available' ? 0.2 : 1,
             }}
           >
             <span>No Image</span>
@@ -142,7 +142,7 @@ export default function BookCard({
           <div>{formatKSTDate(book.created_at)}</div>
           {/* ✨ 2. 소유자 이름 표시 형식을 변경하고 링크를 유지합니다. */}
           <Link to={`/users/${book.owner_id}`} style={{ fontWeight: 600, color: 'var(--text)', textDecoration: 'underline' }}>
-            Owner: {formatOwnerName(book.profiles?.full_name)}
+             {formatOwnerName(book.profiles?.full_name)}
           </Link>
         </div>
       </div>
