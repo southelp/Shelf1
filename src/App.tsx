@@ -1,13 +1,15 @@
 import { useEffect } from 'react';
 import { useUser } from '@supabase/auth-helpers-react';
 import { Link, Routes, Route, useNavigate } from 'react-router-dom';
-import Home from './pages/Home';
-import MyLibrary from './pages/MyLibrary';
-import NewBook from './pages/NewBook';
-import Scan from './pages/Scan';
-import Loans from './pages/Loans'; // 새 페이지 임포트
-import GoogleSignInButton from './components/GoogleSignInButton';
-import { supabase, allowedDomain } from './lib/supabaseClient';
+// ✨ 파일 확장자를 명시하여 import 경로 오류를 수정했습니다.
+import Home from './pages/Home.tsx';
+import MyLibrary from './pages/MyLibrary.tsx';
+import NewBook from './pages/NewBook.tsx';
+import Scan from './pages/Scan.tsx';
+import Loans from './pages/Loans.tsx';
+import UserLibrary from './pages/UserLibrary.tsx';
+import GoogleSignInButton from './components/GoogleSignInButton.tsx';
+import { supabase, allowedDomain } from './lib/supabaseClient.ts';
 
 export default function App() {
   const user = useUser();
@@ -26,16 +28,17 @@ export default function App() {
           await supabase.from('profiles').insert({
             id: user.id,
             email: user.email,
-            full_name: user.user_metadata.full_name, 
+            full_name: user.user_metadata.full_name,
           });
         }
       };
 
       ensureUserProfile();
-      
+
       const email = user.email?.toLowerCase();
       if (email && !email.endsWith(allowedDomain)) {
-        alert(`학교 이메일(${allowedDomain})로만 로그인할 수 있습니다.`);
+        // alert() 대신 사용자에게 메시지를 보여주는 UI를 구현해야 합니다.
+        console.error(`학교 이메일(${allowedDomain})로만 로그인할 수 있습니다.`);
         supabase.auth.signOut();
         navigate('/');
       }
@@ -54,7 +57,7 @@ export default function App() {
         <nav className="nav">
           <Link to="/">도서</Link>
           <Link to="/my">나의 서재</Link>
-          <Link to="/loans">대출/예약</Link> {/* 새 메뉴 추가 */}
+          <Link to="/loans">대출/예약</Link>
           <Link to="/books/new">도서 등록</Link>
           <Link to="/scan">ISBN 스캔</Link>
         </nav>
@@ -73,9 +76,10 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/my" element={<MyLibrary />} />
-        <Route path="/loans" element={<Loans />} /> {/* 새 경로 추가 */}
+        <Route path="/loans" element={<Loans />} />
         <Route path="/books/new" element={<NewBook />} />
         <Route path="/scan" element={<Scan />} />
+        {/* UserLibrary 컴포넌트를 위한 새로운 라우트 추가 */}
         <Route path="/users/:userId" element={<UserLibrary />} />
       </Routes>
     </>
