@@ -15,51 +15,54 @@ export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const [loanRequestsCount, setLoanRequestsCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // ✨ 로그인 직후 대출 요청 개수를 실시간으로 가져오는 useEffect 훅 추가
+  // ✨ 로그인 상태 및 대출 요청 개수를 관리하는 useEffect 훅을 수정했습니다.
   useEffect(() => {
-    if (!user) {
-      setLoanRequestsCount(0);
-      return;
-    }
-    
-    // Supabase Realtime을 활용하여 실시간으로 대출 요청 개수를 업데이트합니다.
-    // 기존에 fetchLoanRequests를 중복 호출하는 부분을 최적화했습니다.
+    // Supabase의 로딩 상태를 확인하여 초기 로딩을 처리합니다.
+    const initialLoad = async () => {
+      setIsLoading(true);
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser) {
+        const { count } = await supabase
+          .from('loans')
+          .select('id', { count: 'exact', head: true })
+          .eq('owner_id', currentUser.id)
+          .eq('status', 'reserved');
+        setLoanRequestsCount(count || 0);
+      }
+      setIsLoading(false);
+    };
+    initialLoad();
+
+    // 실시간 구독 설정: loans 테이블의 변경사항을 감지합니다.
     const subscription = supabase
       .from('loans')
-      .on('INSERT', (payload) => {
-        if (payload.new.owner_id === user.id && payload.new.status === 'reserved') {
-          setLoanRequestsCount(prevCount => prevCount + 1);
-        }
-      })
-      .on('UPDATE', (payload) => {
-        // 예약 상태에서 다른 상태로 변경되었을 때 (예: 승인, 거절)
-        if (payload.old.owner_id === user.id && payload.old.status === 'reserved' && payload.new.status !== 'reserved') {
-          setLoanRequestsCount(prevCount => Math.max(0, prevCount - 1));
-        }
-      })
-      .on('DELETE', (payload) => {
-        if (payload.old.owner_id === user.id && payload.old.status === 'reserved') {
-          setLoanRequestsCount(prevCount => Math.max(0, prevCount - 1));
-        }
+      .on('*', () => { 
+        // 변경이 발생하면 다시 요청 개수를 불러옵니다.
+        const fetchLoanRequests = async () => {
+          const { data: { user: currentUser } } = await supabase.auth.getUser();
+          if (currentUser) {
+            const { count } = await supabase
+              .from('loans')
+              .select('id', { count: 'exact', head: true })
+              .eq('owner_id', currentUser.id)
+              .eq('status', 'reserved');
+            setLoanRequestsCount(count || 0);
+          } else {
+            setLoanRequestsCount(0);
+          }
+        };
+        fetchLoanRequests();
       })
       .subscribe();
-
-    const fetchLoanRequests = async () => {
-      const { count } = await supabase
-        .from('loans')
-        .select('id', { count: 'exact', head: true })
-        .eq('owner_id', user.id)
-        .eq('status', 'reserved');
-      setLoanRequestsCount(count || 0);
-    };
-
-    fetchLoanRequests();
-
+      
+    // 컴포넌트 언마운트 시 구독을 해제합니다.
     return () => {
       supabase.removeSubscription(subscription);
     };
-  }, [user]);
+
+  }, [user]); // user 객체가 변경될 때만 재실행되도록 합니다.
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -68,6 +71,10 @@ export default function App() {
 
   const navLinkClass = "relative px-4 py-2 rounded-lg text-sm font-medium transition-colors";
   
+  if (isLoading) {
+    return <div className="p-6 text-center text-gray-600">Loading...</div>;
+  }
+
   return (
     <>
       <header className="header">
@@ -78,7 +85,6 @@ export default function App() {
           <Link to="/loans" className={`${navLinkClass} ${location.pathname === '/loans' ? 'bg-gray-100' : 'hover:bg-gray-100'} flex items-center`}>
             대출/예약
             {loanRequestsCount > 0 && (
-              // ✨ 배지 스타일을 수정하여 사진처럼 빨간색 원형 알림으로 변경했습니다.
               <span className="absolute -top-1 -right-1 flex h-4 w-4">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-white text-xs font-bold items-center justify-center">
@@ -105,7 +111,6 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/my" element={<MyLibrary />} />
-        {/* Loan.tsx에서 더 이상 count를 가져올 필요가 없으므로 setLoanRequestsCount prop을 제거 */}
         <Route path="/loans" element={<Loans />} />
         <Route path="/books/new" element={<NewBook />} />
         <Route path="/scan" element={<Scan />} />
