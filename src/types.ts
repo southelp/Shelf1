@@ -3,6 +3,7 @@ export type Book = {
   id: string; owner_id: string; isbn: string | null; title: string; authors: string[] | null;
   publisher: string | null; published_year: number | null; cover_url: string | null;
   available: boolean; created_at: string;
+  profiles: { full_name: string | null } | null;
 };
 export type LoanStatus = 'reserved' | 'loaned' | 'returned' | 'cancelled';
 export type Loan = {
