@@ -1,6 +1,4 @@
-// src/components/BookCard.tsx
-
-import { Link } from 'react-router-dom'; // 1. react-router-dom에서 Link를 가져옵니다.
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import type { Book, Loan } from '../types';
 
@@ -29,7 +27,7 @@ export default function BookCard({
     if (!name) return '...';
     return name.replace('(School of Innovation Foundations)', '').trim();
   };
-  
+
   // 날짜를 KST (GMT+9)로 포맷하는 함수
   const formatKSTDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -68,7 +66,7 @@ export default function BookCard({
   }
 
   return (
-    <div className="card">
+    <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
       {book.cover_url ? (
         <img
           src={book.cover_url}
@@ -109,7 +107,16 @@ export default function BookCard({
           {book.authors.join(', ')}
         </div>
       )}
-      <div className="row" style={{ justifyContent: 'space-between' }}>
+
+      {/* ✨ 1. 대출 중(loaned)이고 반납일(due_at)이 있을 때만 날짜를 표시합니다. */}
+      {activeLoan?.status === 'loaned' && activeLoan.due_at && (
+        <div className="label" style={{ marginTop: 8, fontWeight: 600, color: '#dd2222' }}>
+          Due: {formatKSTDate(activeLoan.due_at)}
+        </div>
+      )}
+
+      {/* ✨ 2. 하단 버튼과 소유자 정보가 항상 카드 맨 아래에 위치하도록 수정합니다. */}
+      <div className="row" style={{ justifyContent: 'space-between', marginTop: 'auto', paddingTop: '12px' }}>
         {isOwner ? (
           <div className="btn" style={{ background: '#10b981', cursor: 'default' }}>
             My Book
@@ -121,7 +128,6 @@ export default function BookCard({
         )}
         <div className="label" style={{ textAlign: 'right', lineHeight: 1.4 }}>
           <div>{formatKSTDate(book.created_at)}</div>
-          {/* 2. 소유자 이름 부분을 Link 컴포넌트로 감쌉니다. */}
           <Link to={`/users/${book.owner_id}`} style={{ fontWeight: 600, color: 'var(--text)', textDecoration: 'underline' }}>
             {formatOwnerName(book.profiles?.full_name)}
           </Link>

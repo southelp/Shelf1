@@ -9,6 +9,9 @@ verify_jwt = false
 [functions.return-loan]
 verify_jwt = true
 
+[functions.cancel-loan] # ✨ 추가된 부분
+verify_jwt = true      # ✨ 추가된 부분
+
 [functions.due-reminder-cron]
 verify_jwt = false
 # 배포 시 스케줄 설정(예: 매일 09:00 KST = 00:00 UTC)
