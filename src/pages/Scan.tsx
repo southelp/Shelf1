@@ -25,8 +25,7 @@ export default function Scan() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const [isCameraOn, setIsCameraOn] = useState(false);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null); 
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -36,12 +35,11 @@ export default function Scan() {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
-      setIsCameraOn(false);
     }
   }, []);
 
   const startCamera = useCallback(async () => {
-    if (streamRef.current) return;
+    if (streamRef.current || capturedImage) return;
     setError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -52,12 +50,11 @@ export default function Scan() {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
-        setIsCameraOn(true);
       }
     } catch (e: any) {
       setError(e?.message || 'Unable to access the camera.');
     }
-  }, []);
+  }, [capturedImage]);
 
   useEffect(() => {
     if (session && !capturedImage) {
@@ -67,7 +64,7 @@ export default function Scan() {
     }
     return () => stopCamera();
   }, [session, capturedImage, startCamera, stopCamera]);
-
+  
   const handleCapture = async () => {
     if (!videoRef.current || !canvasRef.current || isLoading) return;
 
@@ -86,17 +83,12 @@ export default function Scan() {
       setIsLoading(false);
       return;
     }
-    
+
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-    
-    // 1. 상태를 업데이트하여 카메라 스트림을 멈추게 함
-    setCapturedImage(dataUrl); 
 
-    // 2. 비디오 요소의 표지를 캡처된 이미지로 설정
-    if (videoRef.current) {
-      videoRef.current.poster = dataUrl;
-    }
+    stopCamera();
+    setCapturedImage(dataUrl);
 
     try {
       const response = await fetch('/api/gemini-cover-to-book', {
@@ -122,15 +114,12 @@ export default function Scan() {
   };
 
   const handleRetake = () => {
-    if (videoRef.current) {
-      // 비디오 표지 제거
-      videoRef.current.poster = '';
-    }
     setCapturedImage(null);
     setCandidates([]);
     setSelectedCandidate(null);
     setError(null);
     setIsLoading(false);
+    // useEffect가 capturedImage가 null로 변경된 것을 감지하고 카메라를 다시 시작합니다.
   };
 
   const handleRegister = async () => {
@@ -161,7 +150,7 @@ export default function Scan() {
       navigate('/my');
     }
   };
-  
+
   if (authLoading) {
     return <div className="p-6 text-center text-gray-600">Checking login...</div>;
   }
@@ -170,11 +159,21 @@ export default function Scan() {
     return <div className="p-6 text-center text-gray-600">Please log in to use the camera.</div>;
   }
 
+  // 공통 스타일
+  const mediaStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    transition: 'opacity 0.3s ease',
+  };
+
   return (
     <div className="p-4 max-w-xl mx-auto">
       <h1 className="text-xl font-semibold mb-3">Book Cover Scan</h1>
 
-      <div 
+      <div
         className="rounded-lg overflow-hidden bg-black relative mx-auto"
         style={{
           width: '100%',
@@ -182,24 +181,34 @@ export default function Scan() {
           aspectRatio: '3/4',
         }}
       >
+        {/* === START: 주요 변경 사항 === */}
         <video
           ref={videoRef}
           style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            // 비디오 스트림이 꺼지면 poster 이미지가 보이게 됨
-            backgroundColor: 'black' 
+            ...mediaStyle,
+            objectFit: 'cover', // 비디오는 꽉 채우기
+            opacity: capturedImage ? 0 : 1, // 캡처되면 투명하게
           }}
           playsInline
           autoPlay
           muted
         />
+        <img
+          src={capturedImage || ''}
+          alt="Captured book cover"
+          style={{
+            ...mediaStyle,
+            objectFit: 'contain', // 이미지는 비율 맞게 포함
+            opacity: capturedImage ? 1 : 0, // 캡처됐을 때만 보이게
+            pointerEvents: 'none', // 이미지 뒤의 비디오가 이벤트를 받지 않도록
+          }}
+        />
+        {/* === END: 주요 변경 사항 === */}
         
         {!capturedImage && (
           <button
             onClick={handleCapture}
-            disabled={isLoading || !isCameraOn}
+            disabled={isLoading}
             style={{
               position: 'absolute',
               bottom: '16px',
@@ -208,10 +217,11 @@ export default function Scan() {
               padding: '12px 20px',
               borderRadius: '50px',
               border: 'none',
-              background: (isLoading || !isCameraOn) ? '#9ca3af' : 'rgba(255, 255, 255, 0.95)',
+              background: isLoading ? '#9ca3af' : 'rgba(255, 255, 255, 0.95)',
               color: isLoading ? '#fff' : '#000',
               fontWeight: '600',
-              cursor: (isLoading || !isCameraOn) ? 'not-allowed' : 'pointer',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              zIndex: 10,
             }}
           >
             {isLoading ? 'Processing...' : 'Capture'}
@@ -219,19 +229,11 @@ export default function Scan() {
         )}
 
         {isLoading && capturedImage && (
-          <div 
+          <div
             style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0, 0, 0, 0.7)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontSize: '1.2em'
+              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(0, 0, 0, 0.7)', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', color: 'white', zIndex: 20
             }}
           >
             Analyzing...
@@ -253,7 +255,7 @@ export default function Scan() {
           {error && <div className="text-sm text-red-600 text-center">Error: {error}</div>}
           
           {!isLoading && candidates.length > 0 && (
-            <div>
+             <div>
               <h2 className="text-base font-semibold text-center mb-2">Select a book to register:</h2>
               <ul className="space-y-2">
                 {candidates.map((c, idx) => (
