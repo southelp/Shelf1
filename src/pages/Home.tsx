@@ -1,11 +1,12 @@
-// src/pages/Home.tsx
-
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import FilterBar from '../components/FilterBar';
 import BookCard from '../components/BookCard';
 import { Book, Loan } from '../types';
 import { useUser } from '@supabase/auth-helpers-react';
+
+// 책 상태에 따른 정렬 순서를 정의합니다.
+const statusOrder = { 'Available': 0, 'Reserved': 1, 'Borrowed': 2 };
 
 export default function Home() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -14,9 +15,8 @@ export default function Home() {
   const [q, setQ] = useState('');
   const user = useUser();
 
-  const load = useCallback(async () => {
-    // ✨ profiles에서 id와 full_name만 명시적으로 선택하여 보안을 강화합니다.
-    let query = supabase.from('books').select('*, profiles(id, full_name)').order('created_at', { ascending: false });
+  const loadData = useCallback(async () => {
+    let query = supabase.from('books').select('*, profiles(id, full_name)');
     
     if (onlyAvailable) {
       query = query.eq('available', true);
@@ -28,33 +28,54 @@ export default function Home() {
     const { data: bookData, error } = await query;
     if (error) {
       console.error('Error fetching books:', error);
-      return;
+      return { books: [], loans: {} };
     }
 
-    setBooks(bookData || []);
-
-    if (!bookData || !user) {
-      setLoans({});
-      return;
-    }
+    if (!bookData) return { books: [], loans: {} };
 
     const bookIds = bookData.map(b => b.id);
+    let loansMap: Record<string, Loan | null> = {};
     if (bookIds.length > 0) {
       const { data: loansData } = await supabase.from('loans').select('*').in('book_id', bookIds).in('status', ['reserved', 'loaned']);
-      const loansMap: Record<string, Loan | null> = {};
       loansData?.forEach(l => {
         if (!loansMap[l.book_id]) {
           loansMap[l.book_id] = l;
         }
       });
-      setLoans(loansMap);
     }
+    return { books: bookData, loans: loansMap };
 
-  }, [onlyAvailable, q, user]);
+  }, [onlyAvailable, q]);
+  
+  // ✨ 1. 정렬 로직을 별도의 함수로 분리합니다.
+  const sortBooks = (booksToSort: Book[], loansToSort: Record<string, Loan | null>) => {
+    const getStatus = (book: Book) => {
+      const loan = loansToSort[book.id];
+      if (loan) return loan.status === 'loaned' ? 'Borrowed' : 'Reserved';
+      return 'Available';
+    };
+
+    return [...booksToSort].sort((a, b) => {
+      const statusA = getStatus(a);
+      const statusB = getStatus(b);
+      // 상태 순서에 따라 정렬하고, 상태가 같으면 최신 등록순으로 정렬합니다.
+      if (statusOrder[statusA] !== statusOrder[statusB]) {
+        return statusOrder[statusA] - statusOrder[statusB];
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  };
 
   useEffect(() => {
-    load();
-  }, [load]);
+    const fetchDataAndSort = async () => {
+      const { books: fetchedBooks, loans: fetchedLoans } = await loadData();
+      const sorted = sortBooks(fetchedBooks, fetchedLoans);
+      setBooks(sorted);
+      setLoans(fetchedLoans);
+    };
+    fetchDataAndSort();
+  }, [loadData]);
+
 
   return (
     <div className="container">
