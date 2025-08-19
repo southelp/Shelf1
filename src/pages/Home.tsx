@@ -10,7 +10,7 @@ import { useUser } from '@supabase/auth-helpers-react';
 export default function Home() {
   const [books, setBooks] = useState<Book[]>([]);
   const [loans, setLoans] = useState<Record<string, Loan | null>>({});
-  const [onlyAvailable, setOnlyAvailable] = useState(true);
+  const [onlyAvailable, setOnlyAvailable] = useState(false);
   const [q, setQ] = useState('');
   const user = useUser();
 

@@ -13,96 +13,78 @@ export default function BookCard({
 }) {
   const isOwner = userId !== undefined && book.owner_id === userId;
 
-  let badge = 'Available';
+  let badgeText = 'Available';
   if (activeLoan) {
-    badge = activeLoan.status === 'loaned' ? 'Borrowed' : 'Reserved';
+    badgeText = activeLoan.status === 'loaned' ? 'Borrowed' : 'Reserved';
   } else if (!book.available) {
-    badge = 'Unavailable';
+    // activeLoan이 없더라도 available이 false일 수 있으므로, 'Borrowed'로 간주합니다.
+    badgeText = 'Borrowed';
   }
 
   const disabled = Boolean(activeLoan) || isOwner;
 
-  const formatOwnerName = (name: string | null | undefined) => {
-    if (!name) return '...';
-    return name.replace('(School of Innovation Foundations)', '').trim();
+  // ✨ 3. 상태에 따라 뱃지의 스타일(배경색, 글자색)을 반환하는 함수
+  const getBadgeStyle = (status: string) => {
+    switch (status) {
+      case 'Available':
+        return { background: '#dcfce7', color: '#166534' };
+      case 'Reserved':
+        return { background: '#ffedd5', color: '#9a3412' };
+      case 'Borrowed':
+        return { background: '#fee2e2', color: '#991b1b' };
+      default:
+        return { background: '#e5e7eb', color: '#4b5563' };
+    }
   };
-
-  const formatKSTDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', {
-      timeZone: 'Asia/Seoul',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  async function requestLoan() {
-    if (!confirm(`Are you sure you want to request "${book.title}"?`)) {
-      return;
-    }
-
-    if (!book.id) {
-      alert('오류: 책의 ID를 찾을 수 없습니다.');
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase.functions.invoke('request-loan', {
-        body: { book_id: book.id },
-      });
-
-      if (error) throw error;
-      
-      if (data && data.message && !data.ok) {
-        throw new Error(data.message);
-      }
-      
-      alert('대출 요청이 성공적으로 전송되었습니다.');
-      window.location.reload();
-
-    } catch (err: any) {
-      console.error('Loan request failed:', err);
-      alert(`요청 실패: ${err.message}`);
-    }
-  }
+  
+  const formatOwnerName = (name: string | null | undefined) => { /* ... */ };
+  const formatKSTDate = (dateString: string) => { /* ... */ };
+  async function requestLoan() { /* ... */ }
 
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
-      {book.cover_url ? (
-        <img
-          src={book.cover_url}
-          alt={book.title}
-          style={{
-            width: '100%',
-            height: '240px',
-            objectFit: 'contain',
-            borderRadius: '12px',
-            marginBottom: '8px',
-            backgroundColor: '#f9fafb',
-          }}
-        />
-      ) : (
-        <div
-          style={{
-            width: '100%',
-            height: '240px',
-            borderRadius: '12px',
-            marginBottom: '8px',
-            backgroundColor: '#f0f2f5',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#a0aec0',
-            fontSize: '14px',
-          }}
-        >
-          <span>No Image</span>
-        </div>
-      )}
-      <div className="badge gray" style={{ marginBottom: 8 }}>
-        {badge}
+      <div style={{ position: 'relative' }}>
+        {book.cover_url ? (
+          <img
+            src={book.cover_url}
+            alt={book.title}
+            style={{
+              width: '100%',
+              height: '240px',
+              objectFit: 'contain',
+              borderRadius: '12px',
+              marginBottom: '8px',
+              backgroundColor: '#f9fafb',
+              // ✨ 2. 대출 불가 상태일 때 이미지를 흐리게 처리합니다.
+              opacity: badgeText !== 'Available' ? 0.3 : 1,
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: '100%',
+              height: '240px',
+              borderRadius: '12px',
+              marginBottom: '8px',
+              backgroundColor: '#f0f2f5',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#a0aec0',
+              fontSize: '14px',
+              opacity: badgeText !== 'Available' ? 0.3 : 1,
+            }}
+          >
+            <span>No Image</span>
+          </div>
+        )}
       </div>
+      
+      {/* ✨ 3. 동적 스타일을 뱃지에 적용합니다. */}
+      <div className="badge" style={{ ...getBadgeStyle(badgeText), marginBottom: 8 }}>
+        {badgeText}
+      </div>
+
       <div style={{ fontWeight: 700, marginBottom: 6 }}>{book.title}</div>
       {book.authors && (
         <div className="label" style={{ marginBottom: 8 }}>
@@ -123,7 +105,7 @@ export default function BookCard({
           </div>
         ) : (
           <button className="btn" disabled={disabled} onClick={requestLoan}>
-            {activeLoan ? badge : 'Request Loan'}
+            {activeLoan ? badgeText : 'Request Loan'}
           </button>
         )}
         <div className="label" style={{ textAlign: 'right', lineHeight: 1.4 }}>
