@@ -10,4 +10,5 @@ export type LoanStatus = 'reserved' | 'loaned' | 'returned' | 'cancelled';
 export type Loan = {
   id: string; book_id: string; owner_id: string; borrower_id: string; status: LoanStatus;
   requested_at: string; approved_at: string | null; due_at: string | null; returned_at: string | null; cancel_reason: string | null;
+  books: Book | null; // ✨ 대출 정보에 책 상세 정보가 포함될 수 있도록 추가
 };
