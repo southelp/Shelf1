@@ -22,13 +22,11 @@ export default function BookCard({
 
   const disabled = Boolean(activeLoan) || isOwner;
 
-  // 이름에서 특정 문구 제거하는 함수
   const formatOwnerName = (name: string | null | undefined) => {
     if (!name) return '...';
     return name.replace('(School of Innovation Foundations)', '').trim();
   };
 
-  // 날짜를 KST (GMT+9)로 포맷하는 함수
   const formatKSTDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('ko-KR', {
@@ -40,7 +38,6 @@ export default function BookCard({
   };
 
   async function requestLoan() {
-    // ✨ "Are you sure?" 확인 창을 추가합니다.
     if (!confirm(`Are you sure you want to request "${book.title}"?`)) {
       return;
     }
@@ -113,14 +110,12 @@ export default function BookCard({
         </div>
       )}
 
-      {/* ✨ 1. 대출 중(loaned)이고 반납일(due_at)이 있을 때만 날짜를 표시합니다. */}
       {activeLoan?.status === 'loaned' && activeLoan.due_at && (
         <div className="label" style={{ marginTop: 8, fontWeight: 600, color: '#dd2222' }}>
           Due: {formatKSTDate(activeLoan.due_at)}
         </div>
       )}
 
-      {/* ✨ 2. 하단 버튼과 소유자 정보가 항상 카드 맨 아래에 위치하도록 수정합니다. */}
       <div className="row" style={{ justifyContent: 'space-between', marginTop: 'auto', paddingTop: '12px' }}>
         {isOwner ? (
           <div className="btn" style={{ background: '#10b981', cursor: 'default' }}>
