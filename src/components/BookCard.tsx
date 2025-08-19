@@ -17,13 +17,11 @@ export default function BookCard({
   if (activeLoan) {
     badgeText = activeLoan.status === 'loaned' ? 'Borrowed' : 'Reserved';
   } else if (!book.available) {
-    // activeLoan이 없더라도 available이 false일 수 있으므로, 'Borrowed'로 간주합니다.
     badgeText = 'Borrowed';
   }
 
   const disabled = Boolean(activeLoan) || isOwner;
 
-  // ✨ 3. 상태에 따라 뱃지의 스타일(배경색, 글자색)을 반환하는 함수
   const getBadgeStyle = (status: string) => {
     switch (status) {
       case 'Available':
@@ -36,10 +34,44 @@ export default function BookCard({
         return { background: '#e5e7eb', color: '#4b5563' };
     }
   };
-  
-  const formatOwnerName = (name: string | null | undefined) => { /* ... */ };
-  const formatKSTDate = (dateString: string) => { /* ... */ };
-  async function requestLoan() { /* ... */ }
+
+  const formatOwnerName = (name: string | null | undefined) => {
+    if (!name) return '...';
+    return name.replace('(School of Innovation Foundations)', '').trim();
+  };
+
+  const formatKSTDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ko-KR', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  // ✨ 1. Request Loan 버튼 로직을 복구하고 확인 창을 추가합니다.
+  async function requestLoan() {
+    if (!confirm(`Are you sure you want to request "${book.title}"?`)) {
+      return;
+    }
+    if (!book.id) {
+      alert('Error: Book ID not found.');
+      return;
+    }
+    try {
+      const { data, error } = await supabase.functions.invoke('request-loan', {
+        body: { book_id: book.id },
+      });
+      if (error) throw error;
+      if (data && data.message && !data.ok) throw new Error(data.message);
+      alert('Loan request sent successfully.');
+      window.location.reload();
+    } catch (err: any) {
+      console.error('Loan request failed:', err);
+      alert(`Request failed: ${err.message}`);
+    }
+  }
 
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
@@ -55,8 +87,7 @@ export default function BookCard({
               borderRadius: '12px',
               marginBottom: '8px',
               backgroundColor: '#f9fafb',
-              // ✨ 2. 대출 불가 상태일 때 이미지를 흐리게 처리합니다.
-              opacity: badgeText !== 'Available' ? 0.3 : 1,
+              opacity: badgeText !== 'Available' ? 0.7 : 1,
             }}
           />
         ) : (
@@ -72,7 +103,7 @@ export default function BookCard({
               justifyContent: 'center',
               color: '#a0aec0',
               fontSize: '14px',
-              opacity: badgeText !== 'Available' ? 0.3 : 1,
+              opacity: badgeText !== 'Available' ? 0.7 : 1,
             }}
           >
             <span>No Image</span>
@@ -80,7 +111,6 @@ export default function BookCard({
         )}
       </div>
       
-      {/* ✨ 3. 동적 스타일을 뱃지에 적용합니다. */}
       <div className="badge" style={{ ...getBadgeStyle(badgeText), marginBottom: 8 }}>
         {badgeText}
       </div>
@@ -110,8 +140,9 @@ export default function BookCard({
         )}
         <div className="label" style={{ textAlign: 'right', lineHeight: 1.4 }}>
           <div>{formatKSTDate(book.created_at)}</div>
+          {/* ✨ 2. 소유자 이름 표시 형식을 변경하고 링크를 유지합니다. */}
           <Link to={`/users/${book.owner_id}`} style={{ fontWeight: 600, color: 'var(--text)', textDecoration: 'underline' }}>
-            {formatOwnerName(book.profiles?.full_name)}
+            Owner: {formatOwnerName(book.profiles?.full_name)}
           </Link>
         </div>
       </div>
