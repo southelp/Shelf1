@@ -24,7 +24,6 @@ export default function Scan() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // isFrozen 대신 capturedImage 상태만으로 화면을 제어합니다.
   const [capturedImage, setCapturedImage] = useState<string | null>(null); 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +38,6 @@ export default function Scan() {
   }, []);
 
   const startCamera = useCallback(async () => {
-    // 이미 카메라가 실행 중이거나 캡처된 이미지가 있으면 새로 시작하지 않음
     if (streamRef.current || capturedImage) return;
     setError(null);
     try {
@@ -63,7 +61,6 @@ export default function Scan() {
     } else {
       stopCamera();
     }
-    // 컴포넌트 언마운트 시 카메라 중지
     return () => stopCamera();
   }, [session, startCamera, stopCamera]);
 
@@ -90,7 +87,6 @@ export default function Scan() {
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
     
     stopCamera();
-    // 캡처된 이미지를 상태에 저장하여 화면에 표시합니다.
     setCapturedImage(dataUrl); 
 
     try {
@@ -117,7 +113,7 @@ export default function Scan() {
   };
 
   const handleRetake = () => {
-    setCapturedImage(null); // 캡처 이미지 초기화
+    setCapturedImage(null);
     setCandidates([]);
     setSelectedCandidate(null);
     setError(null);
@@ -166,7 +162,6 @@ export default function Scan() {
       <h1 className="text-xl font-semibold mb-3">Book Cover Scan</h1>
 
       <div className="rounded-lg overflow-hidden bg-black relative">
-        {/* capturedImage 상태에 따라 비디오 또는 이미지를 렌더링하여 화면 전환 */}
         {capturedImage ? (
           <img 
             src={capturedImage} 
@@ -183,7 +178,6 @@ export default function Scan() {
           />
         )}
         
-        {/* 캡처 버튼은 라이브 비디오 상태일 때만 표시 */}
         {!capturedImage && (
           <button
             onClick={handleCapture}
