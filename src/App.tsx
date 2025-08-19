@@ -15,7 +15,6 @@ export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ✨ 배지 관련 로직을 모두 제거했습니다.
   useEffect(() => {
     if (user) {
       const ensureUserProfile = async () => {
@@ -42,7 +41,6 @@ export default function App() {
     navigate('/');
   }
 
-  // ✨ 메뉴 링크 스타일링을 위한 Tailwind 클래스
   const navLinkClass = "relative px-4 py-2 rounded-lg text-sm font-medium transition-colors";
   
   return (
@@ -52,9 +50,8 @@ export default function App() {
         <nav className="nav">
           <Link to="/" className={`${navLinkClass} ${location.pathname === '/' ? 'bg-gray-100' : 'hover:bg-gray-100'}`}>도서</Link>
           <Link to="/my" className={`${navLinkClass} ${location.pathname === '/my' ? 'bg-gray-100' : 'hover:bg-gray-100'}`}>나의 서재</Link>
-          <Link to="/loans" className={`${navLinkClass} ${location.pathname === '/loans' ? 'bg-gray-100' : 'hover:bg-gray-100'} flex items-center`}>
+          <Link to="/loans" className={`${navLinkClass} ${location.pathname === '/loans' ? 'bg-gray-100' : 'hover:bg-gray-100'}`}>
             대출/예약
-            {/* ✨ 배지 관련 코드를 제거했습니다. */}
           </Link>
           <Link to="/books/new" className={`${navLinkClass} ${location.pathname === '/books/new' ? 'bg-gray-100' : 'hover:bg-gray-100'}`}>도서 등록</Link>
           <Link to="/scan" className={`${navLinkClass} ${location.pathname === '/scan' ? 'bg-gray-100' : 'hover:bg-gray-100'}`}>ISBN 스캔</Link>

@@ -6,15 +6,8 @@ import LoanRequestCard from '../components/LoanRequestCard.tsx';
 
 // '나의 서재'에 있던 MyLoanCard 컴포넌트를 이곳으로 이동시킵니다.
 function MyLoanCard({ loan, onComplete }: { loan: Loan; onComplete: () => void; }) {
-  // ✨ `alert` 대신 사용자 정의 메시지 박스를 사용합니다.
-  const showMessage = (message: string) => {
-    // 실제 구현에서는 모달 또는 토스트 알림을 사용해야 합니다.
-    console.log(message);
-    // 현재는 `alert`를 대체하기 위해 console.log를 사용합니다.
-  };
-
   const handleAction = async (action: 'return' | 'cancel') => {
-    // `confirm` 대신 사용자 정의 모달을 사용해야 합니다.
+    // `alert` 및 `confirm` 대신 사용자 정의 모달을 사용해야 합니다.
     if (!window.confirm(`Are you sure you want to ${action} this loan?`)) return;
 
     try {
@@ -22,10 +15,12 @@ function MyLoanCard({ loan, onComplete }: { loan: Loan; onComplete: () => void; 
       const { error, data } = await supabase.functions.invoke(functionName, { body: { loan_id: loan.id } });
       if (error) throw new Error(`Function error: ${error.message}`);
       if (data.message && !data.ok) throw new Error(data.message);
-      showMessage(`Action completed successfully.`);
+      // `alert` 대신 사용자 정의 메시지 박스를 사용해야 합니다.
+      window.alert(`Action completed successfully.`);
       onComplete();
     } catch (err: any) {
-      showMessage(`Error: ${err.message}`);
+      // `alert` 대신 사용자 정의 메시지 박스를 사용해야 합니다.
+      window.alert(`Error: ${err.message}`);
     }
   };
   
@@ -51,8 +46,8 @@ function MyLoanCard({ loan, onComplete }: { loan: Loan; onComplete: () => void; 
   );
 }
 
-// ✨ setLoanRequestsCount prop을 받도록 수정
-export default function Loans({ setLoanRequestsCount }: { setLoanRequestsCount: (count: number) => void }) {
+// ✨ 배지 관련 로직 제거
+export default function Loans() {
   const [myLoans, setMyLoans] = useState<Loan[]>([]);
   const [incomingRequests, setIncomingRequests] = useState<Loan[]>([]);
   const user = useUser();
@@ -81,11 +76,9 @@ export default function Loans({ setLoanRequestsCount }: { setLoanRequestsCount: 
       .eq('status', 'reserved')
       .order('requested_at', { ascending: false });
     
-    // ✨ Incoming requests 개수를 App.tsx로 전달
-    setLoanRequestsCount((requests || []).length);
     setIncomingRequests(requests || []);
 
-  }, [user, setLoanRequestsCount]);
+  }, [user]);
 
   useEffect(() => {
     loadData();

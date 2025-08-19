@@ -3,14 +3,10 @@
 html,body,#root{height:100%}
 body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
 a{color:var(--purple);text-decoration:none}
-
-/* ✨ header와 nav 스타일 업데이트 */
 .header{display:flex;gap:16px;align-items:center;padding:16px 20px;background:white;border-bottom:1px solid #eee;position:sticky;top:0;z-index:10}
 .brand{font-weight:700;font-size:18px;color:#3a2cb7}
 .nav{display:flex;gap:4px;align-items:center}
-/* ✨ .nav a에 position: relative 추가 */
 .nav a{color:var(--text);text-decoration:none;position:relative;display:inline-block;padding:10px 14px;border-radius:10px;font-weight:600}
-
 .container{max-width:980px;margin:20px auto;padding:0 16px}
 .btn{border:none;padding:10px 14px;border-radius:10px;background:var(--purple);color:white;cursor:pointer;font-weight:600}
 .btn:disabled{background:#c7c7d3;cursor:not-allowed}
