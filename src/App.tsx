@@ -76,6 +76,7 @@ export default function App() {
         <Route path="/loans" element={<Loans />} /> {/* 새 경로 추가 */}
         <Route path="/books/new" element={<NewBook />} />
         <Route path="/scan" element={<Scan />} />
+        <Route path="/users/:userId" element={<UserLibrary />} />
       </Routes>
     </>
   );
