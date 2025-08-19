@@ -52,7 +52,7 @@ export default function Scan() {
         await videoRef.current.play();
       }
     } catch (e: any) {
-      setError(e?.message || 'Unable to access the camera.');
+      setError(e?.message || '카메라에 접근할 수 없습니다.');
     }
   }, [capturedImage]);
 
@@ -79,7 +79,7 @@ export default function Scan() {
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
     if (!ctx) {
-      setError('Failed to get canvas context.');
+      setError('캔버스 컨텍스트를 가져오는데 실패했습니다.');
       setIsLoading(false);
       return;
     }
@@ -98,16 +98,16 @@ export default function Scan() {
       });
       if (!response.ok) {
         const txt = await response.text().catch(() => '');
-        throw new Error(`Server error: ${response.status} ${txt}`);
+        throw new Error(`서버 오류: ${response.status} ${txt}`);
       }
       const result = await response.json();
       const foundCandidates = Array.isArray(result?.candidates) ? result.candidates : [];
       setCandidates(foundCandidates);
       if (foundCandidates.length === 0) {
-        setError("No book information found. Please try again.");
+        setError("책 정보를 찾지 못했습니다. 다시 시도해 주세요.");
       }
     } catch (e: any) {
-      setError(e?.message || 'Failed to recognize the book.');
+      setError(e?.message || '책을 인식하는데 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -119,12 +119,11 @@ export default function Scan() {
     setSelectedCandidate(null);
     setError(null);
     setIsLoading(false);
-    // useEffect가 capturedImage가 null로 변경된 것을 감지하고 카메라를 다시 시작합니다.
   };
 
   const handleRegister = async () => {
     if (!selectedCandidate || !user) {
-      alert("Please select a book to register.");
+      alert("등록할 책을 선택해 주세요.");
       return;
     }
 
@@ -144,22 +143,21 @@ export default function Scan() {
     setIsLoading(false);
 
     if (error) {
-      alert('Failed to register book: ' + error.message);
+      alert('책 등록 실패: ' + error.message);
     } else {
-      alert('Book registered successfully!');
+      alert('책이 성공적으로 등록되었습니다!');
       navigate('/my');
     }
   };
 
   if (authLoading) {
-    return <div className="p-6 text-center text-gray-600">Checking login...</div>;
+    return <div className="p-6 text-center text-gray-600">로그인 확인 중...</div>;
   }
 
   if (!session) {
-    return <div className="p-6 text-center text-gray-600">Please log in to use the camera.</div>;
+    return <div className="p-6 text-center text-gray-600">카메라를 사용하려면 로그인해 주세요.</div>;
   }
 
-  // 공통 스타일
   const mediaStyle: React.CSSProperties = {
     position: 'absolute',
     top: 0,
@@ -171,7 +169,7 @@ export default function Scan() {
 
   return (
     <div className="p-4 max-w-xl mx-auto">
-      <h1 className="text-xl font-semibold mb-3">Book Cover Scan</h1>
+      <h1 className="text-xl font-semibold mb-3">책 표지 스캔</h1>
 
       <div
         className="rounded-lg overflow-hidden bg-black relative mx-auto"
@@ -181,13 +179,12 @@ export default function Scan() {
           aspectRatio: '3/4',
         }}
       >
-        {/* === START: 주요 변경 사항 === */}
         <video
           ref={videoRef}
           style={{
             ...mediaStyle,
-            objectFit: 'cover', // 비디오는 꽉 채우기
-            opacity: capturedImage ? 0 : 1, // 캡처되면 투명하게
+            objectFit: 'cover',
+            opacity: capturedImage ? 0 : 1,
           }}
           playsInline
           autoPlay
@@ -195,15 +192,14 @@ export default function Scan() {
         />
         <img
           src={capturedImage || ''}
-          alt="Captured book cover"
+          alt="촬영된 책 표지"
           style={{
             ...mediaStyle,
-            objectFit: 'contain', // 이미지는 비율 맞게 포함
-            opacity: capturedImage ? 1 : 0, // 캡처됐을 때만 보이게
-            pointerEvents: 'none', // 이미지 뒤의 비디오가 이벤트를 받지 않도록
+            objectFit: 'contain',
+            opacity: capturedImage ? 1 : 0,
+            pointerEvents: 'none',
           }}
         />
-        {/* === END: 주요 변경 사항 === */}
         
         {!capturedImage && (
           <button
@@ -224,7 +220,7 @@ export default function Scan() {
               zIndex: 10,
             }}
           >
-            {isLoading ? 'Processing...' : 'Capture'}
+            {isLoading ? '처리 중...' : '촬영'}
           </button>
         )}
 
@@ -236,7 +232,7 @@ export default function Scan() {
               alignItems: 'center', justifyContent: 'center', color: 'white', zIndex: 20
             }}
           >
-            Analyzing...
+            분석 중...
           </div>
         )}
       </div>
@@ -245,18 +241,18 @@ export default function Scan() {
         <div className="mt-4 space-y-4">
           <div className="flex gap-2 justify-center">
             <button onClick={handleRetake} className="btn" style={{ background: '#6b7280' }} disabled={isLoading}>
-              Retake
+              다시 찍기
             </button>
             <button onClick={handleRegister} className="btn" disabled={!selectedCandidate || isLoading}>
-              {isLoading ? 'Registering...' : 'Register Selected Book'}
+              {isLoading ? '등록 중...' : '선택한 책 등록'}
             </button>
           </div>
 
-          {error && <div className="text-sm text-red-600 text-center">Error: {error}</div>}
+          {error && <div className="text-sm text-red-600 text-center">오류: {error}</div>}
           
           {!isLoading && candidates.length > 0 && (
              <div>
-              <h2 className="text-base font-semibold text-center mb-2">Select a book to register:</h2>
+              <h2 className="text-base font-semibold text-center mb-2">등록할 책을 선택하세요:</h2>
               <ul className="space-y-2">
                 {candidates.map((c, idx) => (
                   <li
