@@ -87,10 +87,7 @@ export default function Scan() {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
     
-    // 1. 카메라 스트림 중지
     stopCamera();
-    
-    // 2. React가 DOM을 업데이트하도록 상태만 변경
     setCapturedImage(dataUrl); 
 
     try {
@@ -177,30 +174,31 @@ export default function Scan() {
           aspectRatio: '3/4',
         }}
       >
-        {capturedImage ? (
-          <img 
-            src={capturedImage} 
-            alt="Captured book cover"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              backgroundColor: 'black',
-            }}
-          />
-        ) : (
-          <video
-            ref={videoRef}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-            }}
-            playsInline
-            autoPlay
-            muted
-          />
-        )}
+        {/* === START: 주요 변경 사항 === */}
+        <video
+          ref={videoRef}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            display: capturedImage ? 'none' : 'block', // 이미지가 있으면 비디오를 숨김
+          }}
+          playsInline
+          autoPlay
+          muted
+        />
+        <img 
+          src={capturedImage || ''}
+          alt="Captured book cover"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            backgroundColor: 'black',
+            display: capturedImage ? 'block' : 'none', // 이미지가 있을 때만 이미지를 보여줌
+          }}
+        />
+        {/* === END: 주요 변경 사항 === */}
         
         {!capturedImage && (
           <button
