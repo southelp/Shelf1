@@ -15,7 +15,7 @@ export default function UserLibrary() {
   const [ownerName, setOwnerName] = useState<string>('');
   const currentUser = useUser();
 
-  // 1. 데이터 로딩 로직을 Home.tsx와 유사하게 수정
+  // 1. 데이터 로딩 로직: 데이터를 가져와서 객체로 반환합니다.
   const loadData = useCallback(async () => {
     if (!userId) return { books: [], loans: {} };
 
@@ -42,7 +42,7 @@ export default function UserLibrary() {
     const getStatus = (book: Book) => {
       const loan = loansToSort[book.id];
       if (loan) return loan.status === 'loaned' ? 'Borrowed' : 'Reserved';
-      if (!book.available) return 'Borrowed'; // activeLoan이 없어도 대출 불가일 수 있음
+      if (!book.available) return 'Borrowed';
       return 'Available';
     };
     return [...booksToSort].sort((a, b) => {
@@ -55,11 +55,14 @@ export default function UserLibrary() {
     });
   };
 
-  // 3. 데이터 로딩과 정렬을 실행하는 useEffect
+  // 3. useEffect에서는 비동기 데이터를 불러와서 정렬하고 상태를 업데이트하는 역할만 수행합니다.
   useEffect(() => {
     const fetchDataAndSort = async () => {
+      // loadData가 완료될 때까지 기다립니다.
       const { books: fetchedBooks, loans: fetchedLoans } = await loadData();
+      // 데이터가 모두 준비된 후 정렬을 실행합니다.
       const sorted = sortBooks(fetchedBooks, fetchedLoans);
+      // 최종적으로 상태를 업데이트하여 화면을 다시 그립니다.
       setBooks(sorted);
       setLoans(fetchedLoans);
     };
