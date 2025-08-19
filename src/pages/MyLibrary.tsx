@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import { BookWithLoan } from '../types'; // ✨ 새로운 타입을 임포트합니다.
+import { supabase } from '../lib/supabaseClient.ts';
+import { BookWithLoan } from '../types.ts';
 import { useUser } from '@supabase/auth-helpers-react';
-import MyOwnedBookCard from '../components/MyOwnedBookCard'; // ✨ 새 컴포넌트를 임포트합니다.
+import MyOwnedBookCard from '../components/MyOwnedBookCard.tsx';
 
 export default function MyLibrary() {
   const [owned, setOwned] = useState<BookWithLoan[]>([]);
@@ -19,23 +19,26 @@ export default function MyLibrary() {
       .from('books')
       .select('*, loans(*, profiles:borrower_id(full_name))')
       .eq('owner_id', user.id)
-      .in('loans.status', ['reserved', 'loaned'])
       .order('created_at', { ascending: false });
-      
-    // Supabase는 위 쿼리에서 대출/예약이 없는 책은 반환하지 않으므로, 별도로 모든 책을 다시 조회합니다.
+
+    // Supabase는 위 쿼리에서 대출/예약이 없는 책은 반환하지 않습니다.
+    // 모든 책을 가져와서 loan 정보를 병합해야 합니다.
     const { data: allOwnedBooks } = await supabase
       .from('books')
-      .select('*')
+      .select('*, profiles:owner_id(full_name)')
       .eq('owner_id', user.id)
       .order('created_at', { ascending: false });
 
     // 두 결과를 합쳐서 최종 목록을 만듭니다.
     const finalOwnedBooks = allOwnedBooks?.map(book => {
       const bookWithLoan = ownedBooks?.find(b => b.id === book.id);
-      return bookWithLoan || { ...book, loans: [] };
+      if (bookWithLoan) {
+        return bookWithLoan;
+      }
+      return { ...book, loans: [] };
     }) || [];
 
-    setOwned(finalOwnedBooks);
+    setOwned(finalOwnedBooks as BookWithLoan[]);
   }, [user]);
 
   useEffect(() => {
