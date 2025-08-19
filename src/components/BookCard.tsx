@@ -40,6 +40,11 @@ export default function BookCard({
   };
 
   async function requestLoan() {
+    // ✨ "Are you sure?" 확인 창을 추가합니다.
+    if (!confirm(`Are you sure you want to request "${book.title}"?`)) {
+      return;
+    }
+
     if (!book.id) {
       alert('오류: 책의 ID를 찾을 수 없습니다.');
       return;

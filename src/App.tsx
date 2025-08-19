@@ -55,10 +55,11 @@ export default function App() {
   return (
     <>
       <header className="header">
-        <div className="brand">Taejae Residence Library</div>
+        <div className="brand">Taejae Open Shelf</div>
         <nav className="nav">
           <Link to="/">도서</Link>
           <Link to="/my">나의 서재</Link>
+          <Link to="/loans">대출/예약</Link> {/* ✨ 새 메뉴 추가 */}
           <Link to="/books/new">도서 등록</Link>
           <Link to="/scan">ISBN 스캔</Link>
         </nav>
@@ -77,9 +78,9 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/my" element={<MyLibrary />} />
+        <Route path="/loans" element={<Loans />} /> {/* ✨ 새 경로 추가 */}
         <Route path="/books/new" element={<NewBook />} />
         <Route path="/scan" element={<Scan />} />
-        <Route path="/users/:userId" element={<UserLibrary />} /> {/* ✨ 새 경로 추가 */}
       </Routes>
     </>
   );
