@@ -3,7 +3,6 @@ import { useSessionContext, useUser } from '@supabase/auth-helpers-react';
 import { supabase } from '../lib/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 
-// Candidate 타입 정의
 type Candidate = {
   score: number;
   isbn13?: string | null;
@@ -25,12 +24,12 @@ export default function Scan() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const [isFrozen, setIsFrozen] = useState(false);
+  // isFrozen 대신 capturedImage 상태만으로 화면을 제어합니다.
+  const [capturedImage, setCapturedImage] = useState<string | null>(null); 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
-  const [imageBase64, setImageBase64] = useState<string | null>(null); // API에 보낼 이미지 데이터를 저장
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -40,7 +39,8 @@ export default function Scan() {
   }, []);
 
   const startCamera = useCallback(async () => {
-    if (streamRef.current) return;
+    // 이미 카메라가 실행 중이거나 캡처된 이미지가 있으면 새로 시작하지 않음
+    if (streamRef.current || capturedImage) return;
     setError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -55,7 +55,7 @@ export default function Scan() {
     } catch (e: any) {
       setError(e?.message || 'Unable to access the camera.');
     }
-  }, []);
+  }, [capturedImage]);
 
   useEffect(() => {
     if (session) {
@@ -63,6 +63,7 @@ export default function Scan() {
     } else {
       stopCamera();
     }
+    // 컴포넌트 언마운트 시 카메라 중지
     return () => stopCamera();
   }, [session, startCamera, stopCamera]);
 
@@ -89,8 +90,8 @@ export default function Scan() {
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
     
     stopCamera();
-    setIsFrozen(true);
-    setImageBase64(dataUrl);
+    // 캡처된 이미지를 상태에 저장하여 화면에 표시합니다.
+    setCapturedImage(dataUrl); 
 
     try {
       const response = await fetch('/api/gemini-cover-to-book', {
@@ -116,11 +117,10 @@ export default function Scan() {
   };
 
   const handleRetake = () => {
-    setIsFrozen(false);
+    setCapturedImage(null); // 캡처 이미지 초기화
     setCandidates([]);
     setSelectedCandidate(null);
     setError(null);
-    setImageBase64(null);
     startCamera();
   };
 
@@ -166,16 +166,25 @@ export default function Scan() {
       <h1 className="text-xl font-semibold mb-3">Book Cover Scan</h1>
 
       <div className="rounded-lg overflow-hidden bg-black relative">
-        <video
-          ref={videoRef}
-          className="w-full h-full object-contain bg-black"
-          style={{ display: isFrozen ? 'block' : 'block' }} // 항상 보이도록 수정
-          playsInline
-          autoPlay
-          muted
-        />
+        {/* capturedImage 상태에 따라 비디오 또는 이미지를 렌더링하여 화면 전환 */}
+        {capturedImage ? (
+          <img 
+            src={capturedImage} 
+            alt="Captured book cover"
+            className="w-full h-full object-contain bg-black"
+          />
+        ) : (
+          <video
+            ref={videoRef}
+            className="w-full h-full object-contain bg-black"
+            playsInline
+            autoPlay
+            muted
+          />
+        )}
         
-        {!isFrozen && (
+        {/* 캡처 버튼은 라이브 비디오 상태일 때만 표시 */}
+        {!capturedImage && (
           <button
             onClick={handleCapture}
             disabled={isLoading}
@@ -186,7 +195,7 @@ export default function Scan() {
         )}
       </div>
 
-      {isFrozen && (
+      {capturedImage && (
         <div className="mt-4 space-y-4">
           <div className="flex gap-2 justify-center">
             <button onClick={handleRetake} className="btn" style={{ background: '#6b7280' }} disabled={isLoading}>
