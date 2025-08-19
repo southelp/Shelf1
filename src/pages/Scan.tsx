@@ -30,6 +30,7 @@ export default function Scan() {
   const [error, setError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+  const [imageBase64, setImageBase64] = useState<string | null>(null); // API에 보낼 이미지 데이터를 저장
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -89,6 +90,7 @@ export default function Scan() {
     
     stopCamera();
     setIsFrozen(true);
+    setImageBase64(dataUrl);
 
     try {
       const response = await fetch('/api/gemini-cover-to-book', {
@@ -118,6 +120,7 @@ export default function Scan() {
     setCandidates([]);
     setSelectedCandidate(null);
     setError(null);
+    setImageBase64(null);
     startCamera();
   };
 
@@ -166,6 +169,7 @@ export default function Scan() {
         <video
           ref={videoRef}
           className="w-full h-full object-contain bg-black"
+          style={{ display: isFrozen ? 'block' : 'block' }} // 항상 보이도록 수정
           playsInline
           autoPlay
           muted
