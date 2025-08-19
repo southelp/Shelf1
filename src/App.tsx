@@ -37,7 +37,6 @@ export default function App() {
     }
   }, [user]);
 
-  // Loan requests count를 설정하는 함수를 useCallback으로 감싸서 안정성을 높였습니다.
   const updateLoanRequestsCount = useCallback((count: number) => {
     setLoanRequestsCount(count);
   }, []);
@@ -47,8 +46,9 @@ export default function App() {
     navigate('/');
   }
 
+  // ✨ 메뉴 링크 스타일링을 위한 Tailwind 클래스
   const navLinkClass = "relative px-4 py-2 rounded-lg text-sm font-medium transition-colors";
-
+  
   return (
     <>
       <header className="header">
@@ -59,8 +59,12 @@ export default function App() {
           <Link to="/loans" className={`${navLinkClass} ${location.pathname === '/loans' ? 'bg-gray-100' : 'hover:bg-gray-100'} flex items-center`}>
             대출/예약
             {loanRequestsCount > 0 && (
-              <span className="absolute -top-1 -right-1 inline-flex items-center justify-center h-5 w-5 rounded-full bg-red-500 text-white text-xs font-bold">
-                {loanRequestsCount > 9 ? '9+' : loanRequestsCount}
+              // ✨ 배지 스타일을 수정하여 작은 원형 알림으로 변경했습니다.
+              <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-white text-xs font-bold items-center justify-center">
+                  {loanRequestsCount > 9 ? '9+' : loanRequestsCount}
+                </span>
               </span>
             )}
           </Link>
@@ -82,7 +86,6 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/my" element={<MyLibrary />} />
-        {/* Loans 컴포넌트에 updateLoanRequestsCount 함수를 prop으로 전달 */}
         <Route path="/loans" element={<Loans setLoanRequestsCount={updateLoanRequestsCount} />} />
         <Route path="/books/new" element={<NewBook />} />
         <Route path="/scan" element={<Scan />} />
