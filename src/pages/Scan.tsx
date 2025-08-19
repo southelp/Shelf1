@@ -30,6 +30,11 @@ export default function Scan() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
 
+  // 디버깅을 위한 useEffect 추가
+  useEffect(() => {
+    console.log('capturedImage state:', capturedImage ? 'HAS_IMAGE' : 'NO_IMAGE');
+  }, [capturedImage]);
+
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
@@ -86,7 +91,16 @@ export default function Scan() {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
     
+    // 먼저 카메라를 중지하고 이미지를 설정
     stopCamera();
+    
+    // 비디오 요소 완전히 정리
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+      videoRef.current.src = '';
+    }
+    
+    // 상태 업데이트를 강제로 동기화
     setCapturedImage(dataUrl); 
 
     try {
@@ -113,11 +127,23 @@ export default function Scan() {
   };
 
   const handleRetake = () => {
+    // 모든 상태를 명시적으로 초기화
     setCapturedImage(null);
     setCandidates([]);
     setSelectedCandidate(null);
     setError(null);
-    startCamera();
+    setIsLoading(false);
+    
+    // 비디오 요소 완전히 정리
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+      videoRef.current.src = '';
+    }
+    
+    // 약간의 지연 후 카메라 재시작
+    setTimeout(() => {
+      startCamera();
+    }, 100);
   };
 
   const handleRegister = async () => {
@@ -171,6 +197,7 @@ export default function Scan() {
         }}
       >
         {capturedImage ? (
+          // 캡처된 이미지만 표시
           <img 
             src={capturedImage} 
             alt="Captured book cover"
@@ -178,17 +205,20 @@ export default function Scan() {
               width: '100%',
               height: '100%',
               objectFit: 'contain',
-              backgroundColor: 'black'
+              backgroundColor: 'black',
+              display: 'block' // 명시적으로 블록 요소로 설정
             }}
           />
         ) : (
+          // 비디오만 표시
           <video
             ref={videoRef}
             style={{
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              backgroundColor: 'black'
+              backgroundColor: 'black',
+              display: 'block' // 명시적으로 블록 요소로 설정
             }}
             playsInline
             autoPlay
