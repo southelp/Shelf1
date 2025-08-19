@@ -1,5 +1,5 @@
-import { supabase } from '../lib/supabaseClient';
-import type { BookWithLoan } from '../types'; // ✨ 새로운 타입을 사용합니다.
+import { supabase } from '../lib/supabaseClient.ts';
+import type { BookWithLoan } from '../types.ts';
 
 export default function MyOwnedBookCard({ book, onComplete }: { book: BookWithLoan; onComplete: () => void; }) {
   const activeLoan = book.loans && book.loans.length > 0 ? book.loans[0] : null;
@@ -56,6 +56,10 @@ export default function MyOwnedBookCard({ book, onComplete }: { book: BookWithLo
             <>
               <div>{activeLoan.status === 'loaned' ? 'Loaned to:' : 'Reserved by:'}</div>
               <div style={{ fontWeight: 600, color: 'var(--text)' }}>{formatName(activeLoan.profiles?.full_name)}</div>
+              {/* ✨ 대출 상태일 경우 반납 예정일 표시 */}
+              {activeLoan.status === 'loaned' && activeLoan.due_at && (
+                <div style={{ fontWeight: 600, color: '#dd2222', marginTop: '4px' }}>Due: {formatKSTDate(activeLoan.due_at)}</div>
+              )}
             </>
           ) : (
             <div>{formatKSTDate(book.created_at)}</div>
