@@ -8,11 +8,12 @@ type Candidate = {
   score: number;
   isbn13?: string | null;
   isbn10?: string | null;
-  title: string;
-  authors: string[];
+  title?: string;
+  authors?: string[];
   publisher?: string;
   published_year?: number | null;
   cover_url?: string | null;
+  google_books_id?: string;
 };
 
 export default function Scan() {
@@ -25,7 +26,6 @@ export default function Scan() {
   const streamRef = useRef<MediaStream | null>(null);
 
   const [isFrozen, setIsFrozen] = useState(false);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null); // 캡처된 이미지 URL 저장
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -35,9 +35,6 @@ export default function Scan() {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
     }
   }, []);
 
@@ -90,11 +87,7 @@ export default function Scan() {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
     
-    // 1. 캡처된 이미지 URL을 상태에 저장
-    setCapturedImage(dataUrl);
-    // 2. 라이브 스트림을 중지
     stopCamera();
-    // 3. UI를 '정지' 상태로 변경
     setIsFrozen(true);
 
     try {
@@ -122,7 +115,6 @@ export default function Scan() {
 
   const handleRetake = () => {
     setIsFrozen(false);
-    setCapturedImage(null); // 캡처된 이미지 초기화
     setCandidates([]);
     setSelectedCandidate(null);
     setError(null);
@@ -171,27 +163,14 @@ export default function Scan() {
       <h1 className="text-xl font-semibold mb-3">Book Cover Scan</h1>
 
       <div className="rounded-lg overflow-hidden bg-black relative">
-        {/* 캡처된 이미지 */}
-        {isFrozen && capturedImage && (
-          <img 
-            src={capturedImage} 
-            alt="Captured book cover"
-            className="w-full h-full object-contain bg-black"
-            style={{ position: 'absolute', top: 0, left: 0, zIndex: 10 }}
-          />
-        )}
-        
-        {/* 비디오 - 정지 상태일 때 숨김 */}
         <video
           ref={videoRef}
           className="w-full h-full object-contain bg-black"
-          style={{ display: isFrozen ? 'none' : 'block' }}
           playsInline
           autoPlay
           muted
         />
         
-        {/* isFrozen 상태가 아닐 때만 캡처 버튼을 표시 */}
         {!isFrozen && (
           <button
             onClick={handleCapture}
@@ -203,7 +182,6 @@ export default function Scan() {
         )}
       </div>
 
-      {/* isFrozen 상태일 때만 결과 및 버튼들을 표시 */}
       {isFrozen && (
         <div className="mt-4 space-y-4">
           <div className="flex gap-2 justify-center">
