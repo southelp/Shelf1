@@ -25,6 +25,7 @@ export default function Scan() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  const [isCameraOn, setIsCameraOn] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null); 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,11 +36,12 @@ export default function Scan() {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
+      setIsCameraOn(false);
     }
   }, []);
 
   const startCamera = useCallback(async () => {
-    if (streamRef.current || capturedImage) return;
+    if (streamRef.current) return;
     setError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -50,20 +52,21 @@ export default function Scan() {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
+        setIsCameraOn(true);
       }
     } catch (e: any) {
       setError(e?.message || 'Unable to access the camera.');
     }
-  }, [capturedImage]);
+  }, []);
 
   useEffect(() => {
-    if (session) {
+    if (session && !capturedImage) {
       startCamera();
     } else {
       stopCamera();
     }
     return () => stopCamera();
-  }, [session, startCamera, stopCamera]);
+  }, [session, capturedImage, startCamera, stopCamera]);
 
   const handleCapture = async () => {
     if (!videoRef.current || !canvasRef.current || isLoading) return;
@@ -87,8 +90,13 @@ export default function Scan() {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
     
-    stopCamera();
+    // 1. 상태를 업데이트하여 카메라 스트림을 멈추게 함
     setCapturedImage(dataUrl); 
+
+    // 2. 비디오 요소의 표지를 캡처된 이미지로 설정
+    if (videoRef.current) {
+      videoRef.current.poster = dataUrl;
+    }
 
     try {
       const response = await fetch('/api/gemini-cover-to-book', {
@@ -114,15 +122,15 @@ export default function Scan() {
   };
 
   const handleRetake = () => {
+    if (videoRef.current) {
+      // 비디오 표지 제거
+      videoRef.current.poster = '';
+    }
     setCapturedImage(null);
     setCandidates([]);
     setSelectedCandidate(null);
     setError(null);
     setIsLoading(false);
-    
-    setTimeout(() => {
-      startCamera();
-    }, 100);
   };
 
   const handleRegister = async () => {
@@ -153,7 +161,7 @@ export default function Scan() {
       navigate('/my');
     }
   };
-
+  
   if (authLoading) {
     return <div className="p-6 text-center text-gray-600">Checking login...</div>;
   }
@@ -174,36 +182,24 @@ export default function Scan() {
           aspectRatio: '3/4',
         }}
       >
-        {/* === START: 주요 변경 사항 === */}
         <video
           ref={videoRef}
           style={{
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            display: capturedImage ? 'none' : 'block', // 이미지가 있으면 비디오를 숨김
+            // 비디오 스트림이 꺼지면 poster 이미지가 보이게 됨
+            backgroundColor: 'black' 
           }}
           playsInline
           autoPlay
           muted
         />
-        <img 
-          src={capturedImage || ''}
-          alt="Captured book cover"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-            backgroundColor: 'black',
-            display: capturedImage ? 'block' : 'none', // 이미지가 있을 때만 이미지를 보여줌
-          }}
-        />
-        {/* === END: 주요 변경 사항 === */}
         
         {!capturedImage && (
           <button
             onClick={handleCapture}
-            disabled={isLoading}
+            disabled={isLoading || !isCameraOn}
             style={{
               position: 'absolute',
               bottom: '16px',
@@ -212,10 +208,10 @@ export default function Scan() {
               padding: '12px 20px',
               borderRadius: '50px',
               border: 'none',
-              background: isLoading ? '#9ca3af' : 'rgba(255, 255, 255, 0.95)',
+              background: (isLoading || !isCameraOn) ? '#9ca3af' : 'rgba(255, 255, 255, 0.95)',
               color: isLoading ? '#fff' : '#000',
               fontWeight: '600',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
+              cursor: (isLoading || !isCameraOn) ? 'not-allowed' : 'pointer',
             }}
           >
             {isLoading ? 'Processing...' : 'Capture'}
