@@ -1,5 +1,6 @@
 // src/components/BookCard.tsx
 
+import { Link } from 'react-router-dom'; // 1. react-router-dom에서 Link를 가져옵니다.
 import { supabase } from '../lib/supabaseClient';
 import type { Book, Loan } from '../types';
 
@@ -23,13 +24,13 @@ export default function BookCard({
 
   const disabled = Boolean(activeLoan) || isOwner;
 
-  // Function to format the owner's name
+  // 이름에서 특정 문구 제거하는 함수
   const formatOwnerName = (name: string | null | undefined) => {
     if (!name) return '...';
     return name.replace('(School of Innovation Foundations)', '').trim();
   };
   
-  // Function to format the date to KST (GMT+9)
+  // 날짜를 KST (GMT+9)로 포맷하는 함수
   const formatKSTDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('ko-KR', {
@@ -47,14 +48,12 @@ export default function BookCard({
     }
 
     try {
-      // supabase.functions.invoke를 사용하여 body에 book_id를 담아 호출
       const { data, error } = await supabase.functions.invoke('request-loan', {
         body: { book_id: book.id },
       });
 
       if (error) throw error;
       
-      // 함수가 반환한 데이터에 오류 메시지가 있는지 확인
       if (data && data.message && !data.ok) {
         throw new Error(data.message);
       }
@@ -122,7 +121,10 @@ export default function BookCard({
         )}
         <div className="label" style={{ textAlign: 'right', lineHeight: 1.4 }}>
           <div>{formatKSTDate(book.created_at)}</div>
-          <div>{formatOwnerName(book.profiles?.full_name)}</div>
+          {/* 2. 소유자 이름 부분을 Link 컴포넌트로 감쌉니다. */}
+          <Link to={`/users/${book.owner_id}`} style={{ fontWeight: 600, color: 'var(--text)', textDecoration: 'underline' }}>
+            {formatOwnerName(book.profiles?.full_name)}
+          </Link>
         </div>
       </div>
     </div>
