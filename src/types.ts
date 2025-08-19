@@ -1,9 +1,10 @@
 export type Profile = { id: string; email: string; full_name: string | null; role: 'user'|'admin' };
 export type Book = {
-  id: string; owner_id: string; isbn: string | null; title: string; authors: string[] | null;
+  id: string; owner_id: string;
+  isbn: string | null; title: string; authors: string[] | null;
   publisher: string | null; published_year: number | null; cover_url: string | null;
   available: boolean; created_at: string;
-  profiles: { full_name: string | null } | null;
+  profiles: { full_name: string | null } | null; // ✨ 이 부분을 다시 추가합니다.
 };
 export type LoanStatus = 'reserved' | 'loaned' | 'returned' | 'cancelled';
 export type Loan = {
