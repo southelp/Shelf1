@@ -161,13 +161,13 @@ export default function Scan() {
     <div className="p-4 max-w-xl mx-auto">
       <h1 className="text-xl font-semibold mb-3">Book Cover Scan</h1>
 
-      {/* 고정 높이와 적절한 스타일링을 가진 카메라/이미지 컨테이너 */}
+      {/* 적절한 가로세로 비율을 가진 카메라/이미지 컨테이너 */}
       <div 
-        className="rounded-lg overflow-hidden bg-black relative"
+        className="rounded-lg overflow-hidden bg-black relative mx-auto"
         style={{
           width: '100%',
-          height: '400px', // 고정 높이 설정
-          maxHeight: '60vh' // 최대 높이 제한
+          maxWidth: '400px', // 최대 너비 제한
+          aspectRatio: '3/4', // 책 표지에 적합한 3:4 비율
         }}
       >
         {capturedImage ? (
@@ -196,22 +196,73 @@ export default function Scan() {
           />
         )}
         
-        {/* 캡처 버튼은 이미지가 없을 때만 표시 */}
-        {!capturedImage && !isLoading && (
+        {/* 캡처 버튼 - 로딩 중일 때는 비활성화 */}
+        {!capturedImage && (
           <button
             onClick={handleCapture}
             disabled={isLoading}
-            className="absolute bottom-4 left-1/2 transform -translate-x-1/2 px-5 py-3 rounded-full bg-white/90 text-black font-medium shadow-lg hover:bg-white transition-colors"
+            style={{
+              position: 'absolute',
+              bottom: '16px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              padding: '12px 20px',
+              borderRadius: '50px',
+              border: 'none',
+              background: isLoading ? '#9ca3af' : 'rgba(255, 255, 255, 0.95)',
+              color: isLoading ? '#fff' : '#000',
+              fontWeight: '600',
+              fontSize: '14px',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+              transition: 'all 0.2s ease',
+              minWidth: '120px'
+            }}
+            onMouseDown={(e) => {
+              if (!isLoading) {
+                e.currentTarget.style.transform = 'translateX(-50%) scale(0.95)';
+              }
+            }}
+            onMouseUp={(e) => {
+              if (!isLoading) {
+                e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isLoading) {
+                e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
+              }
+            }}
           >
-            Capture
+            {isLoading ? '처리 중...' : 'Capture'}
           </button>
         )}
 
         {/* 로딩 상태를 오버레이로 표시 */}
-        {isLoading && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <div className="bg-white/90 px-4 py-2 rounded-lg">
-              <div className="text-black font-medium">Processing...</div>
+        {isLoading && capturedImage && (
+          <div 
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.7)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <div 
+              style={{
+                background: 'rgba(255, 255, 255, 0.95)',
+                padding: '16px 24px',
+                borderRadius: '12px',
+                textAlign: 'center'
+              }}
+            >
+              <div style={{ fontWeight: '600', marginBottom: '8px' }}>책 정보를 분석 중입니다...</div>
+              <div style={{ fontSize: '14px', color: '#666' }}>잠시만 기다려주세요</div>
             </div>
           </div>
         )}
