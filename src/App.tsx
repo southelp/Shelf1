@@ -1,7 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useUser } from '@supabase/auth-helpers-react';
-import { Link, Routes, Route, useNavigate } from 'react-router-dom';
-// ✨ 파일 확장자를 명시하여 import 경로 오류를 수정했습니다.
+import { Link, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Home from './pages/Home.tsx';
 import MyLibrary from './pages/MyLibrary.tsx';
 import NewBook from './pages/NewBook.tsx';
@@ -14,6 +13,8 @@ import { supabase, allowedDomain } from './lib/supabaseClient.ts';
 export default function App() {
   const user = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [loanRequestsCount, setLoanRequestsCount] = useState(0);
 
   useEffect(() => {
     if (user) {
@@ -32,34 +33,39 @@ export default function App() {
           });
         }
       };
-
       ensureUserProfile();
-
-      const email = user.email?.toLowerCase();
-      if (email && !email.endsWith(allowedDomain)) {
-        // alert() 대신 사용자에게 메시지를 보여주는 UI를 구현해야 합니다.
-        console.error(`학교 이메일(${allowedDomain})로만 로그인할 수 있습니다.`);
-        supabase.auth.signOut();
-        navigate('/');
-      }
     }
-  }, [user, navigate]);
+  }, [user]);
+
+  // Loan requests count를 설정하는 함수를 useCallback으로 감싸서 안정성을 높였습니다.
+  const updateLoanRequestsCount = useCallback((count: number) => {
+    setLoanRequestsCount(count);
+  }, []);
 
   async function signOut() {
     await supabase.auth.signOut();
     navigate('/');
   }
 
+  const navLinkClass = "relative px-4 py-2 rounded-lg text-sm font-medium transition-colors";
+
   return (
     <>
       <header className="header">
         <div className="brand">Taejae Open Shelf</div>
         <nav className="nav">
-          <Link to="/">도서</Link>
-          <Link to="/my">나의 서재</Link>
-          <Link to="/loans">대출/예약</Link>
-          <Link to="/books/new">도서 등록</Link>
-          <Link to="/scan">ISBN 스캔</Link>
+          <Link to="/" className={`${navLinkClass} ${location.pathname === '/' ? 'bg-gray-100' : 'hover:bg-gray-100'}`}>도서</Link>
+          <Link to="/my" className={`${navLinkClass} ${location.pathname === '/my' ? 'bg-gray-100' : 'hover:bg-gray-100'}`}>나의 서재</Link>
+          <Link to="/loans" className={`${navLinkClass} ${location.pathname === '/loans' ? 'bg-gray-100' : 'hover:bg-gray-100'} flex items-center`}>
+            대출/예약
+            {loanRequestsCount > 0 && (
+              <span className="absolute -top-1 -right-1 inline-flex items-center justify-center h-5 w-5 rounded-full bg-red-500 text-white text-xs font-bold">
+                {loanRequestsCount > 9 ? '9+' : loanRequestsCount}
+              </span>
+            )}
+          </Link>
+          <Link to="/books/new" className={`${navLinkClass} ${location.pathname === '/books/new' ? 'bg-gray-100' : 'hover:bg-gray-100'}`}>도서 등록</Link>
+          <Link to="/scan" className={`${navLinkClass} ${location.pathname === '/scan' ? 'bg-gray-100' : 'hover:bg-gray-100'}`}>ISBN 스캔</Link>
         </nav>
         <div style={{ marginLeft: 'auto' }}>
           {user ? (
@@ -76,10 +82,10 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/my" element={<MyLibrary />} />
-        <Route path="/loans" element={<Loans />} />
+        {/* Loans 컴포넌트에 updateLoanRequestsCount 함수를 prop으로 전달 */}
+        <Route path="/loans" element={<Loans setLoanRequestsCount={updateLoanRequestsCount} />} />
         <Route path="/books/new" element={<NewBook />} />
         <Route path="/scan" element={<Scan />} />
-        {/* UserLibrary 컴포넌트를 위한 새로운 라우트 추가 */}
         <Route path="/users/:userId" element={<UserLibrary />} />
       </Routes>
     </>

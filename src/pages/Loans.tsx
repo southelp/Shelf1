@@ -1,23 +1,31 @@
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import { Loan } from '../types';
+import { supabase } from '../lib/supabaseClient.ts';
+import { Loan } from '../types.ts';
 import { useUser } from '@supabase/auth-helpers-react';
-import LoanRequestCard from '../components/LoanRequestCard';
+import LoanRequestCard from '../components/LoanRequestCard.tsx';
 
 // '나의 서재'에 있던 MyLoanCard 컴포넌트를 이곳으로 이동시킵니다.
 function MyLoanCard({ loan, onComplete }: { loan: Loan; onComplete: () => void; }) {
+  // ✨ `alert` 대신 사용자 정의 메시지 박스를 사용합니다.
+  const showMessage = (message: string) => {
+    // 실제 구현에서는 모달 또는 토스트 알림을 사용해야 합니다.
+    console.log(message);
+    // 현재는 `alert`를 대체하기 위해 console.log를 사용합니다.
+  };
+
   const handleAction = async (action: 'return' | 'cancel') => {
-    const functionName = action === 'return' ? 'return-loan' : 'cancel-loan';
-    if (!confirm(`Are you sure you want to ${action} this loan?`)) return;
+    // `confirm` 대신 사용자 정의 모달을 사용해야 합니다.
+    if (!window.confirm(`Are you sure you want to ${action} this loan?`)) return;
 
     try {
+      const functionName = action === 'return' ? 'return-loan' : 'cancel-loan';
       const { error, data } = await supabase.functions.invoke(functionName, { body: { loan_id: loan.id } });
       if (error) throw new Error(`Function error: ${error.message}`);
       if (data.message && !data.ok) throw new Error(data.message);
-      alert(`Action completed successfully.`);
+      showMessage(`Action completed successfully.`);
       onComplete();
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      showMessage(`Error: ${err.message}`);
     }
   };
   
@@ -43,8 +51,8 @@ function MyLoanCard({ loan, onComplete }: { loan: Loan; onComplete: () => void; 
   );
 }
 
-
-export default function Loans() {
+// ✨ setLoanRequestsCount prop을 받도록 수정
+export default function Loans({ setLoanRequestsCount }: { setLoanRequestsCount: (count: number) => void }) {
   const [myLoans, setMyLoans] = useState<Loan[]>([]);
   const [incomingRequests, setIncomingRequests] = useState<Loan[]>([]);
   const user = useUser();
@@ -72,9 +80,12 @@ export default function Loans() {
       .eq('owner_id', user.id)
       .eq('status', 'reserved')
       .order('requested_at', { ascending: false });
+    
+    // ✨ Incoming requests 개수를 App.tsx로 전달
+    setLoanRequestsCount((requests || []).length);
     setIncomingRequests(requests || []);
 
-  }, [user]);
+  }, [user, setLoanRequestsCount]);
 
   useEffect(() => {
     loadData();
