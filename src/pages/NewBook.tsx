@@ -27,11 +27,15 @@ export default function NewBook() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingMessage, setLoadingMessage] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Search query state
+  const [titleQuery, setTitleQuery] = useState('');
+  const [authorQuery, setAuthorQuery] = useState('');
+  const [publisherQuery, setPublisherQuery] = useState('');
+
   const webcamRef = useRef<Webcam>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   
-  // Manual form state
   const [manualBook, setManualBook] = useState<BookCandidate>({
     title: '',
     authors: [],
@@ -69,7 +73,9 @@ export default function NewBook() {
     } else {
       alert('Book registered successfully!');
       setCandidates([]);
-      setSearchQuery('');
+      setTitleQuery('');
+      setAuthorQuery('');
+      setPublisherQuery('');
       setCapturedImage(null);
       setIsScanMode(false);
       setIsManualMode(false);
@@ -78,7 +84,7 @@ export default function NewBook() {
   };
 
   const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
+    if (!titleQuery.trim()) return alert('Title is required for search.');
     setIsLoading(true);
     setLoadingMessage('Searching...');
     setError(null);
@@ -88,7 +94,11 @@ export default function NewBook() {
       const searchResponse = await fetch('/api/search-book-by-title', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: searchQuery }),
+        body: JSON.stringify({
+          title: titleQuery,
+          author: authorQuery,
+          publisher: publisherQuery 
+        }),
       });
 
       if (!searchResponse.ok) {
@@ -100,7 +110,7 @@ export default function NewBook() {
       setCandidates(foundCandidates ?? []);
 
       if (!foundCandidates || foundCandidates.length === 0) {
-        setError(`Book not found for query: '${searchQuery}'`);
+        setError(`Book not found for the given criteria.`);
       }
 
     } catch (e: any) {
@@ -111,6 +121,7 @@ export default function NewBook() {
   };
 
   const handleCapture = useCallback(async () => {
+    // This function can remain as is, as it primarily searches by title extracted from the cover.
     if (isLoading) return;
     const imageSrc = webcamRef.current?.getScreenshot();
     if (!imageSrc) return setError("Could not get image from camera.");
@@ -131,7 +142,7 @@ export default function NewBook() {
       const searchResponse = await fetch('/api/search-book-by-title', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: title }),
+        body: JSON.stringify({ title: title }), // Search by title only
       });
       if (!searchResponse.ok) throw new Error(`Search failed: ${await searchResponse.text()}`);
       const { candidates: foundCandidates } = await searchResponse.json();
@@ -168,6 +179,7 @@ export default function NewBook() {
       <h1 className="text-2xl font-bold mb-4 text-center">Register a Book</h1>
 
       {isScanMode ? (
+        // Scan Mode UI remains the same
         <div className="relative">
           <div className="absolute top-2 right-2 z-20">
             <button onClick={() => setIsScanMode(false)} className="btn btn-circle bg-gray-700 text-white hover:bg-gray-900">
@@ -196,6 +208,7 @@ export default function NewBook() {
           </div>
         </div>
       ) : isManualMode ? (
+        // Manual Mode UI remains the same
         <div>
           <div className="flex justify-end mb-4">
             <button onClick={() => setIsManualMode(false)} className="btn btn-ghost">Cancel</button>
@@ -213,18 +226,34 @@ export default function NewBook() {
           </div>
         </div>
       ) : (
-        <div className="flex items-center gap-2 mb-4">
+        // Updated Search UI
+        <div className="space-y-3 mb-4">
           <input
             type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSearch()}
-            placeholder="Search by book title"
+            value={titleQuery}
+            onChange={e => setTitleQuery(e.target.value)}
+            placeholder="Title (required)"
             className="input input-bordered w-full"
           />
-          <button onClick={handleSearch} disabled={isLoading} className="btn btn-primary">Search</button>
-          <button onClick={() => setIsScanMode(true)} className="btn btn-outline">Camera</button>
-          <button onClick={() => setIsManualMode(true)} className="btn btn-outline">Manual</button>
+          <input
+            type="text"
+            value={authorQuery}
+            onChange={e => setAuthorQuery(e.target.value)}
+            placeholder="Author (optional)"
+            className="input input-bordered w-full"
+          />
+          <input
+            type="text"
+            value={publisherQuery}
+            onChange={e => setPublisherQuery(e.target.value)}
+            placeholder="Publisher (optional)"
+            className="input input-bordered w-full"
+          />
+          <div className="flex items-center gap-2">
+            <button onClick={handleSearch} disabled={isLoading || !titleQuery.trim()} className="btn btn-primary flex-grow">Search</button>
+            <button onClick={() => setIsScanMode(true)} className="btn btn-outline">Camera</button>
+            <button onClick={() => setIsManualMode(true)} className="btn btn-outline">Manual</button>
+          </div>
         </div>
       )}
 
