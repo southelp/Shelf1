@@ -31,6 +31,7 @@ export default function Scan() {
   const webcamRef = useRef<Webcam>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('분석 중...');
   const [error, setError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
@@ -50,24 +51,44 @@ export default function Scan() {
     setSelectedCandidate(null);
 
     try {
-      const response = await fetch('/api/gemini-cover-to-book', {
+      // 1단계: Gemini API로 표지에서 책 제목 추출
+      setLoadingMessage('표지에서 책 정보 추출 중...');
+      const geminiResponse = await fetch('/api/gemini-cover-to-book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: imageSrc, maxCandidates: 5 }),
+        body: JSON.stringify({ imageBase64: imageSrc }),
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`서버 오류: ${response.status} ${errorText}`);
+      if (!geminiResponse.ok) {
+        const errorText = await geminiResponse.text();
+        throw new Error(`책 정보 추출 실패: ${errorText}`);
       }
 
-      const result = await response.json();
-      const foundCandidates = result?.candidates ?? [];
-      setCandidates(foundCandidates);
-
-      if (foundCandidates.length === 0) {
-        setError("책 정보를 찾지 못했습니다. 다시 시도해 주세요.");
+      const { title } = await geminiResponse.json();
+      if (!title) {
+        throw new Error('표지에서 책 제목을 찾지 못했습니다.');
       }
+
+      // 2단계: 추출된 제목으로 책 검색 API 호출
+      setLoadingMessage(`'${title}' 검색 중...`);
+      const searchResponse = await fetch('/api/search-book-by-title', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: title }),
+      });
+
+      if (!searchResponse.ok) {
+        const errorText = await searchResponse.text();
+        throw new Error(`책 검색 실패: ${errorText}`);
+      }
+
+      const { candidates: foundCandidates } = await searchResponse.json();
+      setCandidates(foundCandidates ?? []);
+
+      if (!foundCandidates || foundCandidates.length === 0) {
+        setError(`'${title}'에 대한 검색 결과가 없습니다. 다른 책으로 시도해 보세요.`);
+      }
+
     } catch (e: any) {
       setError(e?.message || '책을 인식하는데 실패했습니다.');
     } finally {
@@ -138,7 +159,7 @@ export default function Scan() {
         {isLoading && (
           <div className="absolute inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center text-white z-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-            <p className="text-lg">분석 중...</p>
+            <p className="text-lg">{loadingMessage}</p>
           </div>
         )}
       </div>
