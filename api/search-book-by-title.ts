@@ -1,3 +1,4 @@
+// api/search-book-by-title.ts
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // CORS 설정 함수
@@ -25,63 +26,69 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'A "query" string is required.' });
     }
 
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
     const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY;
+    const GOOGLE_BOOKS_API_KEY = process.env.GOOGLE_BOOKS_API_KEY;
 
-    if (!GEMINI_API_KEY) throw new Error('Missing GEMINI_API_KEY');
-    if (!KAKAO_REST_API_KEY) throw new Error('Missing KAKAO_REST_API_KEY');
-
-    // 1. Gemini API로 사용자 입력을 정제된 검색어로 변환
-    const prompt = `From the user's book search query "${query}", extract the most likely official book title and author. Return the result as a JSON object. For example: {"title": "The Lord of the Rings", "author": "J.R.R. Tolkien"}`;
-    
-    const geminiResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: "application/json" }
-      }),
-    });
-
-    if (!geminiResp.ok) throw new Error('Gemini API request failed');
-    
-    const geminiJson = await geminiResp.json();
-    const refinedSearch = JSON.parse(geminiJson?.candidates?.[0]?.content?.parts?.[0]?.text || '{}');
-    const searchTerm = refinedSearch.title || query; // Gemini가 제목을 못찾으면 원래 쿼리 사용
-
-    // 2. 정제된 검색어로 Kakao/Google Books API 검색
     let searchResults: any[] = [];
-    const kakaoUrl = `https://dapi.kakao.com/v3/search/book?target=title&query=${encodeURIComponent(searchTerm)}&size=5`;
-    const kakaoRes = await fetch(kakaoUrl, { headers: { Authorization: `KakaoAK ${KAKAO_REST_API_KEY}` } });
-    
-    if (kakaoRes.ok) {
-      const kakaoJson = await kakaoRes.json();
-      searchResults = kakaoJson.documents || [];
-    }
+    const seen = new Set<string>();
 
-    if (searchResults.length === 0) {
-        const googleUrl = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(searchTerm)}&maxResults=5`;
-        const googleRes = await fetch(googleUrl);
-        if(googleRes.ok) {
-            const googleJson = await googleRes.json();
-            searchResults = (googleJson.items || []).map((item: any) => item.volumeInfo);
+    // 1. Kakao Books API 검색
+    if (KAKAO_REST_API_KEY) {
+        const kakaoUrl = `https://dapi.kakao.com/v3/search/book?target=title&query=${encodeURIComponent(query)}&size=5`;
+        const kakaoRes = await fetch(kakaoUrl, { headers: { Authorization: `KakaoAK ${KAKAO_REST_API_KEY}` } });
+        if (kakaoRes.ok) {
+            const kakaoJson = await kakaoRes.json();
+            const docs = (kakaoJson.documents || []).map((item: any) => {
+                const isbn13 = (item.isbn || '').split(' ').find((x: string) => x.length === 13) || null;
+                const key = `${item.title}|${(item.authors || []).join(',')}`;
+                return { ...item, isbn13, key };
+            });
+            for (const doc of docs) {
+                if (!seen.has(doc.key)) {
+                    searchResults.push(doc);
+                    seen.add(doc.key);
+                }
+            }
         }
     }
 
-    // 3. 결과를 프론트엔드에 맞는 형식으로 변환하여 전송
-    const candidates = searchResults.map(item => {
-        const isGoogle = 'industryIdentifiers' in item;
-        const isbn = isGoogle 
-            ? (item.industryIdentifiers?.find((i: any) => i.type === 'ISBN_13')?.identifier || item.industryIdentifiers?.find((i: any) => i.type === 'ISBN_10')?.identifier)
-            : (item.isbn?.split(' ').find((i: string) => i.length === 13) || item.isbn?.split(' ')[0]);
+    // 2. Google Books API 검색 (Kakao 결과가 부족할 경우)
+    if (searchResults.length < 5) {
+        const googleUrl = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(query)}&langRestrict=ko&maxResults=5`;
+        const googleRes = await fetch(googleUrl + (GOOGLE_BOOKS_API_KEY ? `&key=${GOOGLE_BOOKS_API_KEY}`:''));
+        if(googleRes.ok) {
+            const googleJson = await googleRes.json();
+            const items = (googleJson.items || []).map((item: any) => {
+                const vi = item.volumeInfo;
+                const isbn13 = vi.industryIdentifiers?.find((i: any) => i.type === 'ISBN_13')?.identifier || null;
+                const key = `${vi.title}|${(vi.authors || []).join(',')}`;
+                return { ...item, isbn13, key };
+            });
+            for (const item of items) {
+                if (!seen.has(item.key) && searchResults.length < 5) {
+                    searchResults.push(item);
+                    seen.add(item.key);
+                }
+            }
+        }
+    }
 
+    // 3. 결과를 프론트엔드에 맞는 형식으로 변환
+    const candidates = searchResults.map(item => {
+        const isGoogle = 'volumeInfo' in item;
+        const info = isGoogle ? item.volumeInfo : item;
+        
         return {
-            isbn: isbn || null,
-            title: item.title,
-            authors: item.authors || [],
-            publisher: item.publisher,
-            published_year: yearFrom(isGoogle ? item.publishedDate : item.datetime),
-            cover_url: isGoogle ? item.imageLinks?.thumbnail : item.thumbnail,
+            isbn13: item.isbn13,
+            isbn10: isGoogle 
+                ? info.industryIdentifiers?.find((i: any) => i.type === 'ISBN_10')?.identifier
+                : (info.isbn || '').split(' ').find((x: string) => x.length === 10) || null,
+            title: info.title,
+            authors: info.authors || [],
+            publisher: info.publisher,
+            published_year: yearFrom(isGoogle ? info.publishedDate : info.datetime),
+            cover_url: isGoogle ? info.imageLinks?.thumbnail : info.thumbnail,
+            google_books_id: isGoogle ? item.id : undefined,
         };
     }).filter(c => c.title); // 제목이 없는 결과는 제외
 
