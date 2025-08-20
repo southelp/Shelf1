@@ -13,6 +13,7 @@ export type Book = {
   authors: string[] | null;
   publisher: string | null;
   published_year: number | null;
+  description: string | null;
   cover_url: string | null;
   available: boolean;
   created_at: string;
