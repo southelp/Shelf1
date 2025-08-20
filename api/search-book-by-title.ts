@@ -1,14 +1,12 @@
 // api/search-book-by-title.ts
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// CORS 설정 함수
 function cors(res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
-// 연도 추출 헬퍼 함수
 const yearFrom = (s?: string) => {
   if (!s) return null;
   const m = s.match(/\d{4}/);
@@ -21,9 +19,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Use POST' });
 
   try {
-    const { query } = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    if (!query || typeof query !== 'string') {
-      return res.status(400).json({ error: 'A "query" string is required.' });
+    const { title, author, publisher } = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    if (!title || typeof title !== 'string') {
+      return res.status(400).json({ error: 'A "title" string is required.' });
     }
 
     const GOOGLE_BOOKS_API_KEY = process.env.GOOGLE_BOOKS_API_KEY;
@@ -33,13 +31,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let searchResults: any[] = [];
     const seen = new Set<string>();
 
-    // Helper to add unique results
     const addUniqueResults = (items: any[], isGoogle: boolean = false, isNaver: boolean = false) => {
         for (const item of items) {
             const info = isGoogle ? item.volumeInfo : item;
-            const title = info.title || '';
-            const authors = (isNaver ? (item.author?.split('|').filter(Boolean) || []) : (info.authors || [])).join(',');
-            const key = `${title}|${authors}`;
+            const resultTitle = info.title || '';
+            const resultAuthors = (isNaver ? (item.author?.split('|').filter(Boolean) || []) : (info.authors || [])).join(',');
+            const key = `${resultTitle}|${resultAuthors}`;
             
             if (!seen.has(key)) {
                 searchResults.push({ ...item, isGoogle, isNaver, key });
@@ -48,9 +45,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
     };
 
-    // 1. Primary Naver Books API search
+    // 1. Primary Naver Books API search (using advanced search)
     if (NAVER_CLIENT_ID && NAVER_CLIENT_SECRET) {
-        const naverUrl = `https://openapi.naver.com/v1/search/book.json?query=${encodeURIComponent(query)}&display=10`;
+        const params = new URLSearchParams({ d_titl: title });
+        if (author) params.append('d_auth', author);
+        if (publisher) params.append('d_publ', publisher);
+        
+        const naverUrl = `https://openapi.naver.com/v1/search/book_adv.json?${params.toString()}&display=10`;
         const naverRes = await fetch(naverUrl, {
             headers: {
                 'X-Naver-Client-Id': NAVER_CLIENT_ID,
@@ -65,7 +66,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // 2. If no results from Naver, fallback to Google Books API
     if (searchResults.length === 0 && GOOGLE_BOOKS_API_KEY) {
-        const googleUrl = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=10&key=${GOOGLE_BOOKS_API_KEY}`;
+        let googleQuery = `intitle:${encodeURIComponent(title)}`;
+        if (author) googleQuery += `+inauthor:${encodeURIComponent(author)}`;
+        if (publisher) googleQuery += `+inpublisher:${encodeURIComponent(publisher)}`;
+        
+        const googleUrl = `https://www.googleapis.com/books/v1/volumes?q=${googleQuery}&maxResults=10&key=${GOOGLE_BOOKS_API_KEY}`;
         const googleRes = await fetch(googleUrl);
         if(googleRes.ok) {
             const googleJson = await googleRes.json();
@@ -73,7 +78,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
     }
 
-    // 3. Final candidates construction
     const candidates = searchResults.slice(0, 10).map(item => {
         const isGoogle = item.isGoogle;
         const isNaver = item.isNaver;
