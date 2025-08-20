@@ -1,5 +1,5 @@
 // src/pages/Scan.tsx
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useSessionContext, useUser } from '@supabase/auth-helpers-react';
 import { supabase } from '../lib/supabaseClient';
 import { useNavigate } from 'react-router-dom';
@@ -23,8 +23,9 @@ export default function Scan() {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-
+  
+  const [isCameraActive, setIsCameraActive] = useState(true);
+  const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,63 +33,60 @@ export default function Scan() {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
 
   const stopCamera = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
     }
-  }, []);
+  }, [stream]);
 
   const startCamera = useCallback(async () => {
-    if (streamRef.current || capturedImage) return;
+    if (stream) return;
     setError(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: 'environment' } },
         audio: false,
       });
-      streamRef.current = stream;
+      setStream(mediaStream);
       if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+        videoRef.current.srcObject = mediaStream;
       }
     } catch (e: any) {
       setError(e?.message || '카메라에 접근할 수 없습니다.');
     }
-  }, [capturedImage]);
+  }, [stream]);
 
   useEffect(() => {
-    if (session && !capturedImage) {
+    if (session && isCameraActive) {
       startCamera();
     } else {
       stopCamera();
     }
     return () => stopCamera();
-  }, [session, capturedImage, startCamera, stopCamera]);
-  
-  const handleCapture = async () => {
-    if (!videoRef.current || !canvasRef.current || isLoading) return;
+  }, [session, isCameraActive, startCamera, stopCamera]);
 
-    setIsLoading(true);
-    setError(null);
-    setCandidates([]);
-    setSelectedCandidate(null);
+  const handleCapture = useCallback(async () => {
+    if (!videoRef.current || !canvasRef.current || isLoading) return;
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      setError('캔버스 컨텍스트를 가져오는데 실패했습니다.');
-      setIsLoading(false);
+    
+    const context = canvas.getContext('2d');
+    if (!context) {
+      setError('캔버스 컨텍스트를 가져올 수 없습니다.');
       return;
     }
-
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-
-    stopCamera();
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+    
     setCapturedImage(dataUrl);
+    setIsCameraActive(false);
+    setIsLoading(true);
+    setError(null);
+    setCandidates([]);
+    setSelectedCandidate(null);
 
     try {
       const response = await fetch('/api/gemini-cover-to-book', {
@@ -96,13 +94,16 @@ export default function Scan() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageBase64: dataUrl, maxCandidates: 5 }),
       });
+
       if (!response.ok) {
-        const txt = await response.text().catch(() => '');
-        throw new Error(`서버 오류: ${response.status} ${txt}`);
+        const errorText = await response.text();
+        throw new Error(`서버 오류: ${response.status} ${errorText}`);
       }
+
       const result = await response.json();
-      const foundCandidates = Array.isArray(result?.candidates) ? result.candidates : [];
+      const foundCandidates = result?.candidates ?? [];
       setCandidates(foundCandidates);
+
       if (foundCandidates.length === 0) {
         setError("책 정보를 찾지 못했습니다. 다시 시도해 주세요.");
       }
@@ -111,7 +112,7 @@ export default function Scan() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isLoading]);
 
   const handleRetake = () => {
     setCapturedImage(null);
@@ -119,6 +120,7 @@ export default function Scan() {
     setSelectedCandidate(null);
     setError(null);
     setIsLoading(false);
+    setIsCameraActive(true);
   };
 
   const handleRegister = async () => {
@@ -128,22 +130,20 @@ export default function Scan() {
     }
 
     setIsLoading(true);
-    const payload = {
+    const { error: insertError } = await supabase.from('books').insert({
       owner_id: user.id,
-      isbn: selectedCandidate.isbn13 || selectedCandidate.isbn10 || null,
+      isbn: selectedCandidate.isbn13 || selectedCandidate.isbn10,
       title: selectedCandidate.title,
       authors: selectedCandidate.authors,
       publisher: selectedCandidate.publisher,
       published_year: selectedCandidate.published_year,
       cover_url: selectedCandidate.cover_url,
       available: true,
-    };
-
-    const { error } = await supabase.from('books').insert(payload);
+    });
     setIsLoading(false);
 
-    if (error) {
-      alert('책 등록 실패: ' + error.message);
+    if (insertError) {
+      alert(`책 등록 실패: ${insertError.message}`);
     } else {
       alert('책이 성공적으로 등록되었습니다!');
       navigate('/my');
@@ -151,130 +151,70 @@ export default function Scan() {
   };
 
   if (authLoading) {
-    return <div className="p-6 text-center text-gray-600">로그인 확인 중...</div>;
+    return <div className="p-6 text-center">로그인 확인 중...</div>;
   }
 
   if (!session) {
-    return <div className="p-6 text-center text-gray-600">카메라를 사용하려면 로그인해 주세요.</div>;
+    return <div className="p-6 text-center">카메라를 사용하려면 로그인해 주세요.</div>;
   }
 
   return (
-    <div className="p-4 max-w-xl mx-auto">
-      <h1 className="text-xl font-semibold mb-3">책 표지 스캔</h1>
+    <div className="p-4 max-w-lg mx-auto">
+      <h1 className="text-2xl font-bold mb-4 text-center">책 표지 스캔</h1>
 
-      <div
-        className="rounded-lg overflow-hidden bg-black relative mx-auto"
-        style={{
-          width: '100%',
-          maxWidth: '400px',
-          aspectRatio: '3/4',
-        }}
-      >
-        <video
-          ref={videoRef}
-          style={{
-            display: capturedImage ? 'none' : 'block',
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-          }}
-          playsInline
-          autoPlay
-          muted
-        />
-        <img
-          src={capturedImage || ''}
-          alt="촬영된 책 표지"
-          style={{
-            display: capturedImage ? 'block' : 'none',
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-          }}
-        />
-        
-        {!capturedImage && (
-          <button
-            onClick={handleCapture}
-            disabled={isLoading}
-            style={{
-              position: 'absolute',
-              bottom: '16px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              padding: '12px 20px',
-              borderRadius: '50px',
-              border: 'none',
-              background: isLoading ? '#9ca3af' : 'rgba(255, 255, 255, 0.95)',
-              color: isLoading ? '#fff' : '#000',
-              fontWeight: '600',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              zIndex: 10,
-            }}
-          >
-            {isLoading ? '처리 중...' : '촬영'}
-          </button>
-        )}
+      <div className="relative w-full aspect-[3/4] bg-black rounded-lg overflow-hidden shadow-lg mx-auto" style={{maxWidth: '400px'}}>
+        <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-contain" style={{ display: isCameraActive ? 'block' : 'none' }} />
+        {capturedImage && <img src={capturedImage} alt="Captured book cover" className="w-full h-full object-contain" style={{ display: !isCameraActive ? 'block' : 'none' }} />}
+        <canvas ref={canvasRef} className="hidden" />
 
-        {isLoading && capturedImage && (
-          <div
-            style={{
-              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-              background: 'rgba(0, 0, 0, 0.7)', display: 'flex',
-              alignItems: 'center', justifyContent: 'center', color: 'white', zIndex: 20
-            }}
-          >
-            분석 중...
+        {isLoading && (
+          <div className="absolute inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center text-white z-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+            <p className="text-lg">분석 중...</p>
           </div>
         )}
       </div>
 
-      {capturedImage && (
-        <div className="mt-4 space-y-4">
-          <div className="flex gap-2 justify-center">
-            <button onClick={handleRetake} className="btn" style={{ background: '#6b7280' }} disabled={isLoading}>
+      <div className="mt-4 flex justify-center gap-4">
+        {isCameraActive ? (
+          <button onClick={handleCapture} disabled={isLoading} className="btn btn-primary">
+            {isLoading ? '처리 중...' : '촬영하기'}
+          </button>
+        ) : (
+          <>
+            <button onClick={handleRetake} disabled={isLoading} className="btn btn-secondary">
               다시 찍기
             </button>
-            <button onClick={handleRegister} className="btn" disabled={!selectedCandidate || isLoading}>
+            <button onClick={handleRegister} disabled={!selectedCandidate || isLoading} className="btn btn-primary">
               {isLoading ? '등록 중...' : '선택한 책 등록'}
             </button>
-          </div>
+          </>
+        )}
+      </div>
 
-          {error && <div className="text-sm text-red-600 text-center">오류: {error}</div>}
-          
-          {!isLoading && candidates.length > 0 && (
-             <div>
-              <h2 className="text-base font-semibold text-center mb-2">등록할 책을 선택하세요:</h2>
-              <ul className="space-y-2">
-                {candidates.map((c, idx) => (
-                  <li
-                    key={`${c.isbn13 || c.title}-${idx}`}
-                    className="p-3 rounded-lg border hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors"
-                    style={{
-                      outline: selectedCandidate?.title === c.title ? '2px solid var(--purple)' : 'none',
-                    }}
-                    onClick={() => setSelectedCandidate(c)}
-                  >
-                    {c.cover_url && (
-                      <img 
-                        src={c.cover_url} 
-                        alt={c.title} 
-                        className="w-12 h-16 object-contain rounded bg-gray-100 flex-shrink-0"
-                      />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <div className="font-medium truncate">{c.title}</div>
-                      <div className="text-sm text-gray-600 truncate">{(c.authors || []).join(', ')}</div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+      {error && <div className="mt-4 text-center text-red-500 bg-red-100 p-3 rounded-lg">{error}</div>}
+
+      {!isLoading && candidates.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-xl font-semibold text-center mb-3">등록할 책을 선택하세요:</h2>
+          <ul className="space-y-3">
+            {candidates.map((c, idx) => (
+              <li
+                key={`${c.isbn13 || c.google_books_id || idx}`}
+                onClick={() => setSelectedCandidate(c)}
+                className={`p-3 border rounded-lg flex items-center gap-4 cursor-pointer transition-all duration-200 ${selectedCandidate?.google_books_id === c.google_books_id ? 'ring-2 ring-blue-500 shadow-md' : 'hover:bg-gray-50'}`}
+              >
+                <img src={c.cover_url || 'https://via.placeholder.com/80x120.png?text=No+Image'} alt={c.title} className="w-16 h-24 object-contain rounded bg-gray-100 flex-shrink-0" />
+                <div className="flex-grow min-w-0">
+                  <p className="font-bold text-lg truncate">{c.title}</p>
+                  <p className="text-gray-600 truncate">{c.authors?.join(', ') || '저자 정보 없음'}</p>
+                  <p className="text-sm text-gray-500">{c.publisher || '출판사 정보 없음'} ({c.published_year || 'N/A'})</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
-
-      <canvas ref={canvasRef} className="hidden" />
     </div>
   );
 }
