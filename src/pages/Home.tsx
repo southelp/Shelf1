@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import FilterBar from '../components/FilterBar';
 import BookCard from '../components/BookCard';
+import PaginatedBookGrid from '../components/PaginatedBookGrid';
 import { Book, Loan } from '../types';
 import { useUser } from '@supabase/auth-helpers-react';
 
@@ -151,16 +152,18 @@ export default function Home() {
 
             {/* Books grid */}
             <div className="w-full">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {books.map(b => (
-                  <BookCard 
-                    key={b.id} 
-                    book={b} 
-                    activeLoan={loans[b.id] || null} 
-                    userId={user?.id} 
+              <PaginatedBookGrid
+                items={books}
+                renderItem={(b) => (
+                  <BookCard
+                    key={b.id}
+                    book={b}
+                    activeLoan={loans[b.id] || null}
+                    userId={user?.id}
                   />
-                ))}
-              </div>
+                )}
+                itemsPerPage={20} // 5 columns * 4 rows
+              />
             </div>
           </>
         )}
