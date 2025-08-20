@@ -137,7 +137,7 @@ export default function NewBook() {
     setCandidates([]);
 
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Recognition timed out after 6 seconds. Please try again.')), 6000)
+      setTimeout(() => reject(new Error('Recognition timed out after 10 seconds. Please try again.')), 10000)
     );
 
     const recognitionPromise = (async () => {
