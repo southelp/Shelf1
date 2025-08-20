@@ -219,7 +219,7 @@ export default function NewBook() {
                 onClick={() => handleRegister(c)}
                 className="p-3 border rounded-lg flex items-center gap-4 cursor-pointer transition-all duration-200 bg-white hover:bg-gray-100"
               >
-                <img src={c.cover_url || 'https://via.placeholder.com/80x120.png?text=No+Image'} alt={c.title} className="w-16 h-24 object-contain rounded bg-gray-100 flex-shrink-0" />
+                <img src={c.cover_url || 'https://via.placeholder.com/80x120.png?text=No+Image'} alt={c.title} className="w-10 h-16 object-contain rounded bg-gray-100 flex-shrink-0" />
                 <div className="flex-grow min-w-0">
                   <p className="font-bold text-lg truncate">{c.title}</p>
                   <p className="text-gray-600 truncate">{c.authors?.join(', ') || '저자 정보 없음'}</p>
