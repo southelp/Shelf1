@@ -90,7 +90,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     // 알라딘 응답이 JSONP 형식이므로, `JSON.parse`를 위해 콜백 부분을 제거
                     const aladinJson = JSON.parse(aladinText.replace(/^\w+\((.*)\);?$/, '$1'));
                     if (aladinJson.item && aladinJson.item.length > 0) {
-                        cover_url = aladinJson.item[0].cover.replace('_sm', '_b'); // 작은 표지 -> 더 큰 표지 (혹은 원본)
+                        cover_url = aladinJson.item[0].cover.replace(/_[a-z]$/, ''); // 모든 접미사 제거 시도
                     }
                 }
             } catch (e) {
