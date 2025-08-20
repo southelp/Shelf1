@@ -32,6 +32,7 @@ export default function NewBook() {
   const [titleQuery, setTitleQuery] = useState('');
   const [authorQuery, setAuthorQuery] = useState('');
   const [publisherQuery, setPublisherQuery] = useState('');
+  const [isbnQuery, setIsbnQuery] = useState('');
 
   const webcamRef = useRef<Webcam>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -76,6 +77,7 @@ export default function NewBook() {
       setTitleQuery('');
       setAuthorQuery('');
       setPublisherQuery('');
+      setIsbnQuery('');
       setCapturedImage(null);
       setIsScanMode(false);
       setIsManualMode(false);
@@ -84,7 +86,7 @@ export default function NewBook() {
   };
 
   const handleSearch = async () => {
-    if (!titleQuery.trim()) return alert('Title is required for search.');
+    if (!titleQuery.trim() && !isbnQuery.trim()) return alert('Title or ISBN is required for search.');
     setIsLoading(true);
     setLoadingMessage('Searching...');
     setError(null);
@@ -94,10 +96,11 @@ export default function NewBook() {
       const searchResponse = await fetch('/api/search-book-by-title', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: JSON.stringify({ 
           title: titleQuery,
           author: authorQuery,
-          publisher: publisherQuery 
+          publisher: publisherQuery,
+          isbn: isbnQuery
         }),
       });
 
@@ -227,32 +230,41 @@ export default function NewBook() {
         </div>
       ) : (
         // Updated Search UI
-        <div className="space-y-3 mb-4">
-          <input
-            type="text"
-            value={titleQuery}
-            onChange={e => setTitleQuery(e.target.value)}
-            placeholder="Title (required)"
-            className="input input-bordered w-full"
-          />
-          <input
-            type="text"
-            value={authorQuery}
-            onChange={e => setAuthorQuery(e.target.value)}
-            placeholder="Author (optional)"
-            className="input input-bordered w-full"
-          />
-          <input
-            type="text"
-            value={publisherQuery}
-            onChange={e => setPublisherQuery(e.target.value)}
-            placeholder="Publisher (optional)"
-            className="input input-bordered w-full"
-          />
-          <div className="flex items-center gap-2">
-            <button onClick={handleSearch} disabled={isLoading || !titleQuery.trim()} className="btn btn-primary flex-grow">Search</button>
-            <button onClick={() => setIsScanMode(true)} className="btn btn-outline">Camera</button>
-            <button onClick={() => setIsManualMode(true)} className="btn btn-outline">Manual</button>
+        <div className="max-w-[500px] mx-auto">
+          <div className="space-y-3 mb-4">
+            <input
+              type="text"
+              value={isbnQuery}
+              onChange={e => setIsbnQuery(e.target.value)}
+              placeholder="ISBN (optional)"
+              className="input input-bordered w-full"
+            />
+            <input
+              type="text"
+              value={titleQuery}
+              onChange={e => setTitleQuery(e.target.value)}
+              placeholder="Title (required if no ISBN)"
+              className="input input-bordered w-full"
+            />
+            <input
+              type="text"
+              value={authorQuery}
+              onChange={e => setAuthorQuery(e.target.value)}
+              placeholder="Author (optional)"
+              className="input input-bordered w-full"
+            />
+            <input
+              type="text"
+              value={publisherQuery}
+              onChange={e => setPublisherQuery(e.target.value)}
+              placeholder="Publisher (optional)"
+              className="input input-bordered w-full"
+            />
+            <div className="flex items-center gap-2">
+              <button onClick={handleSearch} disabled={isLoading || (!titleQuery.trim() && !isbnQuery.trim())} className="btn btn-primary flex-grow">Search</button>
+              <button onClick={() => setIsScanMode(true)} className="btn btn-outline">Camera</button>
+              <button onClick={() => setIsManualMode(true)} className="btn btn-outline">Manual</button>
+            </div>
           </div>
         </div>
       )}
