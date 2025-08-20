@@ -9,8 +9,8 @@ export default defineConfig({
   css: {
     postcss: {
       plugins: [
-        tailwindcss,
-        autoprefixer,
+        tailwindcss(),
+        autoprefixer(),
       ],
     },
   },
@@ -18,5 +18,3 @@ export default defineConfig({
     port: 5173,
   }
 })
-
-// CLI41: Trigger new deployment
