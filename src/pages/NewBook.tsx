@@ -124,17 +124,23 @@ export default function NewBook() {
   };
 
   const handleCapture = useCallback(async () => {
-    // This function can remain as is, as it primarily searches by title extracted from the cover.
     if (isLoading) return;
     const imageSrc = webcamRef.current?.getScreenshot();
-    if (!imageSrc) return setError("Could not get image from camera.");
+    if (!imageSrc) {
+      setError("Could not get image from camera.");
+      return;
+    }
 
     setCapturedImage(imageSrc);
     setIsLoading(true);
     setError(null);
     setCandidates([]);
 
-    try {
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Recognition timed out after 6 seconds. Please try again.')), 6000)
+    );
+
+    const recognitionPromise = (async () => {
       setLoadingMessage('Extracting book info from cover...');
       const geminiResponse = await fetch('/api/gemini-cover-to-book', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ imageBase64: imageSrc }) });
       if (!geminiResponse.ok) throw new Error(`Failed to extract info: ${await geminiResponse.text()}`);
@@ -145,16 +151,22 @@ export default function NewBook() {
       const searchResponse = await fetch('/api/search-book-by-title', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: title }), // Search by title only
+        body: JSON.stringify({ title: title }),
       });
       if (!searchResponse.ok) throw new Error(`Search failed: ${await searchResponse.text()}`);
       const { candidates: foundCandidates } = await searchResponse.json();
-      setCandidates(foundCandidates ?? []);
+      
       if (!foundCandidates || foundCandidates.length === 0) {
         setError(`Book not found for title: '${title}'`);
       }
+      setCandidates(foundCandidates ?? []);
+    })();
+
+    try {
+      await Promise.race([recognitionPromise, timeoutPromise]);
     } catch (e: any) {
       setError(e?.message || 'Failed to recognize the book.');
+      setCandidates([]); // Clear any partial results
     } finally {
       setIsLoading(false);
     }
