@@ -2,12 +2,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient.ts';
 import { Loan } from '../types.ts';
 import { useUser } from '@supabase/auth-helpers-react';
-import LoanRequestCard from '../components/LoanRequestCard.tsx';
 
-// '나의 서재'에 있던 MyLoanCard 컴포넌트를 이곳으로 이동시킵니다.
 function MyLoanCard({ loan, onComplete }: { loan: Loan; onComplete: () => void; }) {
   const handleAction = async (action: 'return' | 'cancel') => {
-    // `alert` 및 `confirm` 대신 사용자 정의 모달을 사용해야 합니다.
     if (!window.confirm(`Are you sure you want to ${action} this loan?`)) return;
 
     try {
@@ -15,11 +12,9 @@ function MyLoanCard({ loan, onComplete }: { loan: Loan; onComplete: () => void; 
       const { error, data } = await supabase.functions.invoke(functionName, { body: { loan_id: loan.id } });
       if (error) throw new Error(`Function error: ${error.message}`);
       if (data.message && !data.ok) throw new Error(data.message);
-      // `alert` 대신 사용자 정의 메시지 박스를 사용해야 합니다.
       window.alert(`Action completed successfully.`);
       onComplete();
     } catch (err: any) {
-      // `alert` 대신 사용자 정의 메시지 박스를 사용해야 합니다.
       window.alert(`Error: ${err.message}`);
     }
   };
@@ -46,20 +41,16 @@ function MyLoanCard({ loan, onComplete }: { loan: Loan; onComplete: () => void; 
   );
 }
 
-// ✨ 배지 관련 로직 제거
 export default function Loans() {
   const [myLoans, setMyLoans] = useState<Loan[]>([]);
-  const [incomingRequests, setIncomingRequests] = useState<Loan[]>([]);
   const user = useUser();
 
   const loadData = useCallback(async () => {
     if (!user) {
       setMyLoans([]);
-      setIncomingRequests([]);
       return;
     }
 
-    // 내가 빌린 책/예약 현황 (상대방이 소유자)
     const { data: loans } = await supabase
       .from('loans')
       .select('*, books(*, profiles(id, full_name))')
@@ -67,17 +58,6 @@ export default function Loans() {
       .in('status', ['reserved', 'loaned'])
       .order('requested_at', { ascending: false });
     setMyLoans(loans || []);
-      
-    // 나에게 들어온 대출 요청 목록 (내가 소유자)
-    const { data: requests } = await supabase
-      .from('loans')
-      .select('*, books(*), profiles:borrower_id(id, full_name)')
-      .eq('owner_id', user.id)
-      .eq('status', 'reserved')
-      .order('requested_at', { ascending: false });
-    
-    setIncomingRequests(requests || []);
-
   }, [user]);
 
   useEffect(() => {
@@ -86,19 +66,6 @@ export default function Loans() {
 
   return (
     <div className="container">
-      {/* 나에게 들어온 대출 요청 섹션 */}
-      {incomingRequests.length > 0 && (
-        <div className="section">
-          <h2>Incoming Loan Requests</h2>
-          <div className="grid">
-            {incomingRequests.map(req => (
-              <LoanRequestCard key={req.id} loan={req} onComplete={loadData} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 나의 대출/예약 현황 섹션 (내가 빌린 책들) */}
       <div className="section">
         <h2>My Loans & Reservations</h2>
         <div className="grid">

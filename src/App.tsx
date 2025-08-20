@@ -4,6 +4,7 @@ import { Link, Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import Home from './pages/Home.tsx';
 import MyLibrary from './pages/MyLibrary.tsx';
 import MyNewBook from './pages/NewBook.tsx';
+import Loans from './pages/Loans.tsx';
 import UserLibrary from './pages/UserLibrary.tsx';
 import GoogleSignInButton from './components/GoogleSignInButton.tsx';
 import { supabase } from './lib/supabaseClient.ts';
@@ -48,6 +49,7 @@ export default function App() {
         <nav className="nav">
           <Link to="/" className={`${navLinkClass} ${location.pathname === '/' ? 'bg-gray-100' : 'hover:bg-gray-100'}`}>Books</Link>
           <Link to="/my" className={`${navLinkClass} ${location.pathname === '/my' ? 'bg-gray-100' : 'hover:bg-gray-100'}`} onClick={(e) => { if (!user) { e.preventDefault(); alert("Please log in to continue."); } }}>My Library</Link>
+          <Link to="/loans" className={`${navLinkClass} ${location.pathname === '/loans' ? 'bg-gray-100' : 'hover:bg-gray-100'}`} onClick={(e) => { if (!user) { e.preventDefault(); alert("Please log in to continue."); } }}>My Loans</Link>
           <Link to="/books/new" className={`${navLinkClass} ${location.pathname === '/books/new' ? 'bg-gray-100' : 'hover:bg-gray-100'}`} onClick={(e) => { if (!user) { e.preventDefault(); alert("Please log in to continue."); } }}>Register Book</Link>
         </nav>
         <div style={{ marginLeft: 'auto' }}>
@@ -65,6 +67,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/my" element={<MyLibrary />} />
+        <Route path="/loans" element={<Loans />} />
         <Route path="/books/new" element={<MyNewBook />} />
         <Route path="/users/:userId" element={<UserLibrary />} />
       </Routes>
