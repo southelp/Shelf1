@@ -52,7 +52,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Function to perform Naver search
     const performNaverSearch = async (searchQuery: string) => {
         if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) return [];
-        const naverUrl = `https://openapi.naver.com/v1/search/book.json?query=${encodeURIComponent(searchQuery)}&display=5`;
+        const naverUrl = `https://openapi.naver.com/v1/search/book.json?query=${encodeURIComponent(searchQuery)}&display=10`;
         const naverRes = await fetch(naverUrl, {
             headers: {
                 'X-Naver-Client-Id': NAVER_CLIENT_ID,
@@ -91,7 +91,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // 3. Final candidates construction (only from Naver results)
-    const candidates = searchResults.slice(0, 5).map(item => {
+    const candidates = searchResults.slice(0, 10).map(item => {
         const isGoogle = item.isGoogle; // Will be false now
         const isNaver = item.isNaver;
         const info = isGoogle ? item.volumeInfo : item; // info will be item for Naver/Kakao
@@ -133,7 +133,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 /*
 // Kakao Books API search (kept for reference)
     if (KAKAO_REST_API_KEY) {
-        const kakaoUrl = `https://dapi.kakao.com/v3/search/book?target=title&query=${encodeURIComponent(query)}&size=5`;
+        const kakaoUrl = `https://dapi.kakao.com/v3/search/book?target=title&query=${encodeURIComponent(query)}&size=10`;
         const kakaoRes = await fetch(kakaoUrl, { headers: { Authorization: `KakaoAK ${KAKAO_REST_API_KEY}` } });
         if (kakaoRes.ok) {
             const kakaoJson = await kakaoRes.json();
@@ -143,7 +143,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 // Google Books API search (kept for reference)
     if (GOOGLE_BOOKS_API_KEY) {
-        const googleUrl = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(query)}&langRestrict=ko&maxResults=5`;
+        const googleUrl = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(query)}&langRestrict=ko&maxResults=10`;
         const googleRes = await fetch(googleUrl + (GOOGLE_BOOKS_API_KEY ? `&key=${GOOGLE_BOOKS_API_KEY}`:''));
         if(googleRes.ok) {
             const googleJson = await googleRes.json();
