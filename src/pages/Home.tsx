@@ -194,7 +194,7 @@ export default function Home() {
                   borderColor: '#EEEEEC' 
                 }}
               >
-                {books.slice(0, 4).map((book, index) => (
+                {books.slice(0, 4).map((book) => (
                   <div 
                     key={book.id}
                     className="flex justify-center"

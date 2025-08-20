@@ -5,7 +5,7 @@ declare global { interface Window { BarcodeDetector?: any; Quagga?: any } }
 
 export default function IsbnScanner({ onDetect }:{ onDetect:(isbn:string)=>void }){
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [useFallback,setUseFallback] = useState(false)
+  const [,setUseFallback] = useState(false)
   const [err,setErr] = useState<string|undefined>()
 
   useEffect(()=>{ (async()=>{
