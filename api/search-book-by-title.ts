@@ -33,6 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const addUniqueResults = (items: any[], isGoogle: boolean = false, isNaver: boolean = false) => {
         for (const item of items) {
+            if (searchResults.length >= 10) break; // Stop if we already have 10 results
             const info = isGoogle ? item.volumeInfo : item;
             const resultTitle = info.title || '';
             const resultAuthors = (isNaver ? (item.author?.split('|').filter(Boolean) || []) : (info.authors || [])).join(',');
@@ -64,13 +65,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
     }
 
-    // 2. If no results from Naver, fallback to Google Books API
-    if (searchResults.length === 0 && GOOGLE_BOOKS_API_KEY) {
+    // 2. If results are less than 10, supplement with Google Books API
+    const resultsCount = searchResults.length;
+    if (resultsCount < 10 && GOOGLE_BOOKS_API_KEY) {
+        const needed = 10 - resultsCount;
         let googleQuery = `intitle:${encodeURIComponent(title)}`;
         if (author) googleQuery += `+inauthor:${encodeURIComponent(author)}`;
         if (publisher) googleQuery += `+inpublisher:${encodeURIComponent(publisher)}`;
         
-        const googleUrl = `https://www.googleapis.com/books/v1/volumes?q=${googleQuery}&maxResults=10&key=${GOOGLE_BOOKS_API_KEY}`;
+        const googleUrl = `https://www.googleapis.com/books/v1/volumes?q=${googleQuery}&maxResults=${needed}&key=${GOOGLE_BOOKS_API_KEY}`;
         const googleRes = await fetch(googleUrl);
         if(googleRes.ok) {
             const googleJson = await googleRes.json();
