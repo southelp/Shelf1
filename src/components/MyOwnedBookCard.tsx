@@ -37,34 +37,45 @@ export default function MyOwnedBookCard({ book, onComplete }: { book: BookWithLo
   };
   
   return (
-    <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
-      {book.cover_url ? (
-        <img src={book.cover_url} alt={book.title} style={{ width: '100%', height: '240px', objectFit: 'contain', borderRadius: '12px', marginBottom: '8px', backgroundColor: '#f9fafb', opacity: badgeText !== 'Available' ? 0.7 : 1 }} />
-      ) : (
-        <div style={{ width: '100%', height: '240px', borderRadius: '12px', marginBottom: '8px', backgroundColor: '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a0aec0', fontSize: '14px', opacity: badgeText !== 'Available' ? 0.7 : 1 }}>
-          <span>No Image</span>
-        </div>
-      )}
-      <div className="badge" style={{ ...getBadgeStyle(badgeText), marginBottom: 8 }}>{badgeText}</div>
-      <div style={{ fontWeight: 700, marginBottom: 6 }}>{book.title}</div>
-      {book.authors && <div className="label" style={{ marginBottom: 8 }}>{book.authors.join(', ')}</div>}
+    <div className="bg-white rounded-lg shadow-sm p-3 flex flex-col h-full text-sm">
+      <div className="relative flex-grow">
+        <img 
+          src={book.cover_url || 'https://via.placeholder.com/150x220.png?text=No+Image'} 
+          alt={book.title} 
+          className={`w-full h-48 object-contain rounded-md mb-2 bg-gray-50 ${badgeText !== 'Available' ? 'opacity-40' : ''}`} 
+        />
+      </div>
       
-      <div className="row" style={{ justifyContent: 'space-between', marginTop: 'auto', paddingTop: '12px' }}>
-        <button className="btn" onClick={handleDeleteBook} style={{ background: '#ef4444' }}>Delete</button>
-        <div className="label" style={{ textAlign: 'right', lineHeight: 1.4 }}>
+      <div 
+        className="px-2 py-1 text-xs font-semibold rounded-full self-start my-2"
+        style={getBadgeStyle(badgeText)}
+      >
+        {badgeText}
+      </div>
+
+      <h3 className="font-bold truncate">{book.title}</h3>
+      {book.authors && <p className="text-gray-600 truncate text-xs mb-2">{book.authors.join(', ')}</p>}
+      
+      <div className="mt-auto pt-2 border-t border-gray-100">
+        <div className="text-xs text-gray-500 mb-2">
           {activeLoan ? (
-            <>
-              <div>{activeLoan.status === 'loaned' ? 'Loaned to:' : 'Reserved by:'}</div>
-              <div style={{ fontWeight: 600, color: 'var(--text)' }}>{formatName(activeLoan.profiles?.full_name)}</div>
-              {/* ✨ 대출 상태일 경우 반납 예정일 표시 */}
+            <div>
+              <span>{activeLoan.status === 'loaned' ? 'Loaned to ' : 'Reserved by '}</span>
+              <span className="font-semibold text-gray-700">{formatName(activeLoan.profiles?.full_name)}</span>
               {activeLoan.status === 'loaned' && activeLoan.due_at && (
-                <div style={{ fontWeight: 600, color: '#dd2222', marginTop: '4px' }}>Due: {formatKSTDate(activeLoan.due_at)}</div>
+                <div className="font-semibold text-red-600">Due: {formatKSTDate(activeLoan.due_at)}</div>
               )}
-            </>
+            </div>
           ) : (
-            <div>{formatKSTDate(book.created_at)}</div>
+            <span>Registered: {formatKSTDate(book.created_at)}</span>
           )}
         </div>
+        <button 
+          onClick={handleDeleteBook} 
+          className="w-full text-center bg-red-500 text-white text-xs font-bold py-1.5 px-2 rounded-md hover:bg-red-600 transition-colors"
+        >
+          Delete
+        </button>
       </div>
     </div>
   );
