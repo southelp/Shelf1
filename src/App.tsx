@@ -3,8 +3,6 @@ import { useUser } from '@supabase/auth-helpers-react';
 import { Link, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Home from './pages/Home.tsx';
 import MyLibrary from './pages/MyLibrary.tsx';
-import NewBook from './pages/NewBook.tsx';
-import Scan from './pages/Scan.tsx';
 import Loans from './pages/Loans.tsx';
 import UserLibrary from './pages/UserLibrary.tsx';
 import GoogleSignInButton from './components/GoogleSignInButton.tsx';
@@ -54,7 +52,7 @@ export default function App() {
             대출/예약
           </Link>
           <Link to="/books/new" className={`${navLinkClass} ${location.pathname === '/books/new' ? 'bg-gray-100' : 'hover:bg-gray-100'}`}>도서 등록</Link>
-          <Link to="/scan" className={`${navLinkClass} ${location.pathname === '/scan' ? 'bg-gray-100' : 'hover:bg-gray-100'}`}>ISBN 스캔</Link>
+          
         </nav>
         <div style={{ marginLeft: 'auto' }}>
           {user ? (
@@ -73,7 +71,7 @@ export default function App() {
         <Route path="/my" element={<MyLibrary />} />
         <Route path="/loans" element={<Loans />} />
         <Route path="/books/new" element={<NewBook />} />
-        <Route path="/scan" element={<Scan />} />
+        
         <Route path="/users/:userId" element={<UserLibrary />} />
       </Routes>
     </>
