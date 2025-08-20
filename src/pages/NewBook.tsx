@@ -190,18 +190,12 @@ export default function NewBook() {
   };
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4 text-center">Register a Book</h1>
+    <div>
+      <h1 className="text-2xl font-bold mb-6 text-center">Register a Book</h1>
 
       {isScanMode ? (
-        // Scan Mode UI remains the same
-        <div className="relative">
-          <div className="absolute top-2 right-2 z-20">
-            <button onClick={() => setIsScanMode(false)} className="btn btn-circle bg-gray-700 text-white hover:bg-gray-900">
-              Close
-            </button>
-          </div>
-          <div className="relative w-full aspect-[3/4] bg-black rounded-lg overflow-hidden shadow-lg mx-auto" style={{maxWidth: '400px'}}>
+        <div className="max-w-md mx-auto">
+          <div className="relative w-full aspect-[3/4] bg-black rounded-lg overflow-hidden shadow-lg">
             {capturedImage ? (
               <img src={capturedImage} alt="Captured book cover" className="w-full h-full object-contain" />
             ) : (
@@ -216,84 +210,49 @@ export default function NewBook() {
           </div>
           <div className="mt-4 flex justify-center gap-4">
             {capturedImage ? (
-              <button onClick={handleRetake} disabled={isLoading} className="btn btn-secondary">Retake</button>
+              <button onClick={handleRetake} disabled={isLoading} className="g-button-gray">Retake</button>
             ) : (
-              <button onClick={handleCapture} disabled={isLoading} className="btn btn-primary">Capture</button>
+              <button onClick={handleCapture} disabled={isLoading} className="g-button-blue">Capture</button>
             )}
+            <button onClick={() => setIsScanMode(false)} className="g-button-gray">Close</button>
           </div>
         </div>
       ) : isManualMode ? (
-        // Manual Mode UI remains the same
-        <div>
-          <div className="flex justify-end mb-4">
-            <button onClick={() => setIsManualMode(false)} className="btn btn-ghost">Cancel</button>
-          </div>
-          <div className="space-y-3">
-            <input type="text" name="title" placeholder="Title (required)" value={manualBook.title} onChange={handleManualInputChange} className="input input-bordered w-full" />
-            <input type="text" name="authors" placeholder="Authors (comma-separated)" value={manualBook.authors?.join(', ')} onChange={handleManualInputChange} className="input input-bordered w-full" />
-            <input type="text" name="publisher" placeholder="Publisher" value={manualBook.publisher} onChange={handleManualInputChange} className="input input-bordered w-full" />
-            <input type="number" name="published_year" placeholder="Year" value={manualBook.published_year || ''} onChange={handleManualInputChange} className="input input-bordered w-full" />
-            <input type="text" name="isbn" placeholder="ISBN" value={manualBook.isbn || ''} onChange={handleManualInputChange} className="input input-bordered w-full" />
-            <input type="text" name="cover_url" placeholder="Cover Image URL" value={manualBook.cover_url} onChange={handleManualInputChange} className="input input-bordered w-full" />
-          </div>
-          <div className="mt-4 flex justify-center">
-            <button onClick={() => handleRegister(manualBook)} disabled={isLoading || !manualBook.title} className="btn btn-primary">Register Manually</button>
+        <div className="max-w-md mx-auto space-y-4">
+          <input type="text" name="title" placeholder="Title (required)" value={manualBook.title} onChange={handleManualInputChange} className="g-search-input" />
+          <input type="text" name="authors" placeholder="Authors (comma-separated)" value={manualBook.authors?.join(', ')} onChange={handleManualInputChange} className="g-search-input" />
+          <input type="text" name="publisher" placeholder="Publisher" value={manualBook.publisher} onChange={handleManualInputChange} className="g-search-input" />
+          <input type="number" name="published_year" placeholder="Year" value={manualBook.published_year || ''} onChange={handleManualInputChange} className="g-search-input" />
+          <input type="text" name="isbn" placeholder="ISBN" value={manualBook.isbn || ''} onChange={handleManualInputChange} className="g-search-input" />
+          <input type="text" name="cover_url" placeholder="Cover Image URL" value={manualBook.cover_url} onChange={handleManualInputChange} className="g-search-input" />
+          <div className="flex justify-center gap-4">
+            <button onClick={() => handleRegister(manualBook)} disabled={isLoading || !manualBook.title} className="g-button-blue">Register Manually</button>
+            <button onClick={() => setIsManualMode(false)} className="g-button-gray">Cancel</button>
           </div>
         </div>
       ) : (
-        // Updated Search UI
-        <div style={{ maxWidth: '400px' }} className="mx-auto">
-          <div className="space-y-3 mb-4">
-            <input
-              type="text"
-              value={isbnQuery}
-              onChange={e => setIsbnQuery(e.target.value)}
-              placeholder="ISBN (optional)"
-              className="input input-bordered w-full"
-            />
-            <input
-              type="text"
-              value={titleQuery}
-              onChange={e => setTitleQuery(e.target.value)}
-              placeholder="Title (required if no ISBN)"
-              className="input input-bordered w-full"
-            />
-            <input
-              type="text"
-              value={authorQuery}
-              onChange={e => setAuthorQuery(e.target.value)}
-              placeholder="Author (optional)"
-              className="input input-bordered w-full"
-            />
-            <input
-              type="text"
-              value={publisherQuery}
-              onChange={e => setPublisherQuery(e.target.value)}
-              placeholder="Publisher (optional)"
-              className="input input-bordered w-full"
-            />
-            <div className="flex items-center gap-2">
-              <button onClick={handleSearch} disabled={isLoading || (!titleQuery.trim() && !isbnQuery.trim())} className="btn btn-primary flex-grow">Search</button>
-              <button onClick={() => setIsScanMode(true)} className="btn btn-outline">Camera</button>
-              <button onClick={() => setIsManualMode(true)} className="btn btn-outline">Manual</button>
-            </div>
+        <div className="max-w-md mx-auto space-y-4">
+          <input type="text" value={isbnQuery} onChange={e => setIsbnQuery(e.target.value)} placeholder="ISBN" className="g-search-input" />
+          <input type="text" value={titleQuery} onChange={e => setTitleQuery(e.target.value)} placeholder="Title" className="g-search-input" />
+          <input type="text" value={authorQuery} onChange={e => setAuthorQuery(e.target.value)} placeholder="Author" className="g-search-input" />
+          <input type="text" value={publisherQuery} onChange={e => setPublisherQuery(e.target.value)} placeholder="Publisher" className="g-search-input" />
+          <div className="flex items-center justify-center gap-4 pt-2">
+            <button onClick={handleSearch} disabled={isLoading || (!titleQuery.trim() && !isbnQuery.trim())} className="g-button-blue">Search</button>
+            <button onClick={() => setIsScanMode(true)} className="g-button-gray">Camera</button>
+            <button onClick={() => setIsManualMode(true)} className="g-button-gray">Manual</button>
           </div>
         </div>
       )}
 
-      {error && <div className="mt-4 text-center text-red-500 bg-red-100 p-3 rounded-lg">{error}</div>}
+      {error && <div className="mt-6 text-center text-red-600 bg-red-100 p-3 rounded-lg max-w-md mx-auto">{error}</div>}
       
       {!isLoading && candidates.length > 0 && (
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold text-center mb-3">Search Results (Click to register)</h2>
-          <ul className="space-y-3">
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold text-center mb-4">Search Results</h2>
+          <ul className="space-y-4">
             {candidates.map((c, idx) => (
-              <li
-                key={`${c.isbn || c.google_books_id || idx}`}
-                onClick={() => handleRegister(c)}
-                className="p-3 border rounded-lg flex items-center gap-4 cursor-pointer transition-all duration-200 bg-white hover:bg-gray-100"
-              >
-                <img src={c.cover_url || 'https://via.placeholder.com/80x120.png?text=No+Image'} alt={c.title} className="object-contain rounded bg-gray-100 flex-shrink-0" style={{ height: '120px', width: 'auto', marginRight: '16px' }} />
+              <li key={`${c.isbn || idx}`} onClick={() => handleRegister(c)} className="g-card flex items-center gap-4 cursor-pointer">
+                <img src={c.cover_url || 'https://via.placeholder.com/80x120.png?text=No+Image'} alt={c.title} className="object-contain rounded bg-gray-100 flex-shrink-0" style={{ height: '120px', width: '80px' }} />
                 <div className="flex-grow min-w-0">
                   <p className="font-bold text-lg truncate">{c.title}</p>
                   <p className="text-gray-600 truncate">{c.authors?.join(', ') || 'No author info'}</p>
