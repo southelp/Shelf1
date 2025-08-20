@@ -13,9 +13,9 @@ const sampleBook: Book = {
   available: true,
   owner_id: 'user-1',
   created_at: '2024-01-15T10:00:00Z',
-  updated_at: '2024-01-15T10:00:00Z',
+  publisher: 'Basic Books',
+  published_year: 2013,
   profiles: {
-    id: 'user-1',
     full_name: 'Jane Smith'
   }
 };
