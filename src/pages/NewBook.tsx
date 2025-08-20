@@ -80,34 +80,15 @@ export default function NewBook() {
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     setIsLoading(true);
-    setLoadingMessage('검색어 분석 중...');
+    setLoadingMessage('검색 중...');
     setError(null);
     setCandidates([]);
 
     try {
-      // 1단계: Gemini API로 검색어 정제
-      const refineResponse = await fetch('/api/refine-book-query', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: searchQuery }),
-      });
-
-      if (!refineResponse.ok) {
-        const errorText = await refineResponse.text();
-        throw new Error(`검색어 분석 실패: ${errorText}`);
-      }
-
-      const { refinedQuery } = await refineResponse.json();
-      if (!refinedQuery) {
-        throw new Error('검색어를 분석하지 못했습니다.');
-      }
-
-      // 2단계: 정제된 검색어로 책 검색 API 호출
-      setLoadingMessage(`'${refinedQuery}' 검색 중...`);
       const searchResponse = await fetch('/api/search-book-by-title', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: refinedQuery }),
+        body: JSON.stringify({ query: searchQuery }),
       });
 
       if (!searchResponse.ok) {
@@ -119,7 +100,7 @@ export default function NewBook() {
       setCandidates(foundCandidates ?? []);
 
       if (!foundCandidates || foundCandidates.length === 0) {
-        setError(`'${refinedQuery}'에 대한 검색 결과가 없습니다.`);
+        setError(`'${searchQuery}'에 대한 검색 결과가 없습니다.`);
       }
 
     } catch (e: any) {
