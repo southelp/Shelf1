@@ -1,89 +1,37 @@
-// src/pages/NewBook.tsx
-import { useState, useRef, useCallback } from 'react';
+import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useUser } from '@supabase/auth-helpers-react';
-import Webcam from 'react-webcam';
 
-// Unified type for book candidates from both search and scan
+// BookCandidate type from previous version
 type BookCandidate = {
-  isbn13?: string | null;
-  isbn10?: string | null;
-  title?: string;
+  isbn?: string | null;
+  title: string;
   authors?: string[];
   publisher?: string;
   published_year?: number | null;
   cover_url?: string;
-  google_books_id?: string;
-};
-
-const videoConstraints = {
-  width: 720,
-  height: 960,
-  facingMode: "environment"
 };
 
 export default function NewBook() {
-  const user = useUser();
-
-  // --- State Management ---
-  // Mode state
-  const [isScanMode, setIsScanMode] = useState(false);
-
-  // Common state
+  const [isbn, setIsbn] = useState('');
+  const [title, setTitle] = useState('');
+  const [authors, setAuthors] = useState('');
+  const [publisher, setPublisher] = useState('');
+  const [publishedYear, setPublishedYear] = useState<number | ''>('');
+  const [cover, setCover] = useState('');
+  
+  const [searchQuery, setSearchQuery] = useState('');
   const [candidates, setCandidates] = useState<BookCandidate[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loadingMessage, setLoadingMessage] = useState('');
+  
+  const user = useUser();
 
-  // Manual search state
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // Scan state
-  const webcamRef = useRef<Webcam>(null);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-
-  // --- Functions ---
-
-  // Combined registration logic
-  const handleRegister = async (book: BookCandidate) => {
-    if (!user) return alert('로그인이 필요합니다.');
-    
-    const confirmMessage = `'${book.title}'\n이 책을 등록하시겠습니까?`;
-    if (!window.confirm(confirmMessage)) return;
-
-    setIsLoading(true);
-    setLoadingMessage('등록 중...');
-
-    const { error: insertError } = await supabase.from('books').insert({
-      owner_id: user.id,
-      isbn: book.isbn13 || book.isbn10,
-      title: book.title,
-      authors: book.authors,
-      publisher: book.publisher,
-      published_year: book.published_year,
-      cover_url: book.cover_url,
-      available: true,
-    });
-
-    setIsLoading(false);
-
-    if (insertError) {
-      alert(`책 등록 실패: ${insertError.message}`);
-    } else {
-      alert('책이 성공적으로 등록되었습니다!');
-      // Reset state after successful registration
-      setCandidates([]);
-      setSearchQuery('');
-      setCapturedImage(null);
-      setIsScanMode(false);
-    }
-  };
-
-  // Manual search logic
+  // Search by title
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
+    
     setIsLoading(true);
-    setLoadingMessage('검색 중...');
     setError(null);
     setCandidates([]);
 
@@ -93,11 +41,16 @@ export default function NewBook() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: searchQuery }),
       });
-      if (!response.ok) throw new Error('검색에 실패했습니다.');
+
+      if (!response.ok) {
+        throw new Error('Search request failed.');
+      }
+      
       const data = await response.json();
-      setCandidates(data.candidates || []);
-      if (!data.candidates || data.candidates.length === 0) {
-        setError('검색 결과가 없습니다.');
+      if (data.candidates && data.candidates.length > 0) {
+        setCandidates(data.candidates);
+      } else {
+        setError('No books found for your query.');
       }
     } catch (err: any) {
       setError(err.message);
@@ -105,127 +58,135 @@ export default function NewBook() {
       setIsLoading(false);
     }
   };
+  
+  // Select a candidate from search results
+  const selectCandidate = (candidate: BookCandidate) => {
+    setTitle(candidate.title || '');
+    setAuthors((candidate.authors || []).join(', '));
+    setPublisher(candidate.publisher || '');
+    setPublishedYear(candidate.published_year || '');
+    setCover(candidate.cover_url || '');
+    setIsbn(candidate.isbn || '');
+    setCandidates([]); // Hide candidates
+    setSearchQuery(candidate.title); // Display selected title in search bar
+  };
 
-  // Scan logic
-  const handleCapture = useCallback(async () => {
-    if (isLoading) return;
-    const imageSrc = webcamRef.current?.getScreenshot();
-    if (!imageSrc) return setError("카메라에서 이미지를 가져올 수 없습니다.");
-
-    setCapturedImage(imageSrc);
-    setIsLoading(true);
-    setError(null);
-    setCandidates([]);
-
-    try {
-      setLoadingMessage('표지에서 책 정보 추출 중...');
-      const geminiResponse = await fetch('/api/gemini-cover-to-book', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ imageBase64: imageSrc }) });
-      if (!geminiResponse.ok) throw new Error(`책 정보 추출 실패: ${await geminiResponse.text()}`);
-      const { title } = await geminiResponse.json();
-      if (!title) throw new Error('표지에서 책 제목을 찾지 못했습니다.');
-
-      setLoadingMessage(`'${title}' 검색 중...`);
-      const searchResponse = await fetch('/api/search-book-by-title', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: title }),
-      });
-      if (!searchResponse.ok) throw new Error(`책 검색 실패: ${await searchResponse.text()}`);
-      const { candidates: foundCandidates } = await searchResponse.json();
-      setCandidates(foundCandidates ?? []);
-      if (!foundCandidates || foundCandidates.length === 0) {
-        setError(`'${title}'에 대한 검색 결과가 없습니다.`);
-      }
-    } catch (e: any) {
-      setError(e?.message || '책을 인식하는데 실패했습니다.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isLoading, webcamRef, setError, setCapturedImage, setIsLoading, setCandidates, setLoadingMessage]);
-
-  const handleRetake = () => {
-    setCapturedImage(null);
+  // Clear the form
+  const clearForm = () => {
+    setIsbn('');
+    setTitle('');
+    setAuthors('');
+    setPublisher('');
+    setPublishedYear('');
+    setCover('');
+    setSearchQuery('');
     setCandidates([]);
     setError(null);
   };
 
-  // --- Render Logic ---
-  return (
-    <div className="p-4 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4 text-center">도서 등록</h1>
+  // Save book information
+  async function save() {
+    if (!user) {
+      alert('You must be logged in to register a book.');
+      return;
+    }
+    if (!title) {
+      alert('Title is required.');
+      return;
+    }
 
-      {/* --- Mode-specific UI --- */}
-      {isScanMode ? (
-        // --- Scan Mode UI ---
-        <div className="relative">
-          <div className="absolute top-2 right-2 z-20">
-            <button onClick={() => setIsScanMode(false)} className="btn btn-circle bg-gray-700 text-white hover:bg-gray-900">
-              닫기
-            </button>
+    const payload = {
+      owner_id: user.id,
+      isbn: isbn || null,
+      title,
+      authors: authors ? authors.split(',').map(s => s.trim()) : null,
+      publisher: publisher || null,
+      published_year: publishedYear || null,
+      cover_url: cover || null,
+      available: true,
+    };
+
+    const { error } = await supabase.from('books').insert(payload);
+
+    if (error) {
+      alert('Failed to save book: ' + error.message);
+    } else {
+      alert('Book registered successfully.');
+      clearForm();
+    }
+  }
+
+  return (
+    <div className="container">
+      {/* Search Area */}
+      <div className="card">
+        <div className="row" style={{ gap: 12, alignItems: 'flex-end' }}>
+          <div style={{ flex: 1 }}>
+            <div className="label">Search by Title</div>
+            <input
+              className="input"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
+              placeholder="e.g., The Hitchhiker's Guide to the Galaxy"
+            />
           </div>
-          <div className="relative w-full aspect-[3/4] bg-black rounded-lg overflow-hidden shadow-lg mx-auto" style={{maxWidth: '400px'}}>
-            {capturedImage ? (
-              <img src={capturedImage} alt="Captured book cover" className="w-full h-full object-contain" />
-            ) : (
-              <Webcam audio={false} ref={webcamRef} screenshotFormat="image/jpeg" videoConstraints={videoConstraints} className="w-full h-full object-contain" />
-            )}
-            {isLoading && (
-              <div className="absolute inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center text-white z-10">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-                <p className="text-lg">{loadingMessage}</p>
-              </div>
-            )}
-          </div>
-          <div className="mt-4 flex justify-center gap-4">
-            {capturedImage ? (
-              <button onClick={handleRetake} disabled={isLoading} className="btn btn-secondary">다시 찍기</button>
-            ) : (
-              <button onClick={handleCapture} disabled={isLoading} className="btn btn-primary"> 촬영하기</button>
-            )}
-          </div>
-        </div>
-      ) : (
-        // --- Search Mode UI ---
-        <div className="flex items-center gap-2 mb-4">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSearch()}
-            placeholder="책 제목으로 검색"
-            className="input input-bordered w-full"
-          />
-          <button onClick={handleSearch} disabled={isLoading} className="btn btn-primary">검색</button>
-          <button onClick={() => setIsScanMode(true)} className="btn btn-square btn-outline">
-            카메라
+          <button className="btn" onClick={handleSearch} disabled={isLoading}>
+            {isLoading ? 'Searching...' : 'Search'}
           </button>
         </div>
-      )}
-
-      {/* --- Common Results Area --- */}
-      {error && <div className="mt-4 text-center text-red-500 bg-red-100 p-3 rounded-lg">{error}</div>}
-      
-      {!isLoading && candidates.length > 0 && (
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold text-center mb-3">검색 결과 (클릭하여 등록)</h2>
-          <ul className="space-y-3">
-            {candidates.map((c, idx) => (
-              <li
-                key={`${c.isbn13 || c.google_books_id || idx}`}
-                onClick={() => handleRegister(c)}
-                className="p-3 border rounded-lg flex items-center gap-4 cursor-pointer transition-all duration-200 bg-white hover:bg-gray-100"
-              >
-                <img src={c.cover_url || 'https://via.placeholder.com/80x120.png?text=No+Image'} alt={c.title} className="w-16 h-24 object-contain rounded bg-gray-100 flex-shrink-0" />
-                <div className="flex-grow min-w-0">
-                  <p className="font-bold text-lg truncate">{c.title}</p>
-                  <p className="text-gray-600 truncate">{c.authors?.join(', ') || '저자 정보 없음'}</p>
-                  <p className="text-sm text-gray-500">{c.publisher || '출판사 정보 없음'} ({c.published_year || 'N/A'})</p>
+        {/* Display Search Results */}
+        {error && <div className="label" style={{color: 'crimson', marginTop: 8}}>{error}</div>}
+        {candidates.length > 0 && (
+          <ul style={{ listStyle: 'none', padding: 0, marginTop: '12px', borderTop: '1px solid #eee' }}>
+            {candidates.map((c, index) => (
+              <li key={index} onClick={() => selectCandidate(c)} style={{ padding: '8px', cursor: 'pointer', borderBottom: '1px solid #eee', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <img src={c.cover_url} alt={c.title} style={{width: '40px', height: '60px', objectFit: 'contain', borderRadius: '4px'}}/>
+                <div>
+                  <div style={{fontWeight: 600}}>{c.title}</div>
+                  <div className="label">{(c.authors || []).join(', ')}</div>
                 </div>
               </li>
             ))}
           </ul>
+        )}
+      </div>
+
+      {/* Input Form */}
+      <div className="section card">
+        <div className="row" style={{ gap: 12 }}>
+          <div style={{ flex: 2 }}>
+            <div className="label">Title</div>
+            <input className="input" value={title} onChange={e => setTitle(e.target.value)} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div className="label">ISBN</div>
+            <input className="input" value={isbn} onChange={e => setIsbn(e.target.value)} />
+          </div>
         </div>
-      )}
+        <div className="row" style={{ gap: 12, marginTop: 12 }}>
+          <div style={{ flex: 1 }}>
+            <div className="label">Authors (comma separated)</div>
+            <input className="input" value={authors} onChange={e => setAuthors(e.target.value)} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div className="label">Publisher</div>
+            <input className="input" value={publisher} onChange={e => setPublisher(e.target.value)} />
+          </div>
+          <div style={{ width: 160 }}>
+            <div className="label">Publication year</div>
+            <input className="input" type="number" value={publishedYear} onChange={e => setPublishedYear(Number(e.target.value) || '')} />
+          </div>
+        </div>
+        <div style={{marginTop: 12}}>
+            <div className="label">Cover URL</div>
+            <input className="input" value={cover} onChange={e => setCover(e.target.value)} />
+        </div>
+        <div className="row" style={{ marginTop: 12, justifyContent: 'flex-end', gap: 8 }}>
+          <button className="btn" onClick={clearForm} style={{background: '#6b7280'}}>Clear</button>
+          <button className="btn" onClick={save}>Save</button>
+        </div>
+      </div>
     </div>
   );
 }
