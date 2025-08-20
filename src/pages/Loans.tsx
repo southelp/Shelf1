@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient.ts';
 import { Loan } from '../types.ts';
 import { useUser } from '@supabase/auth-helpers-react';
+import PaginatedBookGrid from '../components/PaginatedBookGrid';
 
 function MyLoanCard({ loan, onComplete }: { loan: Loan; onComplete: () => void; }) {
   const handleAction = async (action: 'return' | 'cancel') => {
@@ -134,11 +135,13 @@ export default function Loans() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {myLoans.map(loan => 
+        <PaginatedBookGrid
+          items={myLoans}
+          renderItem={(loan) => (
             <MyLoanCard key={loan.id} loan={loan} onComplete={loadData} />
           )}
-        </div>
+          itemsPerPage={20} // 5 columns * 4 rows
+        />
       )}
     </div>
   );
