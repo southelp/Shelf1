@@ -169,8 +169,7 @@ export default function Scan() {
             {candidates.map((c, idx) => (
               <li
                 key={`${c.isbn13 || c.google_books_id || idx}`}
-                onClick={() => setSelectedCandidate(c)}
-                className={`p-3 border rounded-lg flex items-center gap-4 cursor-pointer transition-all duration-200 ${selectedCandidate?.google_books_id === c.google_books_id ? 'ring-2 ring-blue-500 shadow-md' : 'hover:bg-gray-50'}`}
+                className={`p-3 border rounded-lg flex items-center gap-4 transition-all duration-200 ${selectedCandidate?.google_books_id === c.google_books_id ? 'bg-blue-100 ring-2 ring-blue-500' : 'bg-white hover:bg-gray-50'}`}
               >
                 <img src={c.cover_url || 'https://via.placeholder.com/80x120.png?text=No+Image'} alt={c.title} className="w-16 h-24 object-contain rounded bg-gray-100 flex-shrink-0" />
                 <div className="flex-grow min-w-0">
@@ -178,6 +177,9 @@ export default function Scan() {
                   <p className="text-gray-600 truncate">{c.authors?.join(', ') || '저자 정보 없음'}</p>
                   <p className="text-sm text-gray-500">{c.publisher || '출판사 정보 없음'} ({c.published_year || 'N/A'})</p>
                 </div>
+                <button onClick={() => setSelectedCandidate(c)} className="btn btn-sm btn-outline-primary self-center">
+                  {selectedCandidate?.google_books_id === c.google_books_id ? '선택됨' : '선택'}
+                </button>
               </li>
             ))}
           </ul>
