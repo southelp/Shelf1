@@ -51,7 +51,6 @@ export default function Scan() {
     setSelectedCandidate(null);
 
     try {
-      // 1단계: Gemini API로 표지에서 책 제목 추출
       setLoadingMessage('표지에서 책 정보 추출 중...');
       const geminiResponse = await fetch('/api/gemini-cover-to-book', {
         method: 'POST',
@@ -69,7 +68,6 @@ export default function Scan() {
         throw new Error('표지에서 책 제목을 찾지 못했습니다.');
       }
 
-      // 2단계: 추출된 제목으로 책 검색 API 호출
       setLoadingMessage(`'${title}' 검색 중...`);
       const searchResponse = await fetch('/api/search-book-by-title', {
         method: 'POST',
@@ -104,21 +102,22 @@ export default function Scan() {
     setIsLoading(false);
   };
 
-  const handleRegister = async () => {
-    if (!selectedCandidate || !user) {
-      alert("등록할 책을 선택해 주세요.");
+  const handleRegister = async (candidateToRegister: Candidate) => {
+    if (!user) {
+      alert("등록을 위해 로그인이 필요합니다.");
       return;
     }
 
     setIsLoading(true);
+    setLoadingMessage('등록 중...');
     const { error: insertError } = await supabase.from('books').insert({
       owner_id: user.id,
-      isbn: selectedCandidate.isbn13 || selectedCandidate.isbn10,
-      title: selectedCandidate.title,
-      authors: selectedCandidate.authors,
-      publisher: selectedCandidate.publisher,
-      published_year: selectedCandidate.published_year,
-      cover_url: selectedCandidate.cover_url,
+      isbn: candidateToRegister.isbn13 || candidateToRegister.isbn10,
+      title: candidateToRegister.title,
+      authors: candidateToRegister.authors,
+      publisher: candidateToRegister.publisher,
+      published_year: candidateToRegister.published_year,
+      cover_url: candidateToRegister.cover_url,
       available: true,
     });
     setIsLoading(false);
@@ -128,6 +127,13 @@ export default function Scan() {
     } else {
       alert('책이 성공적으로 등록되었습니다!');
       navigate('/my');
+    }
+  };
+
+  const handleCandidateSelect = (candidate: Candidate) => {
+    setSelectedCandidate(candidate);
+    if (window.confirm(`'${candidate.title}'을(를) 등록하시겠습니까?`)) {
+      handleRegister(candidate);
     }
   };
 
@@ -166,14 +172,9 @@ export default function Scan() {
 
       <div className="mt-4 flex justify-center gap-4">
         {capturedImage ? (
-          <>
             <button onClick={handleRetake} disabled={isLoading} className="btn btn-secondary">
               다시 찍기
             </button>
-            <button onClick={handleRegister} disabled={!selectedCandidate || isLoading} className="btn btn-primary">
-              {isLoading ? '등록 중...' : '선택한 책 등록'}
-            </button>
-          </>
         ) : (
           <button onClick={handleCapture} disabled={isLoading} className="btn btn-primary">
             {isLoading ? '처리 중...' : '촬영하기'}
@@ -185,12 +186,13 @@ export default function Scan() {
 
       {!isLoading && candidates.length > 0 && (
         <div className="mt-6">
-          <h2 className="text-xl font-semibold text-center mb-3">등록할 책을 선택하세요:</h2>
+          <h2 className="text-xl font-semibold text-center mb-3">등록할 책을 선택하세요 (클릭하여 등록):</h2>
           <ul className="space-y-3">
             {candidates.map((c, idx) => (
               <li
                 key={`${c.isbn13 || c.google_books_id || idx}`}
-                className={`p-3 border rounded-lg flex items-center gap-4 transition-all duration-200 ${selectedCandidate?.google_books_id === c.google_books_id ? 'bg-blue-100 ring-2 ring-blue-500' : 'bg-white hover:bg-gray-50'}`}
+                onClick={() => handleCandidateSelect(c)}
+                className={`p-3 border rounded-lg flex items-center gap-4 cursor-pointer transition-all duration-200 ${selectedCandidate?.google_books_id === c.google_books_id ? 'bg-gray-200' : 'bg-white hover:bg-gray-100'}`}
               >
                 <img src={c.cover_url || 'https://via.placeholder.com/80x120.png?text=No+Image'} alt={c.title} className="w-16 h-24 object-contain rounded bg-gray-100 flex-shrink-0" />
                 <div className="flex-grow min-w-0">
@@ -198,9 +200,6 @@ export default function Scan() {
                   <p className="text-gray-600 truncate">{c.authors?.join(', ') || '저자 정보 없음'}</p>
                   <p className="text-sm text-gray-500">{c.publisher || '출판사 정보 없음'} ({c.published_year || 'N/A'})</p>
                 </div>
-                <button onClick={() => setSelectedCandidate(c)} className="btn btn-sm btn-outline-primary self-center">
-                  {selectedCandidate?.google_books_id === c.google_books_id ? '선택됨' : '선택'}
-                </button>
               </li>
             ))}
           </ul>
