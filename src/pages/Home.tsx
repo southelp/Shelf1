@@ -78,11 +78,11 @@ export default function Home() {
 
 
   return (
-    <div className="container">
-      <div className="section">
+    <div>
+      <div className="mb-6">
         <FilterBar onSearch={setQ} onlyAvailable={onlyAvailable} onToggleAvailable={setOnlyAvailable} />
       </div>
-      <div className="grid">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {books.map(b => <BookCard key={b.id} book={b} activeLoan={loans[b.id] || null} userId={user?.id} />)}
       </div>
     </div>

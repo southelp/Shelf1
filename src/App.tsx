@@ -40,37 +40,45 @@ export default function App() {
     navigate('/');
   }
 
-  const navLinkClass = "relative px-4 py-2 rounded-lg text-sm font-medium transition-colors";
+  const navLinkClass = "relative px-3 py-2 rounded-md text-sm font-medium transition-colors";
   
   return (
-    <>
-      <header className="header">
-        <div className="brand">Taejae Open Shelf</div>
-        <nav className="nav">
-          <Link to="/" className={`${navLinkClass} ${location.pathname === '/' ? 'bg-gray-100' : 'hover:bg-gray-100'}`}>Books</Link>
-          <Link to="/my" className={`${navLinkClass} ${location.pathname === '/my' ? 'bg-gray-100' : 'hover:bg-gray-100'}`} onClick={(e) => { if (!user) { e.preventDefault(); alert("Please log in to continue."); } }}>My Library</Link>
-          <Link to="/loans" className={`${navLinkClass} ${location.pathname === '/loans' ? 'bg-gray-100' : 'hover:bg-gray-100'}`} onClick={(e) => { if (!user) { e.preventDefault(); alert("Please log in to continue."); } }}>My Loans</Link>
-          <Link to="/books/new" className={`${navLinkClass} ${location.pathname === '/books/new' ? 'bg-gray-100' : 'hover:bg-gray-100'}`} onClick={(e) => { if (!user) { e.preventDefault(); alert("Please log in to continue."); } }}>Register Book</Link>
-        </nav>
-        <div style={{ marginLeft: 'auto' }}>
-          {user ? (
-            <div className="row" style={{ gap: 10 }}>
-              <span className="label">{user.email}</span>
-              <button className="btn" onClick={signOut}>Sign Out</button>
+    <div className="min-h-screen bg-slate-50">
+      <header className="bg-white shadow-sm sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-6">
+              <div className="font-bold text-lg text-gray-800">Taejae Open Shelf</div>
+              <nav className="hidden md:flex space-x-2">
+                <Link to="/" className={`${navLinkClass} ${location.pathname === '/' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'}`}>Books</Link>
+                <Link to="/my" className={`${navLinkClass} ${location.pathname === '/my' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'}`} onClick={(e) => { if (!user) { e.preventDefault(); alert("Please log in to continue."); } }}>My Library</Link>
+                <Link to="/loans" className={`${navLinkClass} ${location.pathname === '/loans' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'}`} onClick={(e) => { if (!user) { e.preventDefault(); alert("Please log in to continue."); } }}>My Loans</Link>
+                <Link to="/books/new" className={`${navLinkClass} ${location.pathname === '/books/new' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'}`} onClick={(e) => { if (!user) { e.preventDefault(); alert("Please log in to continue."); } }}>Register Book</Link>
+              </nav>
             </div>
-          ) : (
-            <GoogleSignInButton />
-          )}
+            <div className="flex items-center space-x-4">
+              {user ? (
+                <>
+                  <span className="text-sm text-gray-600 hidden sm:block">{user.email}</span>
+                  <button className="g-button-gray" onClick={signOut}>Sign Out</button>
+                </>
+              ) : (
+                <GoogleSignInButton />
+              )}
+            </div>
+          </div>
         </div>
       </header>
 
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/my" element={<MyLibrary />} />
-        <Route path="/loans" element={<Loans />} />
-        <Route path="/books/new" element={<MyNewBook />} />
-        <Route path="/users/:userId" element={<UserLibrary />} />
-      </Routes>
-    </>
+      <main className="container">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/my" element={<MyLibrary />} />
+          <Route path="/loans" element={<Loans />} />
+          <Route path="/books/new" element={<MyNewBook />} />
+          <Route path="/users/:userId" element={<UserLibrary />} />
+        </Routes>
+      </main>
+    </div>
   );
 }

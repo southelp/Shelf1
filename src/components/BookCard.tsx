@@ -74,77 +74,51 @@ export default function BookCard({
   }
 
   return (
-    <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
-      <div style={{ position: 'relative' }}>
-        {book.cover_url ? (
-          <img
-            src={book.cover_url}
-            alt={book.title}
-            style={{
-              width: '100%',
-              height: '240px',
-              objectFit: 'contain',
-              borderRadius: '12px',
-              marginBottom: '8px',
-              backgroundColor: '#f9fafb',
-              opacity: badgeText !== 'Available' ? 0.2 : 1,
-            }}
-          />
-        ) : (
-          <div
-            style={{
-              width: '100%',
-              height: '240px',
-              borderRadius: '12px',
-              marginBottom: '8px',
-              backgroundColor: '#f0f2f5',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#a0aec0',
-              fontSize: '14px',
-              opacity: badgeText !== 'Available' ? 0.2 : 1,
-            }}
-          >
-            <span>No Image</span>
-          </div>
-        )}
+    <div className="g-card flex flex-col h-full">
+      <div className="relative flex-grow">
+        <img
+          src={book.cover_url || 'https://via.placeholder.com/150x220.png?text=No+Image'}
+          alt={book.title}
+          className={`w-full h-60 object-contain rounded-md mb-2 bg-gray-100 ${badgeText !== 'Available' ? 'opacity-20' : ''}`}
+        />
       </div>
       
-      <div className="badge" style={{ ...getBadgeStyle(badgeText), marginBottom: 8 }}>
+      <div 
+        className="px-2 py-1 text-xs font-semibold rounded-full self-start mb-2"
+        style={getBadgeStyle(badgeText)}
+      >
         {badgeText}
       </div>
 
-      <div style={{ fontWeight: 700, marginBottom: 6 }}>{book.title}</div>
+      <h3 className="font-bold text-md mb-1 truncate">{book.title}</h3>
       {book.authors && (
-        <div className="label" style={{ marginBottom: 8 }}>
-          {book.authors.join(', ')}
-        </div>
+        <p className="text-sm text-gray-600 mb-2 truncate">{book.authors.join(', ')}</p>
       )}
 
       {activeLoan?.status === 'loaned' && activeLoan.due_at && (
-        <div className="label" style={{ marginTop: 8, fontWeight: 600, color: '#dd2222' }}>
+        <p className="text-sm font-semibold text-red-600 mt-2">
           Due: {formatKSTDate(activeLoan.due_at)}
-        </div>
+        </p>
       )}
 
-      <div className="row" style={{ justifyContent: 'space-between', marginTop: 'auto', paddingTop: '12px' }}>
-        {userId && (isOwner ? (
-          <div className="btn" style={{ background: '#10b981', cursor: 'default' }}>
-            My Book
+      <div className="mt-auto pt-3 border-t border-gray-100">
+        {userId && (
+          <div className="flex items-center justify-between">
+            {isOwner ? (
+              <span className="px-4 py-2 text-sm font-semibold text-green-800 bg-green-100 rounded-lg">My Book</span>
+            ) : (
+              <button className={activeLoan ? "g-button-gray" : "g-button-blue"} disabled={disabled} onClick={requestLoan}>
+                {activeLoan ? badgeText : 'Request Loan'}
+              </button>
+            )}
+            <div className="text-right text-xs text-gray-500">
+              <div>{formatKSTDate(book.created_at)}</div>
+              <Link to={`/users/${book.owner_id}`} className="font-semibold text-gray-700 hover:underline">
+                 {formatOwnerName(book.profiles?.full_name)}
+              </Link>
+            </div>
           </div>
-        ) : (
-          <button className="btn" disabled={disabled} onClick={requestLoan}>
-            {activeLoan ? badgeText : 'Request Loan'}
-          </button>
-        ))}
-        {userId && <div className="label" style={{ textAlign: 'right', lineHeight: 1.4 }}>
-          <div>{formatKSTDate(book.created_at)}</div>
-          {/* ✨ 2. 소유자 이름 표시 형식을 변경하고 링크를 유지합니다. */}
-          <Link to={`/users/${book.owner_id}`} style={{ fontWeight: 600, color: 'var(--text)', textDecoration: 'underline' }}>
-             {formatOwnerName(book.profiles?.full_name)}
-          </Link>
-        </div>}
+        )}
       </div>
     </div>
   );
