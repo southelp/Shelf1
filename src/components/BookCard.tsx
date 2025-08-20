@@ -86,7 +86,7 @@ export default function BookCard({
         ease-out
         p-4
         flex flex-col
-        h-full
+        w-48
         group
       "
       style={{
