@@ -28,6 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY;
     const GOOGLE_BOOKS_API_KEY = process.env.GOOGLE_BOOKS_API_KEY;
+    const ALADIN_API_KEY = process.env.ALADIN_API_KEY;
 
     let searchResults: any[] = [];
     const seen = new Set<string>();
@@ -73,10 +74,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
     }
 
-    // 3. 결과를 프론트엔드에 맞는 형식으로 변환
-    const candidates = searchResults.map(item => {
+    // 3. 결과를 프론트엔드에 맞는 형식으로 변환 (알라딘 표지 포함)
+    const candidates = await Promise.all(searchResults.map(async (item) => {
         const isGoogle = 'volumeInfo' in item;
         const info = isGoogle ? item.volumeInfo : item;
+        let cover_url = isGoogle ? info.imageLinks?.thumbnail : info.thumbnail;
+
+        // 알라딘 API로 고화질 표지 조회
+        if (item.isbn13 && ALADIN_API_KEY) {
+            try {
+                const aladinUrl = `http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey=${ALADIN_API_KEY}&itemIdType=ISBN13&ItemId=${item.isbn13}&output=js&Version=20131101`;
+                const aladinRes = await fetch(aladinUrl);
+                if (aladinRes.ok) {
+                    const aladinText = await aladinRes.text();
+                    // 알라딘 응답이 JSONP 형식이므로, `JSON.parse`를 위해 콜백 부분을 제거
+                    const aladinJson = JSON.parse(aladinText.replace(/^\w+\((.*)\);?$/, '$1'));
+                    if (aladinJson.item && aladinJson.item.length > 0) {
+                        cover_url = aladinJson.item[0].cover.replace('_sm', '_l'); // 작은 표지 -> 큰 표지
+                    }
+                }
+            } catch (e) {
+                // 알라딘 API 실패 시 기존 표지 사용
+                console.error('Aladin API error:', e);
+            }
+        }
         
         return {
             isbn13: item.isbn13,
@@ -87,12 +108,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             authors: info.authors || [],
             publisher: info.publisher,
             published_year: yearFrom(isGoogle ? info.publishedDate : info.datetime),
-            cover_url: isGoogle ? info.imageLinks?.thumbnail : info.thumbnail,
+            cover_url: cover_url,
             google_books_id: isGoogle ? item.id : undefined,
         };
-    }).filter(c => c.title); // 제목이 없는 결과는 제외
+    }));
 
-    res.status(200).json({ candidates });
+    res.status(200).json({ candidates: candidates.filter(c => c.title) });
 
   } catch (e: any) {
     console.error(e);
