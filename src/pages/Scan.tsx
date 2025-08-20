@@ -170,63 +170,62 @@ export default function Scan() {
           aspectRatio: '3/4',
         }}
       >
-        {!capturedImage ? (
-          <>
-            <video
-              ref={videoRef}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
-              }}
-              playsInline
-              autoPlay
-              muted
-            />
-            <button
-              onClick={handleCapture}
-              disabled={isLoading}
-              style={{
-                position: 'absolute',
-                bottom: '16px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                padding: '12px 20px',
-                borderRadius: '50px',
-                border: 'none',
-                background: isLoading ? '#9ca3af' : 'rgba(255, 255, 255, 0.95)',
-                color: isLoading ? '#fff' : '#000',
-                fontWeight: '600',
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                zIndex: 10,
-              }}
-            >
-              {isLoading ? '처리 중...' : '촬영'}
-            </button>
-          </>
-        ) : (
-          <>
-            <img
-              src={capturedImage}
-              alt="촬영된 책 표지"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
-              }}
-            />
-            {isLoading && (
-              <div
-                style={{
-                  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                  background: 'rgba(0, 0, 0, 0.7)', display: 'flex',
-                  alignItems: 'center', justifyContent: 'center', color: 'white', zIndex: 20
-                }}
-              >
-                분석 중...
-              </div>
-            )}
-          </>
+        <video
+          ref={videoRef}
+          style={{
+            display: capturedImage ? 'none' : 'block',
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+          }}
+          playsInline
+          autoPlay
+          muted
+        />
+        <img
+          src={capturedImage || ''}
+          alt="촬영된 책 표지"
+          style={{
+            display: capturedImage ? 'block' : 'none',
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+          }}
+        />
+        
+        {!capturedImage && (
+          <button
+            onClick={handleCapture}
+            disabled={isLoading}
+            style={{
+              position: 'absolute',
+              bottom: '16px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              padding: '12px 20px',
+              borderRadius: '50px',
+              border: 'none',
+              background: isLoading ? '#9ca3af' : 'rgba(255, 255, 255, 0.95)',
+              color: isLoading ? '#fff' : '#000',
+              fontWeight: '600',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              zIndex: 10,
+            }}
+          >
+            {isLoading ? '처리 중...' : '촬영'}
+          </button>
+        )}
+
+        {isLoading && capturedImage && (
+          <div
+            style={{
+              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(0, 0, 0, 0.7)', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', color: 'white', zIndex: 20
+            }}
+          >
+            분석 중...
+          </div>
         )}
       </div>
 
