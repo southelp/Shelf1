@@ -26,10 +26,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'A "query" string is required.' });
     }
 
-    const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY;
+    const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY; // Keep for reference
+    const GOOGLE_BOOKS_API_KEY = process.env.GOOGLE_BOOKS_API_KEY; // Keep for reference
     const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
     const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
-    const GOOGLE_BOOKS_API_KEY = process.env.GOOGLE_BOOKS_API_KEY;
 
     let searchResults: any[] = [];
     const seen = new Set<string>();
@@ -49,9 +49,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
     };
 
-    // 1. Naver Books API 검색
-    if (NAVER_CLIENT_ID && NAVER_CLIENT_SECRET) {
-        const naverUrl = `https://openapi.naver.com/v1/search/book.json?query=${encodeURIComponent(query)}&display=5`;
+    // Function to perform Naver search
+    const performNaverSearch = async (searchQuery: string) => {
+        if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) return [];
+        const naverUrl = `https://openapi.naver.com/v1/search/book.json?query=${encodeURIComponent(searchQuery)}&display=5`;
         const naverRes = await fetch(naverUrl, {
             headers: {
                 'X-Naver-Client-Id': NAVER_CLIENT_ID,
@@ -60,49 +61,50 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
         if (naverRes.ok) {
             const naverJson = await naverRes.json();
-            addUniqueResults(naverJson.items || [], false, true);
+            return naverJson.items || [];
+        }
+        return [];
+    };
+
+    // 1. Primary Naver Books API search
+    let naverItems = await performNaverSearch(query);
+    addUniqueResults(naverItems, false, true);
+
+    // 2. If no results from primary Naver search, try refining query with Gemini and retry Naver
+    if (searchResults.length === 0) {
+        try {
+            const refineResponse = await fetch('/api/refine-book-query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: query }),
+            });
+            if (refineResponse.ok) {
+                const { refinedQuery } = await refineResponse.json();
+                if (refinedQuery && refinedQuery !== query) {
+                    naverItems = await performNaverSearch(refinedQuery);
+                    addUniqueResults(naverItems, false, true);
+                }
+            }
+        } catch (e) {
+            console.error('Error refining query with Gemini:', e);
         }
     }
 
-    // 2. Kakao Books API 검색 (Naver 결과가 부족할 경우)
-    if (searchResults.length < 5 && KAKAO_REST_API_KEY) {
-        const kakaoUrl = `https://dapi.kakao.com/v3/search/book?target=title&query=${encodeURIComponent(query)}&size=5`;
-        const kakaoRes = await fetch(kakaoUrl, { headers: { Authorization: `KakaoAK ${KAKAO_REST_API_KEY}` } });
-        if (kakaoRes.ok) {
-            const kakaoJson = await kakaoRes.json();
-            addUniqueResults(kakaoJson.documents || []);
-        }
-    }
-
-    // 3. Google Books API 검색 (Naver/Kakao 결과가 부족할 경우)
-    if (searchResults.length < 5) {
-        const googleUrl = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(query)}&langRestrict=ko&maxResults=5`;
-        const googleRes = await fetch(googleUrl + (GOOGLE_BOOKS_API_KEY ? `&key=${GOOGLE_BOOKS_API_KEY}`:''));
-        if(googleRes.ok) {
-            const googleJson = await googleRes.json();
-            addUniqueResults(googleJson.items || [], true);
-        }
-    }
-
-    // 4. 최종 후보 데이터 구성
+    // 3. Final candidates construction (only from Naver results)
     const candidates = searchResults.slice(0, 5).map(item => {
-        const isGoogle = item.isGoogle;
+        const isGoogle = item.isGoogle; // Will be false now
         const isNaver = item.isNaver;
-        const info = isGoogle ? item.volumeInfo : item;
+        const info = isGoogle ? item.volumeInfo : item; // info will be item for Naver/Kakao
         
         let isbn13 = null;
         let isbn10 = null;
         let cover_url = null;
 
-        if (isGoogle) {
-            isbn13 = info.industryIdentifiers?.find((i: any) => i.type === 'ISBN_13')?.identifier || null;
-            isbn10 = info.industryIdentifiers?.find((i: any) => i.type === 'ISBN_10')?.identifier || null;
-            cover_url = info.imageLinks?.thumbnail || null;
-        } else if (isNaver) {
-            isbn13 = item.isbn || null; // Naver provides isbn directly
+        if (isNaver) {
+            isbn13 = item.isbn || null; 
             isbn10 = null; // Naver usually provides only isbn13
             cover_url = item.image || null;
-        } else { // Kakao
+        } else { // This path should ideally not be taken if only Naver is used
             isbn13 = (item.isbn || '').split(' ').find((x: string) => x.length === 13) || null;
             isbn10 = (item.isbn || '').split(' ').find((x: string) => x.length === 10) || null;
             cover_url = item.thumbnail || null;
@@ -118,7 +120,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             cover_url: cover_url,
             google_books_id: isGoogle ? item.id : undefined,
         };
-    }).filter(c => c.title); // 제목이 없는 결과는 제외
+    }).filter(c => c.title); // Exclude results without a title
 
     res.status(200).json({ candidates });
 
@@ -127,3 +129,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(500).json({ error: 'Internal Server Error', message: e.message });
   }
 }
+
+/*
+// Kakao Books API search (kept for reference)
+    if (KAKAO_REST_API_KEY) {
+        const kakaoUrl = `https://dapi.kakao.com/v3/search/book?target=title&query=${encodeURIComponent(query)}&size=5`;
+        const kakaoRes = await fetch(kakaoUrl, { headers: { Authorization: `KakaoAK ${KAKAO_REST_API_KEY}` } });
+        if (kakaoRes.ok) {
+            const kakaoJson = await kakaoRes.json();
+            addUniqueResults(kakaoJson.documents || []);
+        }
+    }
+
+// Google Books API search (kept for reference)
+    if (GOOGLE_BOOKS_API_KEY) {
+        const googleUrl = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(query)}&langRestrict=ko&maxResults=5`;
+        const googleRes = await fetch(googleUrl + (GOOGLE_BOOKS_API_KEY ? `&key=${GOOGLE_BOOKS_API_KEY}`:''));
+        if(googleRes.ok) {
+            const googleJson = await googleRes.json();
+            addUniqueResults(googleJson.items || [], true);
+        }
+    }
+*/
