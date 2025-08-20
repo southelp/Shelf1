@@ -3,6 +3,7 @@ import { useUser } from '@supabase/auth-helpers-react';
 import { Link, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Home from './pages/Home.tsx';
 import MyLibrary from './pages/MyLibrary.tsx';
+import MyNewBook from './pages/NewBook.tsx';
 import Loans from './pages/Loans.tsx';
 import UserLibrary from './pages/UserLibrary.tsx';
 import GoogleSignInButton from './components/GoogleSignInButton.tsx';
@@ -70,7 +71,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/my" element={<MyLibrary />} />
         <Route path="/loans" element={<Loans />} />
-        <Route path="/books/new" element={<NewBook />} />
+        <Route path="/books/new" element={<MyNewBook />} />
         
         <Route path="/users/:userId" element={<UserLibrary />} />
       </Routes>
