@@ -95,14 +95,14 @@ export default function BookCard({
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.04)'
       }}
     >
-      <div className="relative flex-grow mb-3">
+      <div className="relative flex-grow mb-3 flex justify-center items-center">
         <div
           className="
-            w-full
-            h-60
+            w-16
+            h-24
             bg-white
             border border-gray-200/40
-            rounded-xl
+            rounded-lg
             shadow-sm
             overflow-hidden
             relative
