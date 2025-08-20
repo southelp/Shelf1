@@ -230,7 +230,7 @@ export default function NewBook() {
         </div>
       ) : (
         // Updated Search UI
-        <div className="max-w-[500px] mx-auto">
+        <div className="max-w-[400px] mx-auto">
           <div className="space-y-3 mb-4">
             <input
               type="text"
