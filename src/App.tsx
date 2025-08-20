@@ -48,11 +48,11 @@ export default function App() {
         <div className="brand">Taejae Open Shelf</div>
         <nav className="nav">
           <Link to="/" className={`${navLinkClass} ${location.pathname === '/' ? 'bg-gray-100' : 'hover:bg-gray-100'}`}>도서</Link>
-          <Link to="/my" className={`${navLinkClass} ${location.pathname === '/my' ? 'bg-gray-100' : 'hover:bg-gray-100'}`}>나의 서재</Link>
-          <Link to="/loans" className={`${navLinkClass} ${location.pathname === '/loans' ? 'bg-gray-100' : 'hover:bg-gray-100'}`}>
+          <Link to="/my" className={`${navLinkClass} ${location.pathname === '/my' ? 'bg-gray-100' : 'hover:bg-gray-100'}`} onClick={(e) => { if (!user) { e.preventDefault(); alert("Please log in to continue."); } }}>나의 서재</Link>
+          <Link to="/loans" className={`${navLinkClass} ${location.pathname === '/loans' ? 'bg-gray-100' : 'hover:bg-gray-100'}`} onClick={(e) => { if (!user) { e.preventDefault(); alert("Please log in to continue."); } }}>
             대출/예약
           </Link>
-          <Link to="/books/new" className={`${navLinkClass} ${location.pathname === '/books/new' ? 'bg-gray-100' : 'hover:bg-gray-100'}`}>도서 등록</Link>
+          <Link to="/books/new" className={`${navLinkClass} ${location.pathname === '/books/new' ? 'bg-gray-100' : 'hover:bg-gray-100'}`} onClick={(e) => { if (!user) { e.preventDefault(); alert("Please log in to continue."); } }}>도서 등록</Link>
           
         </nav>
         <div style={{ marginLeft: 'auto' }}>

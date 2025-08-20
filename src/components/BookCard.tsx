@@ -129,7 +129,7 @@ export default function BookCard({
       )}
 
       <div className="row" style={{ justifyContent: 'space-between', marginTop: 'auto', paddingTop: '12px' }}>
-        {isOwner ? (
+        {userId && (isOwner ? (
           <div className="btn" style={{ background: '#10b981', cursor: 'default' }}>
             My Book
           </div>
@@ -137,14 +137,14 @@ export default function BookCard({
           <button className="btn" disabled={disabled} onClick={requestLoan}>
             {activeLoan ? badgeText : 'Request Loan'}
           </button>
-        )}
-        <div className="label" style={{ textAlign: 'right', lineHeight: 1.4 }}>
+        ))}
+        {userId && <div className="label" style={{ textAlign: 'right', lineHeight: 1.4 }}>
           <div>{formatKSTDate(book.created_at)}</div>
           {/* ✨ 2. 소유자 이름 표시 형식을 변경하고 링크를 유지합니다. */}
           <Link to={`/users/${book.owner_id}`} style={{ fontWeight: 600, color: 'var(--text)', textDecoration: 'underline' }}>
              {formatOwnerName(book.profiles?.full_name)}
           </Link>
-        </div>
+        </div>}
       </div>
     </div>
   );
