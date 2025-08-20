@@ -39,25 +39,140 @@ export default function MyLibrary() {
     loadData();
   }, [loadData]);
 
-  return (
-    <div className="container">
-      {incomingRequests.length > 0 && (
-        <div className="section">
-          <h2>Incoming Loan Requests</h2>
-          <div className="grid">
-            {incomingRequests.map(req => (
-              <LoanRequestCard key={req.id} loan={req} onComplete={loadData} />
-            ))}
-          </div>
+  if (!user) {
+    return (
+      <div 
+        className="flex flex-col justify-center items-center gap-6 self-stretch py-20"
+        style={{ 
+          backgroundColor: '#FCFCFC',
+          fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+        }}
+      >
+        <div 
+          className="text-lg font-medium"
+          style={{ color: '#1A1C1E' }}
+        >
+          Please log in to view your library
         </div>
-      )}
+      </div>
+    );
+  }
 
-      <div className="section">
-        <h2>My Owned Books</h2>
-        <div className="grid">
-          {owned.map(b => (
-            <MyOwnedBookCard key={b.id} book={b} onComplete={loadData} />
-          ))}
+  return (
+    <div 
+      className="w-full h-full overflow-auto p-6"
+      style={{ 
+        backgroundColor: '#FCFCFC',
+        fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+      }}
+    >
+      <div className="flex flex-col gap-8">
+        {/* Incoming Loan Requests Section */}
+        {incomingRequests.length > 0 && (
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <h2 
+                className="text-xl font-medium"
+                style={{
+                  color: '#1A1C1E',
+                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                }}
+              >
+                Incoming Loan Requests
+              </h2>
+              <div 
+                className="px-2 py-1 text-xs font-medium rounded-full"
+                style={{
+                  backgroundColor: '#ffedd5',
+                  color: '#9a3412'
+                }}
+              >
+                {incomingRequests.length}
+              </div>
+            </div>
+            
+            <div 
+              className="p-4 border rounded-2xl"
+              style={{ 
+                backgroundColor: '#F8F8F7',
+                borderColor: '#EEEEEC'
+              }}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {incomingRequests.map(req => (
+                  <LoanRequestCard key={req.id} loan={req} onComplete={loadData} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* My Owned Books Section */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <h2 
+              className="text-xl font-medium"
+              style={{
+                color: '#1A1C1E',
+                fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+              }}
+            >
+              My Books
+            </h2>
+            <div 
+              className="px-2 py-1 text-xs font-medium rounded-full"
+              style={{
+                backgroundColor: '#dcfce7',
+                color: '#166534'
+              }}
+            >
+              {owned.length}
+            </div>
+          </div>
+
+          {owned.length === 0 ? (
+            <div 
+              className="flex flex-col items-center justify-center py-16 border rounded-2xl"
+              style={{ 
+                backgroundColor: '#F8F8F7',
+                borderColor: '#EEEEEC'
+              }}
+            >
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="#9CA3AF"/>
+                  </svg>
+                </div>
+                <div 
+                  className="text-base font-medium"
+                  style={{ color: '#1A1C1E' }}
+                >
+                  No books yet
+                </div>
+                <div 
+                  className="text-sm text-center max-w-md"
+                  style={{ color: '#5D5D5F' }}
+                >
+                  Start building your library by adding your first book
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div 
+              className="p-4 border rounded-2xl"
+              style={{ 
+                backgroundColor: '#F8F8F7',
+                borderColor: '#EEEEEC'
+              }}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {owned.map(b => (
+                  <MyOwnedBookCard key={b.id} book={b} onComplete={loadData} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

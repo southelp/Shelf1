@@ -1,18 +1,19 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useUser } from '@supabase/auth-helpers-react';
-import { Link, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home.tsx';
 import MyLibrary from './pages/MyLibrary.tsx';
 import MyNewBook from './pages/NewBook.tsx';
 import Loans from './pages/Loans.tsx';
 import UserLibrary from './pages/UserLibrary.tsx';
-import GoogleSignInButton from './components/GoogleSignInButton.tsx';
+import BookDisplayDemo from './pages/BookDisplayDemo.tsx';
+import Sidebar from './components/Sidebar.tsx';
+import Header from './components/Header.tsx';
 import { supabase } from './lib/supabaseClient.ts';
 
 export default function App() {
   const user = useUser();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -35,50 +36,72 @@ export default function App() {
     }
   }, [user]);
 
-  async function signOut() {
-    await supabase.auth.signOut();
-    navigate('/');
-  }
-
-  const navLinkClass = "relative px-3 py-2 rounded-md text-sm font-medium transition-colors";
-  
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-6">
-              <div className="font-bold text-lg text-gray-800">Taejae Open Shelf</div>
-              <nav className="hidden md:flex space-x-2">
-                <Link to="/" className={`${navLinkClass} ${location.pathname === '/' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'}`}>Books</Link>
-                <Link to="/my" className={`${navLinkClass} ${location.pathname === '/my' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'}`} onClick={(e) => { if (!user) { e.preventDefault(); alert("Please log in to continue."); } }}>My Library</Link>
-                <Link to="/loans" className={`${navLinkClass} ${location.pathname === '/loans' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'}`} onClick={(e) => { if (!user) { e.preventDefault(); alert("Please log in to continue."); } }}>My Loans</Link>
-                <Link to="/books/new" className={`${navLinkClass} ${location.pathname === '/books/new' ? 'text-blue-600' : 'text-gray-600 hover:text-gray-900'}`} onClick={(e) => { if (!user) { e.preventDefault(); alert("Please log in to continue."); } }}>Register Book</Link>
-              </nav>
-            </div>
-            <div className="flex items-center space-x-4">
-              {user ? (
-                <>
-                  <span className="text-sm text-gray-600 hidden sm:block">{user.email}</span>
-                  <button className="g-button-gray" onClick={signOut}>Sign Out</button>
-                </>
-              ) : (
-                <GoogleSignInButton />
-              )}
+    <div 
+      className="flex w-full h-screen flex-col justify-center items-start absolute"
+      style={{
+        background: 'linear-gradient(0deg, #FCFCFC 0%, #FCFCFC 100%), #FFF',
+        backdropFilter: 'blur(100px)'
+      }}
+    >
+      <div className="flex items-start flex-1 self-stretch">
+        <Sidebar 
+          isCollapsed={sidebarCollapsed} 
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+        />
+
+        <div className="flex flex-col items-start flex-1 self-stretch">
+          <Header />
+
+          <div className="flex flex-col items-start flex-1 self-stretch">
+            <div className="flex items-start self-stretch min-h-0 flex-1">
+              <div className="flex pr-1 flex-col justify-center items-start flex-1 self-stretch">
+                <div 
+                  className="flex flex-col items-start gap-0 flex-1 self-stretch rounded-[20px]"
+                  style={{ background: '#FCFCFC' }}
+                >
+                  <div 
+                    className="flex px-5 flex-col items-start self-stretch"
+                    style={{ backdropFilter: 'blur(1px)' }}
+                  >
+                    <div 
+                      className="flex py-2 px-0 justify-between items-center self-stretch border-b"
+                      style={{ 
+                        borderBottomColor: '#EEEEEC',
+                        borderBottomWidth: '0.667px'
+                      }}
+                    >
+                      <div className="flex px-3 items-center">
+                      </div>
+
+                      <div className="flex h-8 justify-center items-start gap-2">
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex px-5 pb-2 flex-col items-start flex-1 self-stretch">
+                    <div className="flex flex-col items-start flex-1 self-stretch">
+                      <main className="w-full h-full overflow-auto">
+                        <Routes>
+                          <Route path="/" element={<Home />} />
+                          <Route path="/my" element={<MyLibrary />} />
+                          <Route path="/loans" element={<Loans />} />
+                          <Route path="/books/new" element={<MyNewBook />} />
+                          <Route path="/users/:userId" element={<UserLibrary />} />
+                          <Route path="/demo" element={<BookDisplayDemo />} />
+                        </Routes>
+                      </main>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex p-2.5 flex-col items-center self-stretch">
+              </div>
             </div>
           </div>
         </div>
-      </header>
-
-      <main className="container">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/my" element={<MyLibrary />} />
-          <Route path="/loans" element={<Loans />} />
-          <Route path="/books/new" element={<MyNewBook />} />
-          <Route path="/users/:userId" element={<UserLibrary />} />
-        </Routes>
-      </main>
+      </div>
     </div>
   );
 }

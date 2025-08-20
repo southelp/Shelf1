@@ -22,20 +22,45 @@ function MyLoanCard({ loan, onComplete }: { loan: Loan; onComplete: () => void; 
   const formatKSTDate = (dateString: string) => new Date(dateString).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: 'long', day: 'numeric' });
 
   return (
-    <div className="card">
-      {loan.books?.cover_url && <img src={loan.books.cover_url} alt={loan.books.title} style={{ width: '100%', height: 180, objectFit: 'contain', borderRadius: 12, marginBottom: 8, background: '#f9fafb' }} />}
-      <div style={{ fontWeight: 700 }}>{loan.books?.title}</div>
-      <div className="label">Owner: {loan.books?.profiles?.full_name || '...'}</div>
+    <div className="g-card flex flex-col h-full text-sm">
+      <div className="relative flex-grow">
+        <img 
+          src={loan.books?.cover_url || 'https://via.placeholder.com/150x220.png?text=No+Image'} 
+          alt={loan.books?.title} 
+          className="w-full h-48 object-contain rounded-md mb-2 bg-gray-50"
+        />
+      </div>
       
+      <h3 className="font-bold truncate">{loan.books?.title}</h3>
+      <p className="text-gray-600 truncate text-xs mb-2">
+        Owner: {loan.books?.profiles?.full_name || '...'}
+      </p>
+
+      <div 
+        className={`px-2 py-1 text-xs font-semibold rounded-full self-start my-2 ${
+          loan.status === 'loaned' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+        }`}
+      >
+        {loan.status === 'loaned' ? 'Borrowed' : 'Reserved'}
+      </div>
+
       {loan.status === 'loaned' && loan.due_at && (
-        <div className="label" style={{ marginTop: 8, fontWeight: 600, color: '#dd2222' }}>
+        <p className="font-semibold text-red-600">
           Due: {formatKSTDate(loan.due_at)}
-        </div>
+        </p>
       )}
 
-      <div className="row" style={{ marginTop: 'auto', paddingTop: '12px' }}>
-        {loan.status === 'loaned' && <button className="btn" onClick={() => handleAction('return')} style={{ flex: 1 }}>Return Book</button>}
-        {loan.status === 'reserved' && <button className="btn" onClick={() => handleAction('cancel')} style={{ flex: 1, background: '#6b7280' }}>Cancel Reservation</button>}
+      <div className="mt-auto pt-2 border-t border-gray-100">
+        {loan.status === 'loaned' && (
+          <button onClick={() => handleAction('return')} className="w-full g-button-blue">
+            Return Book
+          </button>
+        )}
+        {loan.status === 'reserved' && (
+          <button onClick={() => handleAction('cancel')} className="w-full g-button-gray">
+            Cancel Reservation
+          </button>
+        )}
       </div>
     </div>
   );
@@ -64,16 +89,57 @@ export default function Loans() {
     loadData();
   }, [loadData]);
 
+  if (!user) {
+    return (
+      <div 
+        className="flex flex-col justify-center items-center gap-6 self-stretch py-20"
+        style={{ 
+          backgroundColor: '#FCFCFC',
+          fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+        }}
+      >
+        <div 
+          className="text-lg font-medium"
+          style={{ color: '#1A1C1E' }}
+        >
+          Please log in to view your loans
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container">
-      <div className="section">
-        <h2>My Loans & Reservations</h2>
-        <div className="grid">
+    <div className="p-1">
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-gray-800">
+          My Loans & Reservations
+          {myLoans.length > 0 && (
+            <span className="ml-3 px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+              {myLoans.length}
+            </span>
+          )}
+        </h2>
+      </div>
+
+      {myLoans.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-lg border border-gray-200">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+            <svg className="w-8 h-8 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-800">No active loans</h3>
+          <p className="text-sm text-gray-500 mt-1">
+            You don't have any borrowed books or reservations at the moment.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {myLoans.map(loan => 
             <MyLoanCard key={loan.id} loan={loan} onComplete={loadData} />
           )}
         </div>
-      </div>
+      )}
     </div>
   );
 }

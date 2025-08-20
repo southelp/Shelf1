@@ -34,19 +34,33 @@ export default function LoanRequestCard({ loan, onComplete }: { loan: Loan; onCo
   const borrowerName = formatName(loan.profiles?.full_name);
 
   return (
-    <div className="card">
-      {loan.books?.cover_url ? (
-        <img src={loan.books.cover_url} alt={loan.books.title} style={{ width: '100%', height: 180, objectFit: 'contain', borderRadius: 12, marginBottom: 8, background: '#f9fafb' }} />
-      ) : (
-        <div style={{ width: '100%', height: 180, borderRadius: 12, marginBottom: 8, background: '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a0aec0' }}>No Image</div>
-      )}
-      <div style={{ fontWeight: 700 }}>{loan.books?.title}</div>
-      <div className="label" style={{ marginBottom: '12px' }}>
-        Requested by: <strong>{borrowerName}</strong>
+    <div className="bg-white rounded-lg shadow-sm p-3 flex flex-col h-full text-sm">
+      <div className="relative flex-grow">
+        <img 
+          src={loan.books?.cover_url || 'https://via.placeholder.com/150x220.png?text=No+Image'} 
+          alt={loan.books?.title} 
+          className="w-full h-48 object-contain rounded-md mb-2 bg-gray-50"
+        />
       </div>
-      <div className="row" style={{ gap: '8px' }}>
-        <button className="btn" onClick={() => handleAction('approve')} style={{ flex: 1, background: '#10b981' }}>Approve</button>
-        <button className="btn" onClick={() => handleAction('reject')} style={{ flex: 1, background: '#ef4444' }}>Reject</button>
+      
+      <h3 className="font-bold truncate">{loan.books?.title}</h3>
+      <p className="text-gray-600 truncate text-xs mb-2">
+        Requested by: <span className="font-semibold text-gray-800">{borrowerName}</span>
+      </p>
+      
+      <div className="mt-auto pt-2 border-t border-gray-100 flex items-center gap-2">
+        <button 
+          onClick={() => handleAction('approve')} 
+          className="w-full text-center bg-green-500 text-white text-xs font-bold py-1.5 px-2 rounded-md hover:bg-green-600 transition-colors"
+        >
+          Approve
+        </button>
+        <button 
+          onClick={() => handleAction('reject')} 
+          className="w-full text-center bg-red-500 text-white text-xs font-bold py-1.5 px-2 rounded-md hover:bg-red-600 transition-colors"
+        >
+          Reject
+        </button>
       </div>
     </div>
   );

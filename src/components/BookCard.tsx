@@ -74,46 +74,230 @@ export default function BookCard({
   }
 
   return (
-    <div className="g-card flex flex-col h-full">
-      <div className="relative flex-grow">
-        <img
-          src={book.cover_url || 'https://via.placeholder.com/150x220.png?text=No+Image'}
-          alt={book.title}
-          className={`w-full h-60 object-contain rounded-md mb-2 bg-gray-100 ${badgeText !== 'Available' ? 'opacity-20' : ''}`}
-        />
+    <div
+      className="
+        bg-white
+        border border-gray-200/60
+        rounded-2xl
+        shadow-sm
+        hover:shadow-md
+        transition-all
+        duration-200
+        ease-out
+        p-4
+        flex flex-col
+        h-full
+        group
+      "
+      style={{
+        backgroundColor: '#FCFCFC',
+        borderColor: '#EEEEEC',
+        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.04)'
+      }}
+    >
+      <div className="relative flex-grow mb-3">
+        <div
+          className="
+            w-full
+            h-60
+            bg-white
+            border border-gray-200/40
+            rounded-xl
+            shadow-sm
+            overflow-hidden
+            relative
+          "
+          style={{
+            boxShadow: '0 2px 6px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+          }}
+        >
+          <img
+            src={book.cover_url || 'https://via.placeholder.com/150x220.png?text=No+Image'}
+            alt={book.title}
+            className={`
+              w-full
+              h-full
+              object-cover
+              group-hover:scale-[1.02]
+              transition-transform
+              duration-300
+              ease-out
+              ${badgeText !== 'Available' ? 'opacity-30' : ''}
+            `}
+            style={{
+              filter: badgeText === 'Available' ? 'contrast(1.05) saturate(1.1)' : 'contrast(0.8) saturate(0.7)',
+            }}
+          />
+
+          {/* Subtle overlay for depth */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.02) 100%)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.05)'
+            }}
+          />
+        </div>
       </div>
       
-      <div 
-        className="px-2 py-1 text-xs font-semibold rounded-full self-start mb-2"
-        style={getBadgeStyle(badgeText)}
+      <div
+        className="
+          px-3 py-1.5
+          text-xs
+          font-medium
+          rounded-xl
+          self-start
+          mb-3
+          border
+          shadow-sm
+        "
+        style={{
+          ...getBadgeStyle(badgeText),
+          fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif',
+          borderColor: badgeText === 'Available' ? '#dcfce7' : badgeText === 'Reserved' ? '#ffedd5' : '#fee2e2'
+        }}
       >
         {badgeText}
       </div>
 
-      <h3 className="font-bold text-md mb-1 truncate">{book.title}</h3>
+      <h3
+        className="
+          font-medium
+          text-base
+          mb-2
+          line-clamp-2
+          leading-tight
+        "
+        style={{
+          fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif',
+          color: '#1A1C1E'
+        }}
+      >
+        {book.title}
+      </h3>
       {book.authors && (
-        <p className="text-sm text-gray-600 mb-2 truncate">{book.authors.join(', ')}</p>
+        <p
+          className="
+            text-sm
+            text-gray-600
+            mb-3
+            line-clamp-1
+            font-normal
+          "
+          style={{
+            fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif',
+            color: '#44474E'
+          }}
+        >
+          {book.authors.join(', ')}
+        </p>
       )}
 
       {activeLoan?.status === 'loaned' && activeLoan.due_at && (
-        <p className="text-sm font-semibold text-red-600 mt-2">
+        <p
+          className="
+            text-sm
+            font-medium
+            text-red-600
+            mt-2
+            px-3 py-1.5
+            bg-red-50
+            border border-red-200
+            rounded-xl
+            text-center
+          "
+          style={{
+            fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+          }}
+        >
           Due: {formatKSTDate(activeLoan.due_at)}
         </p>
       )}
 
-      <div className="mt-auto pt-3 border-t border-gray-100">
+      <div
+        className="
+          mt-auto
+          pt-4
+          border-t
+          border-gray-200/50
+        "
+        style={{ borderColor: '#EEEEEC' }}
+      >
         {userId && (
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             {isOwner ? (
-              <span className="px-4 py-2 text-sm font-semibold text-green-800 bg-green-100 rounded-lg">My Book</span>
+              <span
+                className="
+                  px-4 py-2
+                  text-sm
+                  font-medium
+                  text-green-800
+                  bg-green-100
+                  border border-green-200
+                  rounded-xl
+                  shadow-sm
+                "
+                style={{
+                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                }}
+              >
+                My Book
+              </span>
             ) : (
-              <button className={activeLoan ? "g-button-gray" : "g-button-blue"} disabled={disabled} onClick={requestLoan}>
+              <button
+                className={`
+                  px-4 py-2
+                  text-sm
+                  font-medium
+                  rounded-xl
+                  border
+                  transition-all
+                  duration-200
+                  shadow-sm
+                  hover:shadow-md
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-offset-2
+                  ${activeLoan
+                    ? 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50 focus:ring-gray-400'
+                    : 'text-white bg-blue-600 border-blue-600 hover:bg-blue-700 focus:ring-blue-500'
+                  }
+                `}
+                style={{
+                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif',
+                  borderColor: activeLoan ? '#E1E1E1' : undefined
+                }}
+                disabled={disabled}
+                onClick={requestLoan}
+              >
                 {activeLoan ? badgeText : 'Request Loan'}
               </button>
             )}
-            <div className="text-right text-xs text-gray-500">
+            <div
+              className="
+                text-right
+                text-xs
+                text-gray-500
+                flex flex-col
+                gap-1
+              "
+              style={{
+                fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif',
+                color: '#5D5D5F'
+              }}
+            >
               <div>{formatKSTDate(book.created_at)}</div>
-              <Link to={`/users/${book.owner_id}`} className="font-semibold text-gray-700 hover:underline">
+              <Link
+                to={`/users/${book.owner_id}`}
+                className="
+                  font-medium
+                  text-gray-700
+                  hover:text-gray-900
+                  hover:underline
+                  transition-colors
+                "
+                style={{ color: '#32302C' }}
+              >
                  {formatOwnerName(book.profiles?.full_name)}
               </Link>
             </div>
