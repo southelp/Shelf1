@@ -70,7 +70,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/my" element={<MyLibrary />} />
         <Route path="/loans" element={<Loans />} />
-        <Route path="/books/new" element={<h1>Hello World</h1>} />
+        <Route path="/books/new" element={<NewBook />} />
         
         <Route path="/users/:userId" element={<UserLibrary />} />
       </Routes>
