@@ -3,7 +3,6 @@ import { supabase } from '../lib/supabaseClient';
 import { useUser } from '@supabase/auth-helpers-react';
 import Webcam from 'react-webcam';
 
-// BookCandidate type from previous version
 type BookCandidate = {
   isbn?: string | null;
   title: string;
@@ -22,38 +21,39 @@ const videoConstraints = {
 export default function NewBook() {
   const user = useUser();
 
-  // --- State Management ---
-  // Mode state
   const [isScanMode, setIsScanMode] = useState(false);
-
-  // Common state
+  const [isManualMode, setIsManualMode] = useState(false);
   const [candidates, setCandidates] = useState<BookCandidate[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingMessage, setLoadingMessage] = useState('');
-
-  // Manual search state
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Scan state
   const webcamRef = useRef<Webcam>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  
+  // Manual form state
+  const [manualBook, setManualBook] = useState<BookCandidate>({
+    title: '',
+    authors: [],
+    publisher: '',
+    published_year: null,
+    isbn: '',
+    cover_url: ''
+  });
 
-  // --- Functions ---
-
-  // Combined registration logic
   const handleRegister = async (book: BookCandidate) => {
-    if (!user) return alert('로그인이 필요합니다.');
+    if (!user) return alert('You must be logged in to register a book.');
+    if (!book.title) return alert('Title is required.');
     
-    const confirmMessage = `'${book.title}'\n이 책을 등록하시겠습니까?`;
+    const confirmMessage = `Are you sure you want to register this book?\n\nTitle: ${book.title}`;
     if (!window.confirm(confirmMessage)) return;
 
     setIsLoading(true);
-    setLoadingMessage('등록 중...');
+    setLoadingMessage('Registering book...');
 
     const { error: insertError } = await supabase.from('books').insert({
       owner_id: user.id,
-      isbn: book.isbn13 || book.isbn10,
+      isbn: book.isbn,
       title: book.title,
       authors: book.authors,
       publisher: book.publisher,
@@ -65,22 +65,22 @@ export default function NewBook() {
     setIsLoading(false);
 
     if (insertError) {
-      alert(`책 등록 실패: ${insertError.message}`);
+      alert(`Failed to register book: ${insertError.message}`);
     } else {
-      alert('책이 성공적으로 등록되었습니다!');
-      // Reset state after successful registration
+      alert('Book registered successfully!');
       setCandidates([]);
       setSearchQuery('');
       setCapturedImage(null);
       setIsScanMode(false);
+      setIsManualMode(false);
+      setManualBook({ title: '', authors: [], publisher: '', published_year: null, isbn: '', cover_url: '' });
     }
   };
 
-  // Manual search logic
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     setIsLoading(true);
-    setLoadingMessage('검색 중...');
+    setLoadingMessage('Searching...');
     setError(null);
     setCandidates([]);
 
@@ -93,28 +93,27 @@ export default function NewBook() {
 
       if (!searchResponse.ok) {
         const errorText = await searchResponse.text();
-        throw new Error(`책 검색 실패: ${errorText}`);
+        throw new Error(`Search failed: ${errorText}`);
       }
 
       const { candidates: foundCandidates } = await searchResponse.json();
       setCandidates(foundCandidates ?? []);
 
       if (!foundCandidates || foundCandidates.length === 0) {
-        setError(`'${searchQuery}'에 대한 검색 결과가 없습니다.`);
+        setError(`Book not found for query: '${searchQuery}'`);
       }
 
     } catch (e: any) {
-      setError(e?.message || '책을 검색하는데 실패했습니다.');
+      setError(e?.message || 'Failed to search for the book.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Scan logic
   const handleCapture = useCallback(async () => {
     if (isLoading) return;
     const imageSrc = webcamRef.current?.getScreenshot();
-    if (!imageSrc) return setError("카메라에서 이미지를 가져올 수 없습니다.");
+    if (!imageSrc) return setError("Could not get image from camera.");
 
     setCapturedImage(imageSrc);
     setIsLoading(true);
@@ -122,49 +121,57 @@ export default function NewBook() {
     setCandidates([]);
 
     try {
-      setLoadingMessage('표지에서 책 정보 추출 중...');
+      setLoadingMessage('Extracting book info from cover...');
       const geminiResponse = await fetch('/api/gemini-cover-to-book', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ imageBase64: imageSrc }) });
-      if (!geminiResponse.ok) throw new Error(`책 정보 추출 실패: ${await geminiResponse.text()}`);
+      if (!geminiResponse.ok) throw new Error(`Failed to extract info: ${await geminiResponse.text()}`);
       const { title } = await geminiResponse.json();
-      if (!title) throw new Error('표지에서 책 제목을 찾지 못했습니다.');
+      if (!title) throw new Error('Could not find a title on the book cover.');
 
-      setLoadingMessage(`'${title}' 검색 중...`);
+      setLoadingMessage(`Searching for '${title}'...`);
       const searchResponse = await fetch('/api/search-book-by-title', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: title }),
       });
-      if (!searchResponse.ok) throw new Error(`책 검색 실패: ${await searchResponse.text()}`);
+      if (!searchResponse.ok) throw new Error(`Search failed: ${await searchResponse.text()}`);
       const { candidates: foundCandidates } = await searchResponse.json();
       setCandidates(foundCandidates ?? []);
       if (!foundCandidates || foundCandidates.length === 0) {
-        setError(`'${title}'에 대한 검색 결과가 없습니다.`);
+        setError(`Book not found for title: '${title}'`);
       }
     } catch (e: any) {
-      setError(e?.message || '책을 인식하는데 실패했습니다.');
+      setError(e?.message || 'Failed to recognize the book.');
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, webcamRef, setError, setCapturedImage, setIsLoading, setCandidates, setLoadingMessage]);
+  }, [isLoading, webcamRef]);
 
   const handleRetake = () => {
     setCapturedImage(null);
     setCandidates([]);
     setError(null);
   };
+  
+  const handleManualInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    if (name === 'authors') {
+      setManualBook(prev => ({ ...prev, [name]: value.split(',').map(s => s.trim()) }));
+    } else if (name === 'published_year') {
+      setManualBook(prev => ({ ...prev, [name]: value ? Number(value) : null }));
+    } else {
+      setManualBook(prev => ({ ...prev, [name]: value }));
+    }
+  };
 
-  // --- Render Logic ---
   return (
     <div className="p-4 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4 text-center">도서 등록</h1>
+      <h1 className="text-2xl font-bold mb-4 text-center">Register a Book</h1>
 
-      {/* --- Mode-specific UI --- */}
       {isScanMode ? (
-        // --- Scan Mode UI ---
         <div className="relative">
           <div className="absolute top-2 right-2 z-20">
             <button onClick={() => setIsScanMode(false)} className="btn btn-circle bg-gray-700 text-white hover:bg-gray-900">
-              닫기
+              Close
             </button>
           </div>
           <div className="relative w-full aspect-[3/4] bg-black rounded-lg overflow-hidden shadow-lg mx-auto" style={{maxWidth: '400px'}}>
@@ -182,48 +189,62 @@ export default function NewBook() {
           </div>
           <div className="mt-4 flex justify-center gap-4">
             {capturedImage ? (
-              <button onClick={handleRetake} disabled={isLoading} className="btn btn-secondary">다시 찍기</button>
+              <button onClick={handleRetake} disabled={isLoading} className="btn btn-secondary">Retake</button>
             ) : (
-              <button onClick={handleCapture} disabled={isLoading} className="btn btn-primary"> 촬영하기</button>
+              <button onClick={handleCapture} disabled={isLoading} className="btn btn-primary">Capture</button>
             )}
           </div>
         </div>
+      ) : isManualMode ? (
+        <div>
+          <div className="flex justify-end mb-4">
+            <button onClick={() => setIsManualMode(false)} className="btn btn-ghost">Cancel</button>
+          </div>
+          <div className="space-y-3">
+            <input type="text" name="title" placeholder="Title (required)" value={manualBook.title} onChange={handleManualInputChange} className="input input-bordered w-full" />
+            <input type="text" name="authors" placeholder="Authors (comma-separated)" value={manualBook.authors?.join(', ')} onChange={handleManualInputChange} className="input input-bordered w-full" />
+            <input type="text" name="publisher" placeholder="Publisher" value={manualBook.publisher} onChange={handleManualInputChange} className="input input-bordered w-full" />
+            <input type="number" name="published_year" placeholder="Year" value={manualBook.published_year || ''} onChange={handleManualInputChange} className="input input-bordered w-full" />
+            <input type="text" name="isbn" placeholder="ISBN" value={manualBook.isbn || ''} onChange={handleManualInputChange} className="input input-bordered w-full" />
+            <input type="text" name="cover_url" placeholder="Cover Image URL" value={manualBook.cover_url} onChange={handleManualInputChange} className="input input-bordered w-full" />
+          </div>
+          <div className="mt-4 flex justify-center">
+            <button onClick={() => handleRegister(manualBook)} disabled={isLoading || !manualBook.title} className="btn btn-primary">Register Manually</button>
+          </div>
+        </div>
       ) : (
-        // --- Search Mode UI ---
         <div className="flex items-center gap-2 mb-4">
           <input
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
-            placeholder="책 제목으로 검색"
+            placeholder="Search by book title"
             className="input input-bordered w-full"
           />
-          <button onClick={handleSearch} disabled={isLoading} className="btn btn-primary">검색</button>
-          <button onClick={() => setIsScanMode(true)} className="btn btn-square btn-outline">
-            카메라
-          </button>
+          <button onClick={handleSearch} disabled={isLoading} className="btn btn-primary">Search</button>
+          <button onClick={() => setIsScanMode(true)} className="btn btn-outline">Camera</button>
+          <button onClick={() => setIsManualMode(true)} className="btn btn-outline">Manual</button>
         </div>
       )}
 
-      {/* --- Common Results Area --- */}
       {error && <div className="mt-4 text-center text-red-500 bg-red-100 p-3 rounded-lg">{error}</div>}
       
       {!isLoading && candidates.length > 0 && (
         <div className="mt-6">
-          <h2 className="text-xl font-semibold text-center mb-3">검색 결과 (클릭하여 등록)</h2>
+          <h2 className="text-xl font-semibold text-center mb-3">Search Results (Click to register)</h2>
           <ul className="space-y-3">
             {candidates.map((c, idx) => (
               <li
-                key={`${c.isbn13 || c.google_books_id || idx}`}
+                key={`${c.isbn || c.google_books_id || idx}`}
                 onClick={() => handleRegister(c)}
                 className="p-3 border rounded-lg flex items-center gap-4 cursor-pointer transition-all duration-200 bg-white hover:bg-gray-100"
               >
                 <img src={c.cover_url || 'https://via.placeholder.com/80x120.png?text=No+Image'} alt={c.title} className="object-contain rounded bg-gray-100 flex-shrink-0" style={{ height: '120px', width: 'auto', marginRight: '16px' }} />
                 <div className="flex-grow min-w-0">
                   <p className="font-bold text-lg truncate">{c.title}</p>
-                  <p className="text-gray-600 truncate">{c.authors?.join(', ') || '저자 정보 없음'}</p>
-                  <p className="text-sm text-gray-500">{c.publisher || '출판사 정보 없음'} ({c.published_year || 'N/A'})</p>
+                  <p className="text-gray-600 truncate">{c.authors?.join(', ') || 'No author info'}</p>
+                  <p className="text-sm text-gray-500">{c.publisher || 'No publisher info'} ({c.published_year || 'N/A'})</p>
                 </div>
               </li>
             ))}

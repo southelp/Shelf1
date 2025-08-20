@@ -26,8 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'A "query" string is required.' });
     }
 
-    const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY; // Keep for reference
-    const GOOGLE_BOOKS_API_KEY = process.env.GOOGLE_BOOKS_API_KEY; // Keep for reference
+    const GOOGLE_BOOKS_API_KEY = process.env.GOOGLE_BOOKS_API_KEY;
     const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
     const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
 
@@ -39,7 +38,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         for (const item of items) {
             const info = isGoogle ? item.volumeInfo : item;
             const title = info.title || '';
-            const authors = (isNaver ? item.author.split('|').filter(Boolean) : (info.authors || [])).join(',');
+            const authors = (isNaver ? (item.author?.split('|').filter(Boolean) || []) : (info.authors || [])).join(',');
             const key = `${title}|${authors}`;
             
             if (!seen.has(key)) {
@@ -49,10 +48,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
     };
 
-    // Function to perform Naver search
-    const performNaverSearch = async (searchQuery: string) => {
-        if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) return [];
-        const naverUrl = `https://openapi.naver.com/v1/search/book.json?query=${encodeURIComponent(searchQuery)}&display=10`;
+    // 1. Primary Naver Books API search
+    if (NAVER_CLIENT_ID && NAVER_CLIENT_SECRET) {
+        const naverUrl = `https://openapi.naver.com/v1/search/book.json?query=${encodeURIComponent(query)}&display=10`;
         const naverRes = await fetch(naverUrl, {
             headers: {
                 'X-Naver-Client-Id': NAVER_CLIENT_ID,
@@ -61,66 +59,52 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
         if (naverRes.ok) {
             const naverJson = await naverRes.json();
-            return naverJson.items || [];
-        }
-        return [];
-    };
-
-    // 1. Primary Naver Books API search
-    let naverItems = await performNaverSearch(query);
-    addUniqueResults(naverItems, false, true);
-
-    // 2. If no results from primary Naver search, try refining query with Gemini and retry Naver
-    if (searchResults.length === 0) {
-        try {
-            const refineResponse = await fetch('/api/refine-book-query', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: query }),
-            });
-            if (refineResponse.ok) {
-                const { refinedQuery } = await refineResponse.json();
-                if (refinedQuery && refinedQuery !== query) {
-                    naverItems = await performNaverSearch(refinedQuery);
-                    addUniqueResults(naverItems, false, true);
-                }
-            }
-        } catch (e) {
-            console.error('Error refining query with Gemini:', e);
+            addUniqueResults(naverJson.items || [], false, true);
         }
     }
 
-    // 3. Final candidates construction (only from Naver results)
+    // 2. If no results from Naver, fallback to Google Books API
+    if (searchResults.length === 0 && GOOGLE_BOOKS_API_KEY) {
+        const googleUrl = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=10&key=${GOOGLE_BOOKS_API_KEY}`;
+        const googleRes = await fetch(googleUrl);
+        if(googleRes.ok) {
+            const googleJson = await googleRes.json();
+            addUniqueResults(googleJson.items || [], true, false);
+        }
+    }
+
+    // 3. Final candidates construction
     const candidates = searchResults.slice(0, 10).map(item => {
-        const isGoogle = item.isGoogle; // Will be false now
+        const isGoogle = item.isGoogle;
         const isNaver = item.isNaver;
-        const info = isGoogle ? item.volumeInfo : item; // info will be item for Naver/Kakao
+        const info = isGoogle ? item.volumeInfo : item;
         
         let isbn13 = null;
         let isbn10 = null;
         let cover_url = null;
 
-        if (isNaver) {
-            isbn13 = item.isbn || null; 
-            isbn10 = null; // Naver usually provides only isbn13
+        if (isGoogle) {
+            const identifiers = info.industryIdentifiers || [];
+            isbn13 = identifiers.find((i: any) => i.type === 'ISBN_13')?.identifier || null;
+            isbn10 = identifiers.find((i: any) => i.type === 'ISBN_10')?.identifier || null;
+            cover_url = info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail || null;
+        } else if (isNaver) {
+            isbn13 = item.isbn?.split(' ')[1] || item.isbn || null;
+            isbn10 = item.isbn?.split(' ')[0] || null;
             cover_url = item.image || null;
-        } else { // This path should ideally not be taken if only Naver is used
-            isbn13 = (item.isbn || '').split(' ').find((x: string) => x.length === 13) || null;
-            isbn10 = (item.isbn || '').split(' ').find((x: string) => x.length === 10) || null;
-            cover_url = item.thumbnail || null;
         }
 
         return {
             isbn13: isbn13,
             isbn10: isbn10,
-            title: info.title || item.title,
-            authors: isNaver ? item.author.split('|').filter(Boolean) : (info.authors || []),
-            publisher: info.publisher || item.publisher,
-            published_year: yearFrom(isGoogle ? info.publishedDate : (isNaver ? item.pubdate : item.datetime)),
+            title: info.title,
+            authors: isNaver ? (item.author?.split('|').filter(Boolean) || []) : (info.authors || []),
+            publisher: info.publisher,
+            published_year: yearFrom(isGoogle ? info.publishedDate : item.pubdate),
             cover_url: cover_url,
             google_books_id: isGoogle ? item.id : undefined,
         };
-    }).filter(c => c.title); // Exclude results without a title
+    }).filter(c => c.title);
 
     res.status(200).json({ candidates });
 
@@ -129,25 +113,3 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(500).json({ error: 'Internal Server Error', message: e.message });
   }
 }
-
-/*
-// Kakao Books API search (kept for reference)
-    if (KAKAO_REST_API_KEY) {
-        const kakaoUrl = `https://dapi.kakao.com/v3/search/book?target=title&query=${encodeURIComponent(query)}&size=10`;
-        const kakaoRes = await fetch(kakaoUrl, { headers: { Authorization: `KakaoAK ${KAKAO_REST_API_KEY}` } });
-        if (kakaoRes.ok) {
-            const kakaoJson = await kakaoRes.json();
-            addUniqueResults(kakaoJson.documents || []);
-        }
-    }
-
-// Google Books API search (kept for reference)
-    if (GOOGLE_BOOKS_API_KEY) {
-        const googleUrl = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(query)}&langRestrict=ko&maxResults=10`;
-        const googleRes = await fetch(googleUrl + (GOOGLE_BOOKS_API_KEY ? `&key=${GOOGLE_BOOKS_API_KEY}`:''));
-        if(googleRes.ok) {
-            const googleJson = await googleRes.json();
-            addUniqueResults(googleJson.items || [], true);
-        }
-    }
-*/
