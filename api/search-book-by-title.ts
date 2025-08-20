@@ -27,11 +27,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY;
+    const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
+    const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
     const GOOGLE_BOOKS_API_KEY = process.env.GOOGLE_BOOKS_API_KEY;
-    const ALADIN_API_KEY = process.env.ALADIN_API_KEY;
 
     let searchResults: any[] = [];
     const seen = new Set<string>();
+
+    // Helper to add unique results
+    const addUniqueResults = (items: any[], isGoogle: boolean = false) => {
+        for (const item of items) {
+            const info = isGoogle ? item.volumeInfo : item;
+            const title = info.title || '';
+            const authors = (info.authors || []).join(',');
+            const key = `${title}|${authors}`;
+            
+            if (!seen.has(key)) {
+                searchResults.push({ ...item, isGoogle, key });
+                seen.add(key);
+            }
+        }
+    };
 
     // 1. Kakao Books API 검색
     if (KAKAO_REST_API_KEY) {
@@ -39,81 +55,72 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const kakaoRes = await fetch(kakaoUrl, { headers: { Authorization: `KakaoAK ${KAKAO_REST_API_KEY}` } });
         if (kakaoRes.ok) {
             const kakaoJson = await kakaoRes.json();
-            const docs = (kakaoJson.documents || []).map((item: any) => {
-                const isbn13 = (item.isbn || '').split(' ').find((x: string) => x.length === 13) || null;
-                const key = `${item.title}|${(item.authors || []).join(',')}`;
-                return { ...item, isbn13, key };
-            });
-            for (const doc of docs) {
-                if (!seen.has(doc.key)) {
-                    searchResults.push(doc);
-                    seen.add(doc.key);
-                }
-            }
+            addUniqueResults(kakaoJson.documents || []);
         }
     }
 
-    // 2. Google Books API 검색 (Kakao 결과가 부족할 경우)
+    // 2. Naver Books API 검색 (Kakao 결과가 부족할 경우)
+    if (searchResults.length < 5 && NAVER_CLIENT_ID && NAVER_CLIENT_SECRET) {
+        const naverUrl = `https://openapi.naver.com/v1/search/book.json?query=${encodeURIComponent(query)}&display=5`;
+        const naverRes = await fetch(naverUrl, {
+            headers: {
+                'X-Naver-Client-Id': NAVER_CLIENT_ID,
+                'X-Naver-Client-Secret': NAVER_CLIENT_SECRET,
+            },
+        });
+        if (naverRes.ok) {
+            const naverJson = await naverRes.json();
+            addUniqueResults(naverJson.items || []);
+        }
+    }
+
+    // 3. Google Books API 검색 (Kakao/Naver 결과가 부족할 경우)
     if (searchResults.length < 5) {
         const googleUrl = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(query)}&langRestrict=ko&maxResults=5`;
         const googleRes = await fetch(googleUrl + (GOOGLE_BOOKS_API_KEY ? `&key=${GOOGLE_BOOKS_API_KEY}`:''));
         if(googleRes.ok) {
             const googleJson = await googleRes.json();
-            const items = (googleJson.items || []).map((item: any) => {
-                const vi = item.volumeInfo;
-                const isbn13 = vi.industryIdentifiers?.find((i: any) => i.type === 'ISBN_13')?.identifier || null;
-                const key = `${vi.title}|${(vi.authors || []).join(',')}`;
-                return { ...item, isbn13, key };
-            });
-            for (const item of items) {
-                if (!seen.has(item.key) && searchResults.length < 5) {
-                    searchResults.push(item);
-                    seen.add(item.key);
-                }
-            }
+            addUniqueResults(googleJson.items || [], true);
         }
     }
 
-    // 3. 결과를 프론트엔드에 맞는 형식으로 변환 (알라딘 표지 포함)
-    const candidates = await Promise.all(searchResults.map(async (item) => {
-        const isGoogle = 'volumeInfo' in item;
+    // 4. 최종 후보 데이터 구성
+    const candidates = searchResults.slice(0, 5).map(item => {
+        const isGoogle = item.isGoogle;
+        const isNaver = item.link && item.image && item.author; // Simple heuristic for Naver
         const info = isGoogle ? item.volumeInfo : item;
-        let cover_url = isGoogle ? info.imageLinks?.thumbnail : info.thumbnail;
-
-        // 알라딘 API로 고화질 표지 조회
-        if (item.isbn13 && ALADIN_API_KEY) {
-            try {
-                const aladinUrl = `http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey=${ALADIN_API_KEY}&itemIdType=ISBN13&ItemId=${item.isbn13}&output=js&Version=20131101`;
-                const aladinRes = await fetch(aladinUrl);
-                if (aladinRes.ok) {
-                    const aladinText = await aladinRes.text();
-                    // 알라딘 응답이 JSONP 형식이므로, `JSON.parse`를 위해 콜백 부분을 제거
-                    const aladinJson = JSON.parse(aladinText.replace(/^\w+\((.*)\);?$/, '$1'));
-                    if (aladinJson.item && aladinJson.item.length > 0) {
-                        cover_url = aladinJson.item[0].cover.replace(/_[a-z]$/, ''); // 모든 접미사 제거 시도
-                    }
-                }
-            } catch (e) {
-                // 알라딘 API 실패 시 기존 표지 사용
-                console.error('Aladin API error:', e);
-            }
-        }
         
+        let isbn13 = null;
+        let isbn10 = null;
+        let cover_url = null;
+
+        if (isGoogle) {
+            isbn13 = info.industryIdentifiers?.find((i: any) => i.type === 'ISBN_13')?.identifier || null;
+            isbn10 = info.industryIdentifiers?.find((i: any) => i.type === 'ISBN_10')?.identifier || null;
+            cover_url = info.imageLinks?.thumbnail || null;
+        } else if (isNaver) {
+            isbn13 = item.isbn || null; // Naver provides isbn directly
+            isbn10 = null; // Naver usually provides only isbn13
+            cover_url = item.image || null;
+        } else { // Kakao
+            isbn13 = (item.isbn || '').split(' ').find((x: string) => x.length === 13) || null;
+            isbn10 = (item.isbn || '').split(' ').find((x: string) => x.length === 10) || null;
+            cover_url = item.thumbnail || null;
+        }
+
         return {
-            isbn13: item.isbn13,
-            isbn10: isGoogle 
-                ? info.industryIdentifiers?.find((i: any) => i.type === 'ISBN_10')?.identifier
-                : (info.isbn || '').split(' ').find((x: string) => x.length === 10) || null,
-            title: info.title,
-            authors: info.authors || [],
-            publisher: info.publisher,
-            published_year: yearFrom(isGoogle ? info.publishedDate : info.datetime),
+            isbn13: isbn13,
+            isbn10: isbn10,
+            title: info.title || item.title,
+            authors: isNaver ? item.author.split('|').filter(Boolean) : (info.authors || []),
+            publisher: info.publisher || item.publisher,
+            published_year: yearFrom(isGoogle ? info.publishedDate : (isNaver ? item.pubdate : item.datetime)),
             cover_url: cover_url,
             google_books_id: isGoogle ? item.id : undefined,
         };
-    }));
+    }).filter(c => c.title); // 제목이 없는 결과는 제외
 
-    res.status(200).json({ candidates: candidates.filter(c => c.title) });
+    res.status(200).json({ candidates });
 
   } catch (e: any) {
     console.error(e);
