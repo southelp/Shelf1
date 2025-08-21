@@ -24,6 +24,7 @@ create table public.books (
   published_year int,
   cover_url text,
   available boolean default true,
+  source_api text, -- 'google' or 'naver'
   created_at timestamptz default now()
 );
 
@@ -61,7 +62,7 @@ create table public.notifications (
 
 -- 가용성 동기화 트리거
 create or replace function public.sync_book_availability()
-returns trigger as $$
+returns trigger as $
 begin
   if (new.status in ('reserved','loaned')) then
     update public.books set available=false where id=new.book_id;
@@ -74,7 +75,7 @@ begin
   end if;
   return new;
 end;
-$$ language plpgsql;
+$ language plpgsql;
 
 drop trigger if exists trg_loans_status_sync on public.loans;
 create trigger trg_loans_status_sync
@@ -119,15 +120,15 @@ create or replace function public.get_due_loans_on(ymd text)
 returns setof public.loans
 language sql
 security definer
-as $$
+as $
   select * from public.loans
   where status = 'loaned'::public.loan_status
     and to_char(due_at at time zone 'UTC', 'YYYY-MM-DD') = ymd
-$$;
+$;
 -- ✨ 추가된 코드 시작
 -- auth.users 테이블에 새 유저가 추가되면 public.profiles 테이블에도 추가하는 함수
 create or replace function public.handle_new_user()
-returns trigger as $$
+returns trigger as $
 begin
   -- "on conflict" 구문 추가: id가 이미 존재하면(충돌하면) 아무것도 하지 않음
   insert into public.profiles (id, email, full_name)
@@ -135,7 +136,7 @@ begin
   on conflict (id) do nothing;
   return new;
 end;
-$$ language plpgsql security definer;
+$ language plpgsql security definer;
 
 -- 위 함수를 호출하는 트리거
 create trigger on_auth_user_created

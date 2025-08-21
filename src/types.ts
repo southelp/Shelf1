@@ -17,6 +17,7 @@ export type Book = {
   cover_url: string | null;
   available: boolean;
   created_at: string;
+  source_api?: string;
   profiles: { full_name: string | null } | null;
 };
 
