@@ -55,8 +55,8 @@ export default function App() {
           <Header />
 
           <div className="flex flex-col items-start flex-1 self-stretch overflow-hidden">
-            <main className="w-full h-full overflow-auto p-6">
-              <div className="max-w-7xl mx-auto">
+            <main className="w-full h-full p-6">
+              <div className="max-w-7xl mx-auto h-full">
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/my" element={<MyLibrary />} />
