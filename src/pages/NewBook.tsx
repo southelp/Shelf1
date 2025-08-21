@@ -10,6 +10,7 @@ type BookCandidate = {
   publisher?: string;
   published_year?: number | null;
   cover_url?: string;
+  source?: string;
 };
 
 const videoConstraints = {
@@ -64,6 +65,7 @@ export default function NewBook() {
       published_year: book.published_year,
       cover_url: book.cover_url,
       available: true,
+      source_api: book.source,
     });
 
     setIsLoading(false);
@@ -296,14 +298,28 @@ export default function NewBook() {
                 </button>
               </div>
               <div className="p-4 border rounded-2xl space-y-4 bg-gray-50/70" style={{ borderColor: '#EEEEEC' }}>
-                {candidates.map((c, idx) => (
-                  <div key={`${c.isbn || idx}`} onClick={() => handleRegister(c)} className="cursor-pointer p-4 border rounded-2xl hover:shadow-md flex items-center gap-4 bg-white" style={{ borderColor: '#EEEEEC' }}>
-                    <img src={c.cover_url || 'https://via.placeholder.com/80x120.png?text=No+Image'} alt={c.title} className="w-20 h-30 object-cover rounded-lg shadow-sm" />
-                    <div className="flex-grow min-w-0">
-                      <p className="font-medium text-lg line-clamp-2">{c.title}</p>
-                      <p className="text-sm text-gray-600 line-clamp-1 mt-1">{c.authors?.join(', ') || 'No author info'}</p>
-                      <p className="text-xs text-gray-500 mt-1">{c.publisher || 'No publisher info'} ({c.published_year || 'N/A'})</p>
-                    </div>
+                {Object.entries(
+                  candidates.reduce((acc, book) => {
+                    const source = book.source || 'unknown';
+                    if (!acc[source]) {
+                      acc[source] = [];
+                    }
+                    acc[source].push(book);
+                    return acc;
+                  }, {} as Record<string, BookCandidate[]>)
+                ).map(([source, books]) => (
+                  <div key={source}>
+                    <h3 className="text-md font-bold mb-2">{source} api:</h3>
+                    {books.map((c, idx) => (
+                      <div key={`${c.isbn || idx}`} onClick={() => handleRegister(c)} className="cursor-pointer p-4 border rounded-2xl hover:shadow-md flex items-center gap-4 bg-white mb-2" style={{ borderColor: '#EEEEEC' }}>
+                        <img src={c.cover_url || 'https://via.placeholder.com/80x120.png?text=No+Image'} alt={c.title} className="w-20 h-30 object-cover rounded-lg shadow-sm" />
+                        <div className="flex-grow min-w-0">
+                          <p className="font-medium text-lg line-clamp-2">{idx + 1}. {c.title}</p>
+                          <p className="text-sm text-gray-600 line-clamp-1 mt-1">{c.authors?.join(', ') || 'No author info'}</p>
+                          <p className="text-xs text-gray-500 mt-1">{c.publisher || 'No publisher info'} ({c.published_year || 'N/A'})</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>

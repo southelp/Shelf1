@@ -31,16 +31,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let searchResults: any[] = [];
     const seen = new Set<string>();
 
-    const addUniqueResults = (items: any[], isGoogle: boolean = false, isNaver: boolean = false) => {
+    const addUniqueResults = (items: any[], source: 'google' | 'naver') => {
         for (const item of items) {
             if (searchResults.length >= 10) break;
-            const info = isGoogle ? item.volumeInfo : item;
+            const info = source === 'google' ? item.volumeInfo : item;
             const resultTitle = info.title || '';
-            const resultAuthors = (isNaver ? (item.author?.split('|').filter(Boolean) || []) : (info.authors || [])).join(',');
+            const resultAuthors = (source === 'naver' ? (item.author?.split('|').filter(Boolean) || []) : (info.authors || [])).join(',');
             const key = `${resultTitle}|${resultAuthors}`;
             
             if (!seen.has(key)) {
-                searchResults.push({ ...item, isGoogle, isNaver, key });
+                searchResults.push({ ...item, source, key });
                 seen.add(key);
             }
         }
@@ -54,7 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const naverRes = await fetch(naverUrl, { headers: { 'X-Naver-Client-Id': NAVER_CLIENT_ID, 'X-Naver-Client-Secret': NAVER_CLIENT_SECRET } });
         if (naverRes.ok) {
           const naverJson = await naverRes.json();
-          addUniqueResults(naverJson.items || [], false, true);
+          addUniqueResults(naverJson.items || [], 'naver');
         }
       }
       // Google ISBN search
@@ -63,7 +63,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const googleRes = await fetch(googleUrl);
         if (googleRes.ok) {
           const googleJson = await googleRes.json();
-          addUniqueResults(googleJson.items || [], true, false);
+          addUniqueResults(googleJson.items || [], 'google');
         }
       }
     } else { // Fallback to title/author/publisher search
@@ -76,7 +76,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const naverRes = await fetch(naverUrl, { headers: { 'X-Naver-Client-Id': NAVER_CLIENT_ID, 'X-Naver-Client-Secret': NAVER_CLIENT_SECRET } });
         if (naverRes.ok) {
           const naverJson = await naverRes.json();
-          addUniqueResults(naverJson.items || [], false, true);
+          addUniqueResults(naverJson.items || [], 'naver');
         }
       }
       // Google advanced search
@@ -89,40 +89,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const googleRes = await fetch(googleUrl);
         if (googleRes.ok) {
           const googleJson = await googleRes.json();
-          addUniqueResults(googleJson.items || [], true, false);
+          addUniqueResults(googleJson.items || [], 'google');
         }
       }
     }
 
     const candidates = searchResults.slice(0, 10).map(item => {
-        const isGoogle = item.isGoogle;
-        const isNaver = item.isNaver;
-        const info = isGoogle ? item.volumeInfo : item;
+        const source = item.source;
+        const info = source === 'google' ? item.volumeInfo : item;
         
         let isbn13 = null;
         let isbn10 = null;
         let cover_url = null;
 
-        if (isGoogle) {
+        if (source === 'google') {
             const identifiers = info.industryIdentifiers || [];
             isbn13 = identifiers.find((i: any) => i.type === 'ISBN_13')?.identifier || null;
             isbn10 = identifiers.find((i: any) => i.type === 'ISBN_10')?.identifier || null;
             cover_url = info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail || null;
-        } else if (isNaver) {
+        } else if (source === 'naver') {
             isbn13 = item.isbn?.split(' ')[1] || item.isbn || null;
             isbn10 = item.isbn?.split(' ')[0] || null;
             cover_url = item.image || null;
         }
 
         return {
+            source,
             isbn13: isbn13,
             isbn10: isbn10,
             title: info.title,
-            authors: isNaver ? (item.author?.split('|').filter(Boolean) || []) : (info.authors || []),
+            authors: source === 'naver' ? (item.author?.split('|').filter(Boolean) || []) : (info.authors || []),
             publisher: info.publisher,
-            published_year: yearFrom(isGoogle ? info.publishedDate : item.pubdate),
+            published_year: yearFrom(source === 'google' ? info.publishedDate : item.pubdate),
             cover_url: cover_url,
-            google_books_id: isGoogle ? item.id : undefined,
+            google_books_id: source === 'google' ? item.id : undefined,
         };
     }).filter(c => c.title);
 
