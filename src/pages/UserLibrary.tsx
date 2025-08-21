@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { Book, Loan } from '../types';
 import BookCard from '../components/BookCard';
-import { useUser } from '@supabase/auth-helpers-react';
+
 
 // 책 상태에 따른 정렬 순서
 const statusOrder = { 'Available': 0, 'Reserved': 1, 'Borrowed': 2 };
