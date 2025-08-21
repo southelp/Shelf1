@@ -13,7 +13,7 @@ export default function UserLibrary() {
   const [books, setBooks] = useState<Book[]>([]);
   const [loans, setLoans] = useState<Record<string, Loan | null>>({});
   const [ownerName, setOwnerName] = useState<string>('');
-  const currentUser = useUser();
+  
 
   // 1. 데이터 로딩 로직: 데이터를 가져와서 객체로 반환합니다.
   const loadData = useCallback(async () => {
@@ -86,7 +86,7 @@ export default function UserLibrary() {
             key={b.id} 
             book={b} 
             activeLoan={loans[b.id] || null} 
-            activeLoan={loans[b.id] || null} 
+            onClick={() => { /* Do nothing for now */ }} 
           />
         ))}
       </div>
