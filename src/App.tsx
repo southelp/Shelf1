@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import { useUser } from '@supabase/auth-helpers-react';
+import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home.tsx';
 import MyLibrary from './pages/MyLibrary.tsx';
@@ -9,32 +8,10 @@ import UserLibrary from './pages/UserLibrary.tsx';
 import BookDisplayDemo from './pages/BookDisplayDemo.tsx';
 import Sidebar from './components/Sidebar.tsx';
 import Header from './components/Header.tsx';
-import { supabase } from './lib/supabaseClient.ts';
 
 export default function App() {
-  const user = useUser();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      const ensureUserProfile = async () => {
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', user.id)
-          .single();
-
-        if (!profile && error && error.code === 'PGRST116') {
-          await supabase.from('profiles').insert({
-            id: user.id,
-            email: user.email,
-            full_name: user.user_metadata.full_name,
-          });
-        }
-      };
-      ensureUserProfile();
-    }
-  }, [user]);
 
   return (
     <div 
