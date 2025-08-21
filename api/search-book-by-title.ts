@@ -28,6 +28,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
     const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
 
+    // --- DEBUG LOG ---
+    console.log(`GOOGLE_BOOKS_API_KEY loaded: ${!!GOOGLE_BOOKS_API_KEY}`);
+
     let searchResults: any[] = [];
     const seen = new Set<string>();
 
@@ -60,10 +63,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Google ISBN search
       if (searchResults.length < 10 && GOOGLE_BOOKS_API_KEY) {
         const googleUrl = `https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}&key=${GOOGLE_BOOKS_API_KEY}`;
+        // --- DEBUG LOG ---
+        console.log(`Requesting Google API (ISBN): ${googleUrl}`);
         const googleRes = await fetch(googleUrl);
+        // --- DEBUG LOG ---
+        console.log(`Google API Response Status (ISBN): ${googleRes.status}`);
         if (googleRes.ok) {
           const googleJson = await googleRes.json();
           addUniqueResults(googleJson.items || [], 'google');
+        } else {
+          // --- DEBUG LOG ---
+          console.error(`Google API Error (ISBN): ${await googleRes.text()}`);
         }
       }
     } else { // Fallback to title/author/publisher search
@@ -86,10 +96,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (author) googleQuery += `+inauthor:${encodeURIComponent(author)}`;
         if (publisher) googleQuery += `+inpublisher:${encodeURIComponent(publisher)}`;
         const googleUrl = `https://www.googleapis.com/books/v1/volumes?q=${googleQuery}&maxResults=${needed}&key=${GOOGLE_BOOKS_API_KEY}`;
+        // --- DEBUG LOG ---
+        console.log(`Requesting Google API (Title): ${googleUrl}`);
         const googleRes = await fetch(googleUrl);
+        // --- DEBUG LOG ---
+        console.log(`Google API Response Status (Title): ${googleRes.status}`);
         if (googleRes.ok) {
           const googleJson = await googleRes.json();
           addUniqueResults(googleJson.items || [], 'google');
+        } else {
+          // --- DEBUG LOG ---
+          console.error(`Google API Error (Title): ${await googleRes.text()}`);
         }
       }
     }
