@@ -290,14 +290,14 @@ export default function NewBook() {
             </div>
           )}
           {!isLoading && candidates.length > 0 && (
-            <div>
+            <div className="max-w-3xl mx-auto">
               <div className="flex justify-center items-center gap-2 mb-4">
                 <h2 className="text-lg font-medium" style={{ color: '#1A1C1E' }}>Search Results</h2>
                 <button onClick={handleClearResults} className="p-1 rounded-full text-gray-500 hover:bg-gray-200">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
                 </button>
               </div>
-              <div className="p-4 border rounded-2xl space-y-4 bg-gray-50/70" style={{ borderColor: '#EEEEEC' }}>
+              <div className="p-4 border rounded-2xl space-y-6 bg-gray-50/70" style={{ borderColor: '#EEEEEC' }}>
                 {Object.entries(
                   candidates.reduce((acc, book) => {
                     const source = book.source || 'unknown';
@@ -309,17 +309,18 @@ export default function NewBook() {
                   }, {} as Record<string, BookCandidate[]>)
                 ).map(([source, books]) => (
                   <div key={source}>
-                    <h3 className="text-md font-bold mb-2">{source} api:</h3>
-                    {books.map((c, idx) => (
-                      <div key={`${c.isbn || idx}`} onClick={() => handleRegister(c)} className="cursor-pointer p-4 border rounded-2xl hover:shadow-md flex items-center gap-4 bg-white mb-2" style={{ borderColor: '#EEEEEC' }}>
-                        <img src={c.cover_url || 'https://via.placeholder.com/80x120.png?text=No+Image'} alt={c.title} className="w-20 h-30 object-cover rounded-lg shadow-sm" />
-                        <div className="flex-grow min-w-0">
-                          <p className="font-medium text-lg line-clamp-2">{idx + 1}. {c.title}</p>
-                          <p className="text-sm text-gray-600 line-clamp-1 mt-1">{c.authors?.join(', ') || 'No author info'}</p>
-                          <p className="text-xs text-gray-500 mt-1">{c.publisher || 'No publisher info'} ({c.published_year || 'N/A'})</p>
+                    <h3 className="text-md font-semibold mb-3 capitalize" style={{ color: '#1A1C1E' }}>{source} API Results</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {books.map((c, idx) => (
+                        <div key={`${c.isbn || idx}`} onClick={() => handleRegister(c)} className="cursor-pointer p-3 border rounded-2xl hover:shadow-md flex flex-col items-center text-center gap-2 bg-white" style={{ borderColor: '#EEEEEC' }}>
+                          <img src={c.cover_url || 'https://via.placeholder.com/100x150.png?text=No+Image'} alt={c.title} className="w-24 h-36 object-cover rounded-lg shadow-sm" />
+                          <div className="flex-grow w-full mt-1">
+                            <p className="font-medium text-sm line-clamp-2 leading-tight">{c.title}</p>
+                            <p className="text-xs text-gray-500 line-clamp-1 mt-1">{c.authors?.join(', ') || 'N/A'}</p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
