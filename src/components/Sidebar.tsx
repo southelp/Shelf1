@@ -66,11 +66,10 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   return (
     <div 
       className={`
-        flex flex-col
+        flex flex-col h-full
         ${isCollapsed ? 'w-[72px]' : 'w-[220px]'}
         transition-all duration-200 ease-out
         border-r
-        self-stretch
         relative
       `}
       style={{
@@ -158,6 +157,35 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
         {/* Spacer */}
         <div className="flex-1"></div>
+
+        {/* Terms of Use Link */}
+        <div className="flex flex-col items-start self-stretch p-0.5 pb-4">
+          <Link
+            to="/terms"
+            className="flex items-center self-stretch px-1.5 py-1 rounded-xl hover:bg-gray-100/50 transition-colors duration-200 ease-out"
+          >
+            <div className="flex w-9 min-w-9 justify-center items-center">
+              <div className="flex flex-col items-start text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z" />
+                </svg>
+              </div>
+            </div>
+            {!isCollapsed && (
+              <div className="flex flex-col items-start">
+                <div 
+                  className="text-sm font-medium leading-5"
+                  style={{
+                    color: '#5D5D5F',
+                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                  }}
+                >
+                  Terms of Use
+                </div>
+              </div>
+            )}
+          </Link>
+        </div>
       </div>
     </div>
   );

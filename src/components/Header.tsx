@@ -85,7 +85,16 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
             </button>
           </>
         ) : (
-          <GoogleSignInButton />
+          <div className="text-center">
+            <GoogleSignInButton />
+            <p className="text-xs text-gray-500 mt-2">
+              By signing in, you agree to our{' '}
+              <a href="/terms" className="underline hover:text-gray-700">
+                Terms of Use
+              </a>
+              .
+            </p>
+          </div>
         )}
       </div>
     </div>
