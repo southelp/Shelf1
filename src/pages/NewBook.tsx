@@ -1,22 +1,56 @@
-import { useState, useRef, useCallback } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import { useUser } from '@supabase/auth-helpers-react';
-import Webcam from 'react-webcam';
+// SearchResultsModal Component (within the same file)
+const SearchResultsModal = ({ candidates, onRegister, onClose }: { candidates: BookCandidate[], onRegister: (book: BookCandidate) => void, onClose: () => void }) => {
+  if (candidates.length === 0) return null;
 
-type BookCandidate = {
-  isbn?: string | null;
-  title: string;
-  authors?: string[];
-  publisher?: string;
-  published_year?: number | null;
-  cover_url?: string;
-  source?: string;
-};
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+      <div 
+        className="w-full max-w-4xl h-full max-h-[85vh] flex flex-col rounded-2xl shadow-lg"
+        style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)'
+        }}
+      >
+        {/* Modal Header */}
+        <div className="flex-shrink-0 flex justify-between items-center p-4 border-b border-gray-200">
+          <h2 className="text-lg font-medium" style={{ color: '#1A1C1E' }}>Search Results</h2>
+          <button onClick={onClose} className="p-1 rounded-full text-gray-500 hover:bg-gray-200">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
 
-const videoConstraints = {
-  width: 720,
-  height: 960,
-  facingMode: "environment"
+        {/* Modal Body */}
+        <div className="flex-grow overflow-y-auto p-4 space-y-6">
+          {Object.entries(
+            candidates.reduce((acc, book) => {
+              const source = book.source || 'unknown';
+              if (!acc[source]) acc[source] = [];
+              acc[source].push(book);
+              return acc;
+            }, {} as Record<string, BookCandidate[]>)
+          ).map(([source, books]) => (
+            <div key={source}>
+              <h3 className="text-md font-semibold mb-3 capitalize" style={{ color: '#1A1C1E' }}>{source} API Results</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {books.map((c, idx) => (
+                  <div key={`${c.isbn || idx}`} onClick={() => onRegister(c)} className="cursor-pointer p-3 border rounded-2xl hover:shadow-md flex flex-col items-center text-center gap-2 bg-white bg-opacity-80" style={{ borderColor: '#EEEEEC' }}>
+                    <img src={c.cover_url || 'https://via.placeholder.com/100x150.png?text=No+Image'} alt={c.title} className="w-24 h-36 object-cover rounded-lg shadow-sm" />
+                    <div className="flex-grow w-full mt-1">
+                      <p className="font-medium text-sm line-clamp-2 leading-tight">{c.title}</p>
+                      <p className="text-xs text-gray-500 line-clamp-1 mt-1">{c.authors?.join(', ') || 'N/A'}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default function NewBook() {
@@ -216,7 +250,18 @@ export default function NewBook() {
                 {capturedImage ? (
                   <img src={capturedImage} alt="Captured book cover" className="w-full h-full object-contain" />
                 ) : (
-                  <Webcam audio={false} ref={webcamRef} screenshotFormat="image/jpeg" videoConstraints={videoConstraints} className="w-full h-full object-contain" />
+                  <>
+                    <Webcam audio={false} ref={webcamRef} screenshotFormat="image/jpeg" videoConstraints={videoConstraints} className="w-full h-full object-contain" />
+                    {/* Camera Guide Overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div 
+                        className="w-[85%] h-[60%] border-2 border-white rounded-2xl"
+                        style={{
+                          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)'
+                        }}
+                      ></div>
+                    </div>
+                  </>
                 )}
                 {isLoading && (
                   <div className="absolute inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center text-white z-10">
@@ -282,52 +327,20 @@ export default function NewBook() {
           )}
         </div>
       </div>
-      <div className="flex-grow overflow-y-auto mt-6 px-6 pb-6">
-        <div className="max-w-md mx-auto">
-          {error && (
-            <div className="text-center p-4 rounded-2xl border mb-6" style={{ color: '#991b1b', backgroundColor: '#fee2e2', borderColor: '#fecaca' }}>
-              {error}
-            </div>
-          )}
-          {!isLoading && candidates.length > 0 && (
-            <div className="max-w-3xl mx-auto">
-              <div className="flex justify-center items-center gap-2 mb-4">
-                <h2 className="text-lg font-medium" style={{ color: '#1A1C1E' }}>Search Results</h2>
-                <button onClick={handleClearResults} className="p-1 rounded-full text-gray-500 hover:bg-gray-200">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
-                </button>
-              </div>
-              <div className="p-4 border rounded-2xl space-y-6 bg-gray-50/70" style={{ borderColor: '#EEEEEC' }}>
-                {Object.entries(
-                  candidates.reduce((acc, book) => {
-                    const source = book.source || 'unknown';
-                    if (!acc[source]) {
-                      acc[source] = [];
-                    }
-                    acc[source].push(book);
-                    return acc;
-                  }, {} as Record<string, BookCandidate[]>)
-                ).map(([source, books]) => (
-                  <div key={source}>
-                    <h3 className="text-md font-semibold mb-3 capitalize" style={{ color: '#1A1C1E' }}>{source} API Results</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {books.map((c, idx) => (
-                        <div key={`${c.isbn || idx}`} onClick={() => handleRegister(c)} className="cursor-pointer p-3 border rounded-2xl hover:shadow-md flex flex-col items-center text-center gap-2 bg-white" style={{ borderColor: '#EEEEEC' }}>
-                          <img src={c.cover_url || 'https://via.placeholder.com/100x150.png?text=No+Image'} alt={c.title} className="w-24 h-36 object-cover rounded-lg shadow-sm" />
-                          <div className="flex-grow w-full mt-1">
-                            <p className="font-medium text-sm line-clamp-2 leading-tight">{c.title}</p>
-                            <p className="text-xs text-gray-500 line-clamp-1 mt-1">{c.authors?.join(', ') || 'N/A'}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+      
+      {/* Error Display */}
+      {error && (
+        <div className="max-w-md mx-auto text-center p-4 rounded-2xl border mt-6" style={{ color: '#991b1b', backgroundColor: '#fee2e2', borderColor: '#fecaca' }}>
+          {error}
         </div>
-      </div>
+      )}
+
+      {/* Search Results Modal */}
+      <SearchResultsModal 
+        candidates={candidates}
+        onRegister={handleRegister}
+        onClose={handleClearResults}
+      />
     </div>
   );
 }
