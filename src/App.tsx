@@ -46,7 +46,6 @@ export default function App() {
       `}>
         <Sidebar 
           isCollapsed={!isSidebarOpen} 
-          onToggle={() => setIsSidebarOpen(!isSidebarOpen)} 
         />
       </div>
 
