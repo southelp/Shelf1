@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { Link } from 'react-router-dom'; // Import Link
 import { supabase } from '../lib/supabaseClient.ts';
 import { Loan } from '../types.ts';
 import { useUser } from '@supabase/auth-helpers-react';
@@ -123,17 +124,24 @@ export default function Loans() {
       </div>
 
       {myLoans.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-lg border border-gray-200">
+        <Link
+          to="/"
+          className="flex flex-col items-center justify-center py-16 border-2 border-dashed rounded-2xl text-gray-500 hover:text-blue-600 hover:border-blue-500 transition-colors"
+          style={{ 
+            backgroundColor: '#F8F8F7',
+            borderColor: '#EEEEEC'
+          }}
+        >
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-            <svg className="w-8 h-8 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
               <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-800">No active loans</h3>
-          <p className="text-sm text-gray-500 mt-1">
+          <h3 className="text-lg font-medium">Browse Books</h3>
+          <p className="text-sm mt-1">
             You don't have any borrowed books or reservations at the moment.
           </p>
-        </div>
+        </Link>
       ) : (
         <PaginatedBookGrid
           items={myLoans}
