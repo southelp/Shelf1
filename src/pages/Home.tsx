@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import FilterBar from '../components/FilterBar';
 import BookCard from '../components/BookCard';
 import PaginatedBookGrid from '../components/PaginatedBookGrid';
-import BookDetailsPanel from '../components/BookDetailsPanel'; // New import
+import BookDetailsPanel from '../components/BookDetailsPanel';
 import { Book, Loan } from '../types';
 import { useUser } from '@supabase/auth-helpers-react';
 
@@ -16,25 +16,10 @@ export default function Home() {
   const [onlyAvailable, setOnlyAvailable] = useState(false);
   const [q, setQ] = useState('');
   const user = useUser();
-  const [selectedBook, setSelectedBook] = useState<Book | null>(null); // New state
-  const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null); // New state
-  const [panelPosition, setPanelPosition] = useState<{ top: number, left: number } | null>(null);
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
 
-  const handleBookClick = (book: Book, loan: Loan | null, event: React.MouseEvent<HTMLDivElement>) => {
-    if (selectedBook?.id === book.id) {
-      handleCloseDetailsPanel();
-      return;
-    }
-
-    const rect = event.currentTarget.getBoundingClientRect();
-    const grid = event.currentTarget.closest('.grid'); // Find the grid container
-    const gridRect = grid ? grid.getBoundingClientRect() : { top: 0, left: 0 };
-    
-    // Position the panel relative to the grid container to handle scrolling
-    setPanelPosition({
-      top: rect.top - gridRect.top,
-      left: rect.left - gridRect.left + rect.width + 12, // 12px gap
-    });
+  const handleBookClick = (book: Book, loan: Loan | null) => {
     setSelectedBook(book);
     setSelectedLoan(loan);
   };
@@ -42,7 +27,6 @@ export default function Home() {
   const handleCloseDetailsPanel = () => {
     setSelectedBook(null);
     setSelectedLoan(null);
-    setPanelPosition(null);
   };
 
   const loadData = useCallback(async () => {
@@ -110,12 +94,6 @@ export default function Home() {
       style={{ 
         backgroundColor: '#FCFCFC',
         fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-      }}
-      onClick={(e) => {
-        // Close panel if clicking outside of a book card
-        if (!(e.target as HTMLElement).closest('.relative')) {
-          handleCloseDetailsPanel();
-        }
       }}
     >
       {/* Main content area */}
@@ -186,7 +164,7 @@ export default function Home() {
             </div>
 
             {/* Books grid */}
-            <div className="w-full relative">
+            <div className="w-full">
               <PaginatedBookGrid
                 items={books}
                 renderItem={(b) => (
@@ -197,17 +175,8 @@ export default function Home() {
                     onClick={handleBookClick}
                   />
                 )}
-                itemsPerPage={20} // 5 columns * 4 rows
+                itemsPerPage={50} // 10 columns * 5 rows
               />
-              {selectedBook && panelPosition && (
-                <BookDetailsPanel
-                  book={selectedBook}
-                  activeLoan={selectedLoan}
-                  userId={user?.id}
-                  onClose={handleCloseDetailsPanel}
-                  position={panelPosition}
-                />
-              )}
             </div>
           </>
         )}
@@ -274,6 +243,15 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {selectedBook && (
+        <BookDetailsPanel
+          book={selectedBook}
+          activeLoan={selectedLoan}
+          userId={user?.id}
+          onClose={handleCloseDetailsPanel}
+        />
+      )}
     </div>
   );
 }

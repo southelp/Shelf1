@@ -19,8 +19,8 @@ export default function BookCard({
     >
       <div
         className="
-          w-16
-          h-24
+          w-full 
+          pb-[150%] /* 2:3 aspect ratio */
           bg-white
           border border-gray-200/40
           rounded-lg
@@ -37,6 +37,8 @@ export default function BookCard({
           src={book.cover_url || 'https://via.placeholder.com/150x220.png?text=No+Image'}
           alt={book.title}
           className={`
+            absolute
+            inset-0
             w-full
             h-full
             object-cover

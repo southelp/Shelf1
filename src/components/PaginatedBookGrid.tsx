@@ -24,7 +24,7 @@ const PaginatedBookGrid = <T,>({ items, renderItem, itemsPerPage = 20 }: Paginat
 
   return (
     <div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
         {currentItems.map((item, index) => (
           <React.Fragment key={index}>
             {renderItem(item)}
