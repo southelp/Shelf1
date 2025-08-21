@@ -159,9 +159,60 @@ export default function NewBook() {
         <div className="max-w-md mx-auto">
           {/* Search/Manual/Scan Forms */}
           {isScanMode ? (
-            <p>Scan UI</p>
+            <div className="max-w-md mx-auto">
+              <div 
+                className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden border shadow-lg"
+                style={{ 
+                  backgroundColor: '#000',
+                  borderColor: '#EEEEEC'
+                }}
+              >
+                {capturedImage ? (
+                  <img src={capturedImage} alt="Captured book cover" className="w-full h-full object-contain" />
+                ) : (
+                  <Webcam audio={false} ref={webcamRef} screenshotFormat="image/jpeg" videoConstraints={videoConstraints} className="w-full h-full object-contain" />
+                )}
+                {isLoading && (
+                  <div className="absolute inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center text-white z-10">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+                    <p className="text-lg text-center">{loadingMessage}</p>
+                  </div>
+                )}
+              </div>
+              <div className="mt-6 flex justify-center gap-4">
+                {capturedImage ? (
+                  <button onClick={handleRetake} disabled={isLoading} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm" style={{ borderColor: '#E1E1E1' }}>
+                    Retake
+                  </button>
+                ) : (
+                  <button onClick={handleCapture} disabled={isLoading} className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-sm">
+                    Capture
+                  </button>
+                )}
+                <button onClick={() => setIsScanMode(false)} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm" style={{ borderColor: '#E1E1E1' }}>
+                  Close
+                </button>
+              </div>
+            </div>
           ) : isManualMode ? (
-            <p>Manual UI</p>
+            <div className="max-w-md mx-auto space-y-4">
+              <div className="p-6 border rounded-2xl space-y-4" style={{ backgroundColor: '#F8F8F7', borderColor: '#EEEEEC' }}>
+                <input type="text" name="title" placeholder="Title (required)" value={manualBook.title} onChange={handleManualInputChange} className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" style={{ borderColor: '#EEEEEC' }} />
+                <input type="text" name="authors" placeholder="Authors (comma-separated)" value={manualBook.authors?.join(', ')} onChange={handleManualInputChange} className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" style={{ borderColor: '#EEEEEC' }} />
+                <input type="text" name="publisher" placeholder="Publisher" value={manualBook.publisher} onChange={handleManualInputChange} className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" style={{ borderColor: '#EEEEEC' }} />
+                <input type="number" name="published_year" placeholder="Year" value={manualBook.published_year || ''} onChange={handleManualInputChange} className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" style={{ borderColor: '#EEEEEC' }} />
+                <input type="text" name="isbn" placeholder="ISBN" value={manualBook.isbn || ''} onChange={handleManualInputChange} className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" style={{ borderColor: '#EEEEEC' }} />
+                <input type="text" name="cover_url" placeholder="Cover Image URL" value={manualBook.cover_url} onChange={handleManualInputChange} className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" style={{ borderColor: '#EEEEEC' }} />
+              </div>
+              <div className="flex justify-center gap-4">
+                <button onClick={() => handleRegister(manualBook)} disabled={isLoading || !manualBook.title} className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm">
+                  Register Manually
+                </button>
+                <button onClick={() => setIsManualMode(false)} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm" style={{ borderColor: '#E1E1E1' }}>
+                  Cancel
+                </button>
+              </div>
+            </div>
           ) : (
             <div className="space-y-4">
               <div className="p-6 border rounded-2xl space-y-4" style={{ backgroundColor: '#F8F8F7', borderColor: '#EEEEEC' }}>
