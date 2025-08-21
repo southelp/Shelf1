@@ -20,16 +20,20 @@ export default function GoogleSignInButton(){
   const checkDomain = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     const email = user?.email?.toLowerCase();
-    console.log('Checking email domain:', email, 'against allowed domain:', allowedDomain); // Debug log
-    if (email && !email.endsWith(`@${allowedDomain}`)) {
-      if (!alertShown) {
-        alertShown = true;
-        alert(`You can only sign in using a school email (@${allowedDomain}).`);
-        await supabase.auth.signOut();
+    
+    if (email) {
+      const domain = email.substring(email.lastIndexOf('@') + 1);
+      console.log('Checking email domain:', domain, 'against allowed suffix:', allowedDomain); // Debug log
+
+      if (!domain.endsWith(allowedDomain)) {
+        if (!alertShown) {
+          alertShown = true;
+          alert(`You can only sign in using a school email (e.g., @*.${allowedDomain}).`);
+          await supabase.auth.signOut();
+        }
+      } else {
+        alertShown = false;
       }
-    } else if (user) {
-      // If user is valid, ensure flag is reset for next time
-      alertShown = false;
     }
   }
 
