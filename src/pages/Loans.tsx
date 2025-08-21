@@ -114,7 +114,7 @@ export default function Loans() {
     <div className="w-full h-full flex flex-col p-6">
       <div className="mb-6 flex-shrink-0">
         <h2 className="text-xl font-semibold text-gray-800">
-          My Loans & Reservations
+          My Borrows
           {myLoans.length > 0 && (
             <span className="ml-3 px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
               {myLoans.length}
