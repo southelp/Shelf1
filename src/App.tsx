@@ -6,6 +6,7 @@ import MyNewBook from './pages/NewBook.tsx';
 import Loans from './pages/Loans.tsx';
 import UserLibrary from './pages/UserLibrary.tsx';
 import BookDisplayDemo from './pages/BookDisplayDemo.tsx';
+import TermsOfUse from './pages/TermsOfUse.tsx';
 import Sidebar from './components/Sidebar.tsx';
 import Header from './components/Header.tsx';
 
@@ -61,6 +62,7 @@ export default function App() {
               <Route path="/books/new" element={<MyNewBook />} />
               <Route path="/users/:userId" element={<UserLibrary />} />
               <Route path="/demo" element={<BookDisplayDemo />} />
+              <Route path="/terms" element={<TermsOfUse />} />
             </Routes>
           </div>
         </main>
