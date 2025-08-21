@@ -1,5 +1,6 @@
 import { useUser } from '@supabase/auth-helpers-react';
 import { supabase } from '../lib/supabaseClient';
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import GoogleSignInButton from './GoogleSignInButton';
 
@@ -7,6 +8,7 @@ export default function Header() {
   const user = useUser();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -33,9 +35,18 @@ export default function Header() {
 
   return (
     <div 
-      className="flex px-3 pr-6 items-center gap-3 self-stretch"
+      className="relative flex px-3 pr-6 items-center gap-3 self-stretch"
       style={{ height: '76px' }}
     >
+      {/* Hamburger Icon for Mobile */}
+      <div className="md:hidden absolute right-3 top-1/2 -translate-y-1/2">
+        <button 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="text-2xl p-2 focus:outline-none"
+        >
+          ☰
+        </button>
+      </div>
       {/* Page Title */}
       <div className="h-[76px] flex-1">
         <div className="flex items-center h-full px-3">
@@ -52,7 +63,13 @@ export default function Header() {
       </div>
 
       {/* Action Buttons */}
-      <div className="hidden md:flex items-center gap-1">
+      <div
+        className={`
+          ${isMobileMenuOpen ? 'flex flex-col absolute top-[76px] right-0 bg-white shadow-md z-10 w-full p-4' : 'hidden'}
+          md:flex md:relative md:top-auto md:right-auto md:bg-transparent md:shadow-none md:z-auto md:w-auto md:p-0
+          items-center gap-1
+        `}
+      >
         {/* Get API Key Button (placeholder for future) */}
         <div className="flex px-1 flex-col items-start">
           <div 
