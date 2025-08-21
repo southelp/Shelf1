@@ -114,6 +114,11 @@ export default function BookDetailsPanel({ book, activeLoan, userId, onClose, on
             <p className="text-sm text-gray-500">
               <span className="font-semibold">Status:</span> {loanStatusText}
             </p>
+            {book.source_api && (
+              <p className="text-sm text-gray-500">
+                <span className="font-semibold">Source:</span> {book.source_api} api
+              </p>
+            )}
             {book.description && (
               <p className="text-sm text-gray-700 mt-4 max-h-40 overflow-y-auto">
                 {book.description}
