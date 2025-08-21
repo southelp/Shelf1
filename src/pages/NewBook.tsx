@@ -116,7 +116,7 @@ export default function NewBook() {
       }
 
     } catch (e: any) {
-      setError(e?.message || 'Failed to search for the book.');
+      setError(e.message || 'Failed to search for the book.');
     } finally {
       setIsLoading(false);
     }
@@ -164,7 +164,7 @@ export default function NewBook() {
     try {
       await Promise.race([recognitionPromise, timeoutPromise]);
     } catch (e: any) {
-      setError(e?.message || 'Failed to recognize the book.');
+      setError(e.message || 'Failed to recognize the book.');
       setCandidates([]);
     } finally {
       setIsLoading(false);
