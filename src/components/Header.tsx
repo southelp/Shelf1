@@ -18,10 +18,9 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
   }
 
   const getPageTitle = () => {
-    // ... (getPageTitle function remains the same)
     switch (location.pathname) {
       case '/':
-        return 'Browse Books';
+        return null; // Hide title on home page
       case '/my':
         return 'My Library';
       case '/loans':
