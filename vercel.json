@@ -1,5 +1,5 @@
 {
-  "name": "testserver",
+  "name": "shelf1",
   "rewrites": [
     { "source": "/:path*", "destination": "/index.html" }
   ]
