@@ -78,7 +78,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                 </div>
               )}
               <span className="text-sm font-medium text-gray-700 max-w-[120px] truncate">
-                {user.user_metadata.full_name?.replace(' (school of innovation foundation)', '') || user.email}
+                {user.user_metadata.full_name?.replace(/\s*\((school of innovation foundation)s?\)\s*/i, '') || user.email}
               </span>
             </div>
             <button
