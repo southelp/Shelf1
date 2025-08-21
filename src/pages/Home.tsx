@@ -33,7 +33,7 @@ export default function Home() {
 
   const loadData = useCallback(async () => {
     // Fetch books
-    let bookQuery = supabase.from('books').select('*, profiles(id, full_name), source_api');
+    let bookQuery = supabase.from('books').select('*, profiles(id, full_name)');
     if (onlyAvailable) {
       bookQuery = bookQuery.eq('available', true);
     }
