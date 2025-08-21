@@ -123,7 +123,52 @@ export default function NewBook() {
   };
 
   const handleCapture = useCallback(async () => {
-    // ... (omitting unchanged code for brevity)
+    if (isLoading) return;
+    const imageSrc = webcamRef.current?.getScreenshot();
+    if (!imageSrc) {
+      setError("Could not get image from camera.");
+      return;
+    }
+
+    setCapturedImage(imageSrc);
+    setIsLoading(true);
+    setError(null);
+    setCandidates([]);
+
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Recognition timed out after 10 seconds. Please try again.')), 10000)
+    );
+
+    const recognitionPromise = (async () => {
+      setLoadingMessage('Extracting book info from cover...');
+      const geminiResponse = await fetch('/api/gemini-cover-to-book', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ imageBase64: imageSrc }) });
+      if (!geminiResponse.ok) throw new Error(`Failed to extract info: ${await geminiResponse.text()}`);
+      const { title } = await geminiResponse.json();
+      if (!title) throw new Error('Could not find a title on the book cover.');
+
+      setLoadingMessage(`Searching for '${title}'...`);
+      const searchResponse = await fetch('/api/search-book-by-title', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: title }),
+      });
+      if (!searchResponse.ok) throw new Error(`Search failed: ${await searchResponse.text()}`);
+      const { candidates: foundCandidates } = await searchResponse.json();
+      
+      if (!foundCandidates || foundCandidates.length === 0) {
+        setError(`Book not found for title: '${title}'`);
+      }
+      setCandidates(foundCandidates ?? []);
+    })();
+
+    try {
+      await Promise.race([recognitionPromise, timeoutPromise]);
+    } catch (e: any) {
+      setError(e?.message || 'Failed to recognize the book.');
+      setCandidates([]);
+    } finally {
+      setIsLoading(false);
+    }
   }, [isLoading, webcamRef]);
 
   const handleRetake = () => {
@@ -164,16 +209,9 @@ export default function NewBook() {
           Add a Book
         </h1>
         <div className="max-w-md mx-auto">
-          {/* Search/Manual/Scan Forms */}
           {isScanMode ? (
             <div className="max-w-md mx-auto">
-              <div 
-                className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden border shadow-lg"
-                style={{ 
-                  backgroundColor: '#000',
-                  borderColor: '#EEEEEC'
-                }}
-              >
+              <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden border shadow-lg" style={{ backgroundColor: '#000', borderColor: '#EEEEEC' }}>
                 {capturedImage ? (
                   <img src={capturedImage} alt="Captured book cover" className="w-full h-full object-contain" />
                 ) : (
