@@ -215,374 +215,378 @@ export default function NewBook() {
 
   return (
     <div 
-      className="w-full h-full overflow-auto p-6"
+      className="w-full h-full flex flex-col p-6"
       style={{ 
         backgroundColor: '#FCFCFC',
         fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
       }}
     >
-      <div className="max-w-4xl mx-auto">
-        <h1 
-          className="text-2xl font-medium mb-8 text-center"
-          style={{
-            color: '#1A1C1E',
-            fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-          }}
-        >
-          Add a Book
-        </h1>
+      <div className="max-w-4xl mx-auto w-full flex flex-col h-full">
+        <div className="flex-shrink-0">
+          <h1 
+            className="text-2xl font-medium mb-8 text-center"
+            style={{
+              color: '#1A1C1E',
+              fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+            }}
+          >
+            Add a Book
+          </h1>
 
-        {isScanMode ? (
-          <div className="max-w-md mx-auto">
-            <div 
-              className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden border shadow-lg"
-              style={{ 
-                backgroundColor: '#000',
-                borderColor: '#EEEEEC'
-              }}
-            >
-              {capturedImage ? (
-                <img src={capturedImage} alt="Captured book cover" className="w-full h-full object-contain" />
-              ) : (
-                <Webcam audio={false} ref={webcamRef} screenshotFormat="image/jpeg" videoConstraints={videoConstraints} className="w-full h-full object-contain" />
-              )}
-              {isLoading && (
-                <div className="absolute inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center text-white z-10">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-                  <p 
-                    className="text-lg text-center"
-                    style={{ fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif' }}
+          {isScanMode ? (
+            <div className="max-w-md mx-auto">
+              <div 
+                className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden border shadow-lg"
+                style={{ 
+                  backgroundColor: '#000',
+                  borderColor: '#EEEEEC'
+                }}
+              >
+                {capturedImage ? (
+                  <img src={capturedImage} alt="Captured book cover" className="w-full h-full object-contain" />
+                ) : (
+                  <Webcam audio={false} ref={webcamRef} screenshotFormat="image/jpeg" videoConstraints={videoConstraints} className="w-full h-full object-contain" />
+                )}
+                {isLoading && (
+                  <div className="absolute inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center text-white z-10">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+                    <p 
+                      className="text-lg text-center"
+                      style={{ fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif' }}
+                    >
+                      {loadingMessage}
+                    </p>
+                  </div>
+                )}
+              </div>
+              <div className="mt-6 flex justify-center gap-4">
+                {capturedImage ? (
+                  <button 
+                    onClick={handleRetake} 
+                    disabled={isLoading} 
+                    className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 transition-all duration-200 shadow-sm"
+                    style={{
+                      fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif',
+                      borderColor: '#E1E1E1'
+                    }}
                   >
-                    {loadingMessage}
-                  </p>
-                </div>
-              )}
-            </div>
-            <div className="mt-6 flex justify-center gap-4">
-              {capturedImage ? (
+                    Retake
+                  </button>
+                ) : (
+                  <button 
+                    onClick={handleCapture} 
+                    disabled={isLoading} 
+                    className="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-sm"
+                    style={{
+                      fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                    }}
+                  >
+                    Capture
+                  </button>
+                )}
                 <button 
-                  onClick={handleRetake} 
-                  disabled={isLoading} 
+                  onClick={() => setIsScanMode(false)} 
                   className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 transition-all duration-200 shadow-sm"
                   style={{
                     fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif',
                     borderColor: '#E1E1E1'
                   }}
                 >
-                  Retake
+                  Close
                 </button>
-              ) : (
+              </div>
+            </div>
+          ) : isManualMode ? (
+            <div className="max-w-md mx-auto space-y-4">
+              <div 
+                className="p-6 border rounded-2xl space-y-4"
+                style={{ 
+                  backgroundColor: '#F8F8F7',
+                  borderColor: '#EEEEEC'
+                }}
+              >
+                <input 
+                  type="text" 
+                  name="title" 
+                  placeholder="Title (required)" 
+                  value={manualBook.title} 
+                  onChange={handleManualInputChange} 
+                  className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  style={{
+                    borderColor: '#EEEEEC',
+                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                  }}
+                />
+                <input 
+                  type="text" 
+                  name="authors" 
+                  placeholder="Authors (comma-separated)" 
+                  value={manualBook.authors?.join(', ')} 
+                  onChange={handleManualInputChange} 
+                  className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  style={{
+                    borderColor: '#EEEEEC',
+                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                  }}
+                />
+                <input 
+                  type="text" 
+                  name="publisher" 
+                  placeholder="Publisher" 
+                  value={manualBook.publisher} 
+                  onChange={handleManualInputChange} 
+                  className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  style={{
+                    borderColor: '#EEEEEC',
+                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                  }}
+                />
+                <input 
+                  type="number" 
+                  name="published_year" 
+                  placeholder="Year" 
+                  value={manualBook.published_year || ''} 
+                  onChange={handleManualInputChange} 
+                  className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  style={{
+                    borderColor: '#EEEEEC',
+                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                  }}
+                />
+                <input 
+                  type="text" 
+                  name="isbn" 
+                  placeholder="ISBN" 
+                  value={manualBook.isbn || ''} 
+                  onChange={handleManualInputChange} 
+                  className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  style={{
+                    borderColor: '#EEEEEC',
+                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                  }}
+                />
+                <input 
+                  type="text" 
+                  name="cover_url" 
+                  placeholder="Cover Image URL" 
+                  value={manualBook.cover_url} 
+                  onChange={handleManualInputChange} 
+                  className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  style={{
+                    borderColor: '#EEEEEC',
+                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                  }}
+                />
+              </div>
+              
+              <div className="flex justify-center gap-4">
                 <button 
-                  onClick={handleCapture} 
-                  disabled={isLoading} 
-                  className="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-sm"
+                  onClick={() => handleRegister(manualBook)} 
+                  disabled={isLoading || !manualBook.title} 
+                  className="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 shadow-sm"
                   style={{
                     fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
                   }}
                 >
-                  Capture
+                  Register Manually
                 </button>
-              )}
-              <button 
-                onClick={() => setIsScanMode(false)} 
-                className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 transition-all duration-200 shadow-sm"
-                style={{
-                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif',
-                  borderColor: '#E1E1E1'
-                }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        ) : isManualMode ? (
-          <div className="max-w-md mx-auto space-y-4">
-            <div 
-              className="p-6 border rounded-2xl space-y-4"
-              style={{ 
-                backgroundColor: '#F8F8F7',
-                borderColor: '#EEEEEC'
-              }}
-            >
-              <input 
-                type="text" 
-                name="title" 
-                placeholder="Title (required)" 
-                value={manualBook.title} 
-                onChange={handleManualInputChange} 
-                className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                style={{
-                  borderColor: '#EEEEEC',
-                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                }}
-              />
-              <input 
-                type="text" 
-                name="authors" 
-                placeholder="Authors (comma-separated)" 
-                value={manualBook.authors?.join(', ')} 
-                onChange={handleManualInputChange} 
-                className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                style={{
-                  borderColor: '#EEEEEC',
-                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                }}
-              />
-              <input 
-                type="text" 
-                name="publisher" 
-                placeholder="Publisher" 
-                value={manualBook.publisher} 
-                onChange={handleManualInputChange} 
-                className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                style={{
-                  borderColor: '#EEEEEC',
-                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                }}
-              />
-              <input 
-                type="number" 
-                name="published_year" 
-                placeholder="Year" 
-                value={manualBook.published_year || ''} 
-                onChange={handleManualInputChange} 
-                className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                style={{
-                  borderColor: '#EEEEEC',
-                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                }}
-              />
-              <input 
-                type="text" 
-                name="isbn" 
-                placeholder="ISBN" 
-                value={manualBook.isbn || ''} 
-                onChange={handleManualInputChange} 
-                className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                style={{
-                  borderColor: '#EEEEEC',
-                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                }}
-              />
-              <input 
-                type="text" 
-                name="cover_url" 
-                placeholder="Cover Image URL" 
-                value={manualBook.cover_url} 
-                onChange={handleManualInputChange} 
-                className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                style={{
-                  borderColor: '#EEEEEC',
-                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                }}
-              />
-            </div>
-            
-            <div className="flex justify-center gap-4">
-              <button 
-                onClick={() => handleRegister(manualBook)} 
-                disabled={isLoading || !manualBook.title} 
-                className="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 shadow-sm"
-                style={{
-                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                }}
-              >
-                Register Manually
-              </button>
-              <button 
-                onClick={() => setIsManualMode(false)} 
-                className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 transition-all duration-200 shadow-sm"
-                style={{
-                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif',
-                  borderColor: '#E1E1E1'
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="max-w-md mx-auto space-y-6">
-            <div 
-              className="p-6 border rounded-2xl space-y-4"
-              style={{ 
-                backgroundColor: '#F8F8F7',
-                borderColor: '#EEEEEC'
-              }}
-            >
-              <input 
-                type="text" 
-                value={isbnQuery} 
-                onChange={e => setIsbnQuery(e.target.value)} 
-                placeholder="ISBN" 
-                className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                style={{
-                  borderColor: '#EEEEEC',
-                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                }}
-              />
-              <input 
-                type="text" 
-                value={titleQuery} 
-                onChange={e => setTitleQuery(e.target.value)} 
-                placeholder="Title" 
-                className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                style={{
-                  borderColor: '#EEEEEC',
-                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                }}
-              />
-              <input 
-                type="text" 
-                value={authorQuery} 
-                onChange={e => setAuthorQuery(e.target.value)} 
-                placeholder="Author" 
-                className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                style={{
-                  borderColor: '#EEEEEC',
-                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                }}
-              />
-              <input 
-                type="text" 
-                value={publisherQuery} 
-                onChange={e => setPublisherQuery(e.target.value)} 
-                placeholder="Publisher" 
-                className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                style={{
-                  borderColor: '#EEEEEC',
-                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                }}
-              />
-            </div>
-            
-            <div className="flex justify-center gap-3 pt-2">
-              <button 
-                onClick={handleSearch} 
-                disabled={isLoading || (!titleQuery.trim() && !isbnQuery.trim())} 
-                className="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 shadow-sm"
-                style={{
-                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                }}
-              >
-                Search
-              </button>
-              <button 
-                onClick={() => setIsScanMode(true)} 
-                className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 transition-all duration-200 shadow-sm"
-                style={{
-                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif',
-                  borderColor: '#E1E1E1'
-                }}
-              >
-                Camera
-              </button>
-              <button 
-                onClick={() => setIsManualMode(true)} 
-                className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 transition-all duration-200 shadow-sm"
-                style={{
-                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif',
-                  borderColor: '#E1E1E1'
-                }}
-              >
-                Manual
-              </button>
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <div 
-            className="mt-8 text-center p-4 rounded-2xl max-w-md mx-auto border"
-            style={{
-              color: '#991b1b',
-              backgroundColor: '#fee2e2',
-              borderColor: '#fecaca',
-              fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-            }}
-          >
-            {error}
-          </div>
-        )}
-        
-        {!isLoading && candidates.length > 0 && (
-          <div className="mt-8">
-            <div className="flex justify-center items-center gap-2 mb-6">
-              <h2 
-                className="text-xl font-medium"
-                style={{
-                  color: '#1A1C1E',
-                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                }}
-              >
-                Search Results
-              </h2>
-              <button 
-                onClick={handleClearResults}
-                className="p-1 rounded-full text-gray-500 hover:bg-gray-200 transition-colors"
-                aria-label="Clear search results"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-            <div className="space-y-4">
-              {candidates.map((c, idx) => (
-                <div 
-                  key={`${c.isbn || idx}`} 
-                  onClick={() => handleRegister(c)} 
-                  className="cursor-pointer p-4 border rounded-2xl hover:shadow-md transition-all duration-200 flex items-center gap-4"
+                <button 
+                  onClick={() => setIsManualMode(false)} 
+                  className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 transition-all duration-200 shadow-sm"
                   style={{
-                    backgroundColor: '#FCFCFC',
-                    borderColor: '#EEEEEC',
-                    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.04)'
+                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif',
+                    borderColor: '#E1E1E1'
                   }}
                 >
-                  <div 
-                    className="w-20 h-30 bg-white border rounded-lg shadow-sm overflow-hidden flex-shrink-0"
-                    style={{ borderColor: '#EEEEEC' }}
-                  >
-                    <img 
-                      src={c.cover_url || 'https://via.placeholder.com/80x120.png?text=No+Image'} 
-                      alt={c.title} 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="flex-grow min-w-0">
-                    <p 
-                      className="font-medium text-lg line-clamp-2"
-                      style={{
-                        color: '#1A1C1E',
-                        fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                      }}
-                    >
-                      {c.title}
-                    </p>
-                    <p 
-                      className="text-sm line-clamp-1 mt-1"
-                      style={{
-                        color: '#44474E',
-                        fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                      }}
-                    >
-                      {c.authors?.join(', ') || 'No author info'}
-                    </p>
-                    <p 
-                      className="text-xs mt-1"
-                      style={{
-                        color: '#5D5D5F',
-                        fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                      }}
-                    >
-                      {c.publisher || 'No publisher info'} ({c.published_year || 'N/A'})
-                    </p>
-                  </div>
-                </div>
-              ))}
+                  Cancel
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="max-w-md mx-auto space-y-6">
+              <div 
+                className="p-6 border rounded-2xl space-y-4"
+                style={{ 
+                  backgroundColor: '#F8F8F7',
+                  borderColor: '#EEEEEC'
+                }}
+              >
+                <input 
+                  type="text" 
+                  value={isbnQuery} 
+                  onChange={e => setIsbnQuery(e.target.value)} 
+                  placeholder="ISBN" 
+                  className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  style={{
+                    borderColor: '#EEEEEC',
+                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                  }}
+                />
+                <input 
+                  type="text" 
+                  value={titleQuery} 
+                  onChange={e => setTitleQuery(e.target.value)} 
+                  placeholder="Title" 
+                  className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  style={{
+                    borderColor: '#EEEEEC',
+                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                  }}
+                />
+                <input 
+                  type="text" 
+                  value={authorQuery} 
+                  onChange={e => setAuthorQuery(e.target.value)} 
+                  placeholder="Author" 
+                  className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  style={{
+                    borderColor: '#EEEEEC',
+                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                  }}
+                />
+                <input 
+                  type="text" 
+                  value={publisherQuery} 
+                  onChange={e => setPublisherQuery(e.target.value)} 
+                  placeholder="Publisher" 
+                  className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  style={{
+                    borderColor: '#EEEEEC',
+                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                  }}
+                />
+              </div>
+              
+              <div className="flex justify-center gap-3 pt-2">
+                <button 
+                  onClick={handleSearch} 
+                  disabled={isLoading || (!titleQuery.trim() && !isbnQuery.trim())} 
+                  className="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 shadow-sm"
+                  style={{
+                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                  }}
+                >
+                  Search
+                </button>
+                <button 
+                  onClick={() => setIsScanMode(true)} 
+                  className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 transition-all duration-200 shadow-sm"
+                  style={{
+                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif',
+                    borderColor: '#E1E1E1'
+                  }}
+                >
+                  Camera
+                </button>
+                <button 
+                  onClick={() => setIsManualMode(true)} 
+                  className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 transition-all duration-200 shadow-sm"
+                  style={{
+                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif',
+                    borderColor: '#E1E1E1'
+                  }}
+                >
+                  Manual
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex-grow overflow-y-auto mt-8">
+          {error && (
+            <div 
+              className="text-center p-4 rounded-2xl max-w-md mx-auto border"
+              style={{
+                color: '#991b1b',
+                backgroundColor: '#fee2e2',
+                borderColor: '#fecaca',
+                fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+              }}
+            >
+              {error}
+            </div>
+          )}
+          
+          {!isLoading && candidates.length > 0 && (
+            <div>
+              <div className="flex justify-center items-center gap-2 mb-6">
+                <h2 
+                  className="text-xl font-medium"
+                  style={{
+                    color: '#1A1C1E',
+                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                  }}
+                >
+                  Search Results
+                </h2>
+                <button 
+                  onClick={handleClearResults}
+                  className="p-1 rounded-full text-gray-500 hover:bg-gray-200 transition-colors"
+                  aria-label="Clear search results"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+              <div className="space-y-4">
+                {candidates.map((c, idx) => (
+                  <div 
+                    key={`${c.isbn || idx}`} 
+                    onClick={() => handleRegister(c)} 
+                    className="cursor-pointer p-4 border rounded-2xl hover:shadow-md transition-all duration-200 flex items-center gap-4"
+                    style={{
+                      backgroundColor: '#FCFCFC',
+                      borderColor: '#EEEEEC',
+                      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.04)'
+                    }}
+                  >
+                    <div 
+                      className="w-20 h-30 bg-white border rounded-lg shadow-sm overflow-hidden flex-shrink-0"
+                      style={{ borderColor: '#EEEEEC' }}
+                    >
+                      <img 
+                        src={c.cover_url || 'https://via.placeholder.com/80x120.png?text=No+Image'} 
+                        alt={c.title} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-grow min-w-0">
+                      <p 
+                        className="font-medium text-lg line-clamp-2"
+                        style={{
+                          color: '#1A1C1E',
+                          fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                        }}
+                      >
+                        {c.title}
+                      </p>
+                      <p 
+                        className="text-sm line-clamp-1 mt-1"
+                        style={{
+                          color: '#44474E',
+                          fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                        }}
+                      >
+                        {c.authors?.join(', ') || 'No author info'}
+                      </p>
+                      <p 
+                        className="text-xs mt-1"
+                        style={{
+                          color: '#5D5D5F',
+                          fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                        }}
+                      >
+                        {c.publisher || 'No publisher info'} ({c.published_year || 'N/A'})
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

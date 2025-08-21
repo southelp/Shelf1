@@ -111,8 +111,8 @@ export default function Loans() {
   }
 
   return (
-    <div className="p-1">
-      <div className="mb-6">
+    <div className="w-full h-full flex flex-col p-6">
+      <div className="mb-6 flex-shrink-0">
         <h2 className="text-xl font-semibold text-gray-800">
           My Loans & Reservations
           {myLoans.length > 0 && (
@@ -123,34 +123,36 @@ export default function Loans() {
         </h2>
       </div>
 
-      {myLoans.length === 0 ? (
-        <Link
-          to="/"
-          className="flex flex-col items-center justify-center py-16 border-2 border-dashed rounded-2xl text-gray-500 hover:text-blue-600 hover:border-blue-500 transition-colors"
-          style={{ 
-            backgroundColor: '#F8F8F7',
-            borderColor: '#EEEEEC'
-          }}
-        >
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-            <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium">Browse Books</h3>
-          <p className="text-sm mt-1">
-            You don't have any borrowed books or reservations at the moment.
-          </p>
-        </Link>
-      ) : (
-        <PaginatedBookGrid
-          items={myLoans}
-          renderItem={(loan) => (
-            <MyLoanCard key={loan.id} loan={loan} onComplete={loadData} />
-          )}
-          itemsPerPage={20} // 5 columns * 4 rows
-        />
-      )}
+      <div className="flex-grow overflow-y-auto">
+        {myLoans.length === 0 ? (
+          <Link
+            to="/"
+            className="flex flex-col items-center justify-center h-full border-2 border-dashed rounded-2xl text-gray-500 hover:text-blue-600 hover:border-blue-500 transition-colors"
+            style={{ 
+              backgroundColor: '#F8F8F7',
+              borderColor: '#EEEEEC'
+            }}
+          >
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+              <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium">Browse Books</h3>
+            <p className="text-sm mt-1">
+              You don't have any borrowed books or reservations at the moment.
+            </p>
+          </Link>
+        ) : (
+          <PaginatedBookGrid
+            items={myLoans}
+            renderItem={(loan) => (
+              <MyLoanCard key={loan.id} loan={loan} onComplete={loadData} />
+            )}
+            itemsPerPage={20} // 5 columns * 4 rows
+          />
+        )}
+      </div>
     </div>
   );
 }

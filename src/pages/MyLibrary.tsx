@@ -66,16 +66,16 @@ export default function MyLibrary() {
 
   return (
     <div 
-      className="w-full h-full overflow-auto p-6"
+      className="w-full h-full flex flex-col p-6"
       style={{ 
         backgroundColor: '#FCFCFC',
         fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
       }}
     >
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-8 flex-grow overflow-y-auto">
         {/* Incoming Loan Requests Section */}
         {incomingRequests.length > 0 && (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 flex-shrink-0">
             <div className="flex items-center gap-3">
               <h2 
                 className="text-xl font-medium"
@@ -114,8 +114,8 @@ export default function MyLibrary() {
         )}
 
         {/* My Owned Books Section */}
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-4 flex-grow">
+          <div className="flex items-center gap-3 flex-shrink-0">
             <h2 
               className="text-xl font-medium"
               style={{
