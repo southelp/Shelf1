@@ -274,9 +274,10 @@ export default function NewBook() {
                   <>
                     <Webcam audio={false} ref={webcamRef} screenshotFormat="image/jpeg" videoConstraints={videoConstraints} className="w-full h-full object-contain" />
                     {/* Camera Guide Overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <p className="text-white text-lg mb-4">Align with the book title</p>
                       <div 
-                        className="w-[85%] h-[60%] border-2 border-white rounded-2xl"
+                        className="w-[85%] h-[30%] border-2 border-white rounded-2xl"
                         style={{
                           boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)'
                         }}
