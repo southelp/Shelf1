@@ -35,9 +35,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) return [];
       let naverUrl: string;
       if (isbn) {
-        naverUrl = `https://openapi.naver.com/v1/search/book_adv.json?d_isbn=${encodeURIComponent(isbn)}&display=5`;
+        naverUrl = `https://openapi.naver.com/v1/search/book_adv.json?d_isbn=${encodeURIComponent(isbn)}&display=6`;
       } else {
-        const params = new URLSearchParams({ d_titl: title, display: '5' });
+        const params = new URLSearchParams({ d_titl: title, display: '6' });
         if (author) params.append('d_auth', author);
         if (publisher) params.append('d_publ', publisher);
         naverUrl = `https://openapi.naver.com/v1/search/book_adv.json?${params.toString()}`;
@@ -54,12 +54,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!GOOGLE_BOOKS_API_KEY) return [];
       let googleUrl: string;
       if (isbn) {
-        googleUrl = `https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}&maxResults=5&key=${GOOGLE_BOOKS_API_KEY}`;
+        googleUrl = `https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}&maxResults=6&key=${GOOGLE_BOOKS_API_KEY}`;
       } else {
         let googleQuery = `intitle:${encodeURIComponent(title)}`;
         if (author) googleQuery += `+inauthor:${encodeURIComponent(author)}`;
         if (publisher) googleQuery += `+inpublisher:${encodeURIComponent(publisher)}`;
-        googleUrl = `https://www.googleapis.com/books/v1/volumes?q=${googleQuery}&maxResults=5&key=${GOOGLE_BOOKS_API_KEY}`;
+        googleUrl = `https://www.googleapis.com/books/v1/volumes?q=${googleQuery}&maxResults=6&key=${GOOGLE_BOOKS_API_KEY}`;
       }
       const googleRes = await fetch(googleUrl);
       if (googleRes.ok) {
