@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { Link } from 'react-router-dom'; // Import Link
 import { supabase } from '../lib/supabaseClient.ts';
 import { BookWithLoan, Loan } from '../types.ts';
 import { useUser } from '@supabase/auth-helpers-react';
@@ -136,33 +137,32 @@ export default function MyLibrary() {
           </div>
 
           {owned.length === 0 ? (
-            <div 
-              className="flex flex-col items-center justify-center py-16 border rounded-2xl"
+            <Link 
+              to="/books/new"
+              className="flex flex-col items-center justify-center py-16 border-2 border-dashed rounded-2xl text-gray-500 hover:text-blue-600 hover:border-blue-500 transition-colors"
               style={{ 
                 backgroundColor: '#F8F8F7',
                 borderColor: '#EEEEEC'
               }}
             >
               <div className="flex flex-col items-center gap-3">
-                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="#9CA3AF"/>
+                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-blue-100">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
                   </svg>
                 </div>
                 <div 
                   className="text-base font-medium"
-                  style={{ color: '#1A1C1E' }}
                 >
-                  No books yet
+                  Add your first book
                 </div>
                 <div 
                   className="text-sm text-center max-w-md"
-                  style={{ color: '#5D5D5F' }}
                 >
-                  Start building your library by adding your first book
+                  Start building your library by adding a book
                 </div>
               </div>
-            </div>
+            </Link>
           ) : (
             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
               {owned.map(b => (
