@@ -4,10 +4,9 @@ import { Logo } from './Logo'; // New import
 
 interface SidebarProps {
   isCollapsed: boolean;
-  onToggle: () => void;
 }
 
-export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
+export default function Sidebar({ isCollapsed }: SidebarProps) {
   const location = useLocation();
   const user = useUser();
 
