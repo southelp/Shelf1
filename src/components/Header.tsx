@@ -5,9 +5,10 @@ import GoogleSignInButton from './GoogleSignInButton';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
+  isCollapsed: boolean;
 }
 
-export default function Header({ onToggleSidebar }: HeaderProps) {
+export default function Header({ onToggleSidebar, isCollapsed }: HeaderProps) {
   const user = useUser();
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,6 +28,8 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         return 'My Loans';
       case '/books/new':
         return 'Add Book';
+      case '/terms':
+        return 'Terms of Use';
       default:
         if (location.pathname.startsWith('/users/')) {
           return 'User Library';
@@ -50,14 +53,29 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         </button>
       </div>
       
-      {/* Page Title */}
-      <div className="flex-1">
+      {/* Page Title & Collapse Button */}
+      <div className="flex-1 flex items-center gap-2">
         <h1 
           className="text-base font-semibold leading-6"
           style={{ color: '#1A1C1E' }}
         >
           {getPageTitle()}
         </h1>
+        <button
+          onClick={onToggleSidebar}
+          className="p-2 rounded-full hover:bg-gray-200 hidden md:block" // Hide on mobile
+        >
+          <svg 
+            width="20" 
+            height="20" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+            className={`transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
+          >
+            <path d="M15 18L9 12L15 6" stroke="#32302C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
       </div>
 
       {/* Auth Section */}
