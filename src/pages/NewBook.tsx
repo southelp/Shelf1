@@ -138,7 +138,14 @@ export default function NewBook() {
   };
   
   const handleManualInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // ... (omitting unchanged code for brevity)
+    const { name, value } = e.target;
+    if (name === 'authors') {
+      setManualBook(prev => ({ ...prev, [name]: value.split(',').map(s => s.trim()) }));
+    } else if (name === 'published_year') {
+      setManualBook(prev => ({ ...prev, [name]: value ? Number(value) : null }));
+    } else {
+      setManualBook(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   if (!user) {
