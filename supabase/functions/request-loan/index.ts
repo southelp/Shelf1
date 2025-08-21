@@ -63,7 +63,7 @@ serve(async (req) => {
     const myLibraryUrl = `${Deno.env.get('APP_BASE_URL')}/my`;
 
     // ✨ 2. 이메일 제목과 본문에 책 제목과 요청자 이름을 추가합니다.
-    await sendEmail(owner.email, `[Taejae Open Shelf] Loan Request: "${book.title}" from ${borrowerName}`,
+    await sendEmail(owner.email, `[Loan Request]: "${book.title}" from ${borrowerName}`,
         `
         <p>Hi there,</p>
         <p>You have received a new loan request for your book, <strong>"${book.title}"</strong>, from <strong>${borrowerName}</strong>.</p>
