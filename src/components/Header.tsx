@@ -52,7 +52,7 @@ export default function Header() {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center gap-1">
+      <div className="hidden md:flex items-center gap-1">
         {/* Get API Key Button (placeholder for future) */}
         <div className="flex px-1 flex-col items-start">
           <div 
