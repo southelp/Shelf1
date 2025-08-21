@@ -1,6 +1,4 @@
-import React from 'react';
 import { Book, Loan } from '../types';
-import { supabase } from '../lib/supabaseClient';
 
 interface BookDetailsPanelProps {
   book: Book;

@@ -1,58 +1,16 @@
-import { Link } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
 import type { Book, Loan } from '../types';
 
 export default function BookCard({
   book,
   activeLoan,
-  userId,
   onClick, // New prop for click handler
 }: {
   book: Book;
   activeLoan: Loan | null;
-  userId?: string;
   onClick: (book: Book, activeLoan: Loan | null) => void; // Define onClick prop type
 }) {
-  const isOwner = userId !== undefined && book.owner_id === userId;
-
-  let badgeText = 'Available';
-  if (activeLoan) {
-    badgeText = activeLoan.status === 'loaned' ? 'Borrowed' : 'Reserved';
-  } else if (!book.available) {
-    badgeText = 'Borrowed';
-  }
-
-  const disabled = Boolean(activeLoan) || isOwner;
-
-  const getBadgeStyle = (status: string) => {
-    switch (status) {
-      case 'Available':
-        return { background: '#dcfce7', color: '#166534' };
-      case 'Reserved':
-        return { background: '#ffedd5', color: '#9a3412' };
-      case 'Borrowed':
-        return { background: '#fee2e2', color: '#991b1b' };
-      default:
-        return { background: '#e5e7eb', color: '#4b5563' };
-    }
-  };
-
-  const formatOwnerName = (name: string | null | undefined) => {
-    if (!name) return 'User';
-    return name.replace('(School of Innovation Foundations)', '').trim();
-  };
-
-  const formatKSTDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', {
-      timeZone: 'Asia/Seoul',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  // Removed requestLoan function as it will be handled by BookDetailsPanel
+  // Determine if the book is currently unavailable (borrowed or reserved)
+  const isUnavailable = activeLoan && (activeLoan.status === 'loaned' || activeLoan.status === 'reserved');
 
   return (
     <div
@@ -86,10 +44,10 @@ export default function BookCard({
             transition-transform
             duration-300
             ease-out
-            ${badgeText !== 'Available' ? 'opacity-30' : ''}
+            ${isUnavailable ? 'opacity-30' : ''}
           `}
           style={{
-            filter: badgeText === 'Available' ? 'contrast(1.05) saturate(1.1)' : 'contrast(0.8) saturate(0.7)',
+            filter: isUnavailable ? 'contrast(0.8) saturate(0.7)' : 'contrast(1.05) saturate(1.1)',
           }}
         />
 

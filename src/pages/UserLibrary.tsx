@@ -86,7 +86,7 @@ export default function UserLibrary() {
             key={b.id} 
             book={b} 
             activeLoan={loans[b.id] || null} 
-            userId={currentUser?.id} 
+            userId={currentUser?.id} onClick={() => { /* Do nothing for now */ }} 
           />
         ))}
       </div>
