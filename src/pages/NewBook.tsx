@@ -1,3 +1,24 @@
+import { useState, useRef, useCallback } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { useUser } from '@supabase/auth-helpers-react';
+import Webcam from 'react-webcam';
+
+type BookCandidate = {
+  isbn?: string | null;
+  title: string;
+  authors?: string[];
+  publisher?: string;
+  published_year?: number | null;
+  cover_url?: string;
+  source?: string;
+};
+
+const videoConstraints = {
+  width: 720,
+  height: 960,
+  facingMode: "environment"
+};
+
 // SearchResultsModal Component (within the same file)
 const SearchResultsModal = ({ candidates, onRegister, onClose }: { candidates: BookCandidate[], onRegister: (book: BookCandidate) => void, onClose: () => void }) => {
   if (candidates.length === 0) return null;
