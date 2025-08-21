@@ -259,8 +259,8 @@ export default function NewBook() {
   }
 
   return (
-    <div className="w-full h-full flex flex-col" style={{ backgroundColor: '#FCFCFC' }}>
-      <div className="flex-shrink-0 px-6">
+    <div className="w-full" style={{ backgroundColor: '#FCFCFC' }}>
+      <div>
         <h1 className="text-2xl font-medium my-6 text-center" style={{ color: '#1A1C1E' }}>
           Add a Book
         </h1>
