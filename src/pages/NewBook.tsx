@@ -493,10 +493,10 @@ export default function NewBook() {
           )}
         </div>
 
-        <div className="flex-grow overflow-y-auto mt-8">
+        <div className="flex-grow overflow-y-auto mt-6 p-1">
           {error && (
             <div 
-              className="text-center p-4 rounded-2xl max-w-md mx-auto border"
+              className="text-center p-4 rounded-2xl max-w-md mx-auto border mb-6"
               style={{
                 color: '#991b1b',
                 backgroundColor: '#fee2e2',
@@ -509,10 +509,10 @@ export default function NewBook() {
           )}
           
           {!isLoading && candidates.length > 0 && (
-            <div>
-              <div className="flex justify-center items-center gap-2 mb-6">
+            <div className="max-w-md mx-auto">
+              <div className="flex justify-center items-center gap-2 mb-4">
                 <h2 
-                  className="text-xl font-medium"
+                  className="text-lg font-medium"
                   style={{
                     color: '#1A1C1E',
                     fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
@@ -530,14 +530,16 @@ export default function NewBook() {
                   </svg>
                 </button>
               </div>
-              <div className="space-y-4">
+              <div 
+                className="p-4 border rounded-2xl space-y-4 bg-gray-50/70"
+                style={{ borderColor: '#EEEEEC' }}
+              >
                 {candidates.map((c, idx) => (
                   <div 
                     key={`${c.isbn || idx}`} 
                     onClick={() => handleRegister(c)} 
-                    className="cursor-pointer p-4 border rounded-2xl hover:shadow-md transition-all duration-200 flex items-center gap-4"
+                    className="cursor-pointer p-4 border rounded-2xl hover:shadow-md transition-all duration-200 flex items-center gap-4 bg-white"
                     style={{
-                      backgroundColor: '#FCFCFC',
                       borderColor: '#EEEEEC',
                       boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.04)'
                     }}
