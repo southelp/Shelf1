@@ -78,25 +78,38 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         background: '#F8F8F7'
       }}
     >
-      {/* Logo Section */}
-      <div className="flex h-[76px] items-center px-[18px]">
-        <div className="flex flex-col items-start">
-          {!isCollapsed && (
-            <div 
-              className="font-medium text-lg"
-              style={{
-                color: '#191919',
-                fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-              }}
-            >
-              Taejea Open Shelf
-            </div>
-          )}
-        </div>
+      {/* Logo Section & Toggle Button */}
+      <div className="flex h-[76px] items-center px-[18px] justify-between">
+        {!isCollapsed && (
+          <div 
+            className="font-medium text-lg"
+            style={{
+              color: '#191919',
+              fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+            }}
+          >
+            Taejea Open Shelf
+          </div>
+        )}
+        <button
+          onClick={onToggle}
+          className="p-2 rounded-full hover:bg-gray-200"
+        >
+          <svg 
+            width="20" 
+            height="20" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+            className={`transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
+          >
+            <path d="M15 18L9 12L15 6" stroke="#32302C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
       </div>
 
       {/* Navigation Menu */}
-      <div className="flex flex-col items-start flex-1">
+      <div className="flex flex-col items-start flex-1 pt-4">
         <div className="flex flex-col items-start self-stretch">
           {menuItems.map((item) => (
             <div key={item.path} className="flex flex-col items-start self-stretch p-0.5">
@@ -145,72 +158,6 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
         {/* Spacer */}
         <div className="flex-1"></div>
-
-        {/* User Section */}
-        {!isCollapsed && (
-          <div className="flex flex-col items-start gap-1 self-stretch pb-4">
-            <div className="flex min-h-9 flex-col items-start self-stretch">
-              <div className="flex w-[184px] px-2 flex-col items-start">
-                <div 
-                  className="text-xs leading-5"
-                  style={{
-                    color: '#44474E',
-                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                  }}
-                >
-                  Taejea residence libraries may make mistakes, so double-check outputs.
-                </div>
-              </div>
-            </div>
-            {user && (
-              <div 
-                className="flex h-9 px-3 items-center gap-1 self-stretch rounded-xl"
-              >
-                <div className="flex flex-col items-start">
-                  <div className="flex w-[18px] h-[18px] justify-center items-center">
-                    <div className="flex w-[18px] h-[18px] flex-col items-center flex-shrink-0">
-                      <div 
-                        className="w-[18px] h-[18px] flex-shrink-0 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium"
-                      >
-                        {user.email?.[0]?.toUpperCase() || 'U'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex pr-1.5 flex-col items-center">
-                  <div 
-                    className="text-sm font-medium leading-5 truncate max-w-[140px]"
-                    style={{
-                      color: '#32302C',
-                      fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                    }}
-                  >
-                    {user.email}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Collapse Button */}
-        <div className="flex pb-3 flex-col items-start self-stretch">
-          <div className="flex w-full justify-end items-start">
-            <button
-              onClick={onToggle}
-              className="flex h-8 px-2 py-1 justify-center items-center bg-white rounded-l-2xl border-r-0"
-              style={{ borderColor: '#EEEEEC' }}
-            >
-              <div 
-                className={`flex flex-col items-start transition-transform duration-200 ${isCollapsed ? 'rotate-90' : '-rotate-90'}`}
-              >
-                <svg width="18" height="22" viewBox="0 0 23 18" fill="none">
-                  <path d="M14.1175 12.45L13.3112 13.2375L9.07374 9.00005L13.3112 4.76255L14.1175 5.55005L10.6675 9.00005L14.1175 12.45Z" fill="#32302C"/>
-                </svg>
-              </div>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );
