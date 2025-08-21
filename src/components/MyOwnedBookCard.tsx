@@ -1,7 +1,14 @@
 import { supabase } from '../lib/supabaseClient.ts';
 import type { BookWithLoan } from '../types.ts';
 
-export default function MyOwnedBookCard({ book, onComplete }: { book: BookWithLoan; onComplete: () => void; }) {
+interface MyOwnedBookCardProps {
+  book: BookWithLoan;
+  onComplete: () => void;
+  isSelected: boolean;
+  onClick: () => void;
+}
+
+export default function MyOwnedBookCard({ book, onComplete, isSelected, onClick }: MyOwnedBookCardProps) {
   const activeLoan = book.loans && book.loans.length > 0 ? book.loans[0] : null;
 
   let badgeText = 'Available';
@@ -25,7 +32,8 @@ export default function MyOwnedBookCard({ book, onComplete }: { book: BookWithLo
 
   const formatKSTDate = (dateString: string) => new Date(dateString).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
 
-  const handleDeleteBook = async () => {
+  const handleDeleteBook = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent the card click event from firing
     if (!confirm('Are you sure you want to delete this book? This action cannot be undone.')) return;
     const { error } = await supabase.from('books').delete().eq('id', book.id);
     if (error) {
@@ -35,9 +43,58 @@ export default function MyOwnedBookCard({ book, onComplete }: { book: BookWithLo
       onComplete();
     }
   };
+
+  if (!isSelected) {
+    return (
+      <div className="w-full cursor-pointer" onClick={onClick}>
+        <div
+          className="
+            w-full 
+            pb-[150%] /* 2:3 aspect ratio */
+            bg-white
+            border border-gray-200/40
+            rounded-lg
+            shadow-sm
+            overflow-hidden
+            relative
+          "
+          style={{
+            boxShadow: '0 2px 6px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+          }}
+        >
+          <img
+            src={book.cover_url || 'https://via.placeholder.com/150x220.png?text=No+Image'}
+            alt={book.title}
+            className={`
+              absolute
+              inset-0
+              w-full
+              h-full
+              object-cover
+              group-hover:scale-[1.02]
+              transition-transform
+              duration-300
+              ease-out
+              ${badgeText !== 'Available' ? 'opacity-30' : ''}
+            `}
+            style={{
+              filter: badgeText !== 'Available' ? 'contrast(0.8) saturate(0.7)' : 'contrast(1.05) saturate(1.1)',
+            }}
+          />
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.02) 100%)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.05)'
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
   
   return (
-    <div className="bg-white rounded-lg shadow-sm p-3 flex flex-col h-full text-sm">
+    <div className="bg-white rounded-lg shadow-lg p-3 flex flex-col h-full text-sm ring-2 ring-blue-500" onClick={onClick}>
       <div className="relative flex-grow">
         <img 
           src={book.cover_url || 'https://via.placeholder.com/150x220.png?text=No+Image'} 
