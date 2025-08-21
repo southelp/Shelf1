@@ -1,13 +1,15 @@
 import { Book, Loan } from '../types';
+import { supabase } from '../lib/supabaseClient'; // Import supabase client
 
 interface BookDetailsPanelProps {
   book: Book;
   activeLoan: Loan | null;
   userId?: string;
   onClose: () => void;
+  onLoanRequested: () => void; // Add a callback for when a loan is requested
 }
 
-export default function BookDetailsPanel({ book, activeLoan, userId, onClose }: BookDetailsPanelProps) {
+export default function BookDetailsPanel({ book, activeLoan, userId, onClose, onLoanRequested }: BookDetailsPanelProps) {
   const isOwner = userId !== undefined && book.owner_id === userId;
 
   let loanStatusText = 'Available';
@@ -20,6 +22,32 @@ export default function BookDetailsPanel({ book, activeLoan, userId, onClose }: 
   const formatOwnerName = (name: string | null | undefined) => {
     if (!name) return 'User';
     return name.replace('(School of Innovation Foundations)', '').trim();
+  };
+
+  const handleRequestLoan = async () => {
+    if (!userId) {
+      alert('You must be logged in to request a loan.');
+      return;
+    }
+    if (!window.confirm('Are you sure you want to request this book?')) {
+      return;
+    }
+
+    try {
+      const { error, data } = await supabase.functions.invoke('request-loan', {
+        body: { book_id: book.id },
+      });
+
+      if (error) throw new Error(`Function error: ${error.message}`);
+      if (data.message && !data.ok) throw new Error(data.message);
+
+      alert('Loan requested successfully! The owner has been notified.');
+      onLoanRequested(); // Trigger data refresh
+      onClose(); // Close the modal
+    } catch (err: any) {
+      alert(`Error: ${err.message}`);
+      console.error(err);
+    }
   };
 
   const renderActionButton = () => {
@@ -44,7 +72,7 @@ export default function BookDetailsPanel({ book, activeLoan, userId, onClose }: 
       return (
         <button
           className="w-full px-4 py-2 mt-4 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-xl shadow-sm hover:bg-blue-700"
-          onClick={() => alert('Request Loan functionality to be implemented')}
+          onClick={handleRequestLoan}
         >
           Request Loan
         </button>

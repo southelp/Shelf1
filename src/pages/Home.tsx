@@ -253,6 +253,7 @@ export default function Home() {
           activeLoan={selectedLoan}
           userId={user?.id}
           onClose={handleCloseDetailsPanel}
+          onLoanRequested={loadData}
         />
       )}
     </div>
