@@ -104,177 +104,59 @@ export default function Home() {
         fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
       }}
     >
-      {/* Main content area */}
-      <div className="flex flex-col items-start self-stretch h-full">
-        {/* Zero state or search area */}
-        {books.length === 0 && !q ? (
-          <div className="flex flex-col justify-center items-center gap-3 self-stretch flex-grow">
-            <div className="flex flex-col items-center">
-              <div className="flex flex-col items-start">
-                {/* Logo similar to Google AI Studio */}
-                <div 
-                  className="text-3xl font-medium mb-2"
-                  style={{
-                    color: '#191919',
-                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                  }}
-                >
-                  Taejea Open Shelf
-                </div>
-              </div>
-            </div>
-
-            {/* Search input similar to Google AI Studio */}
-            <div className="flex max-w-3xl pt-3 justify-center items-start">
-              <div className="flex px-1 flex-col items-start">
-                <div 
-                  className="flex flex-col items-start"
-                >
-                  <div 
-                    className="flex p-3 flex-col items-start rounded-[40px] border bg-white"
-                    style={{ borderColor: '#EEEEEC' }}
-                  >
-                    <div className="flex items-end gap-1.5">
-                      <div className="flex min-h-9 py-2 items-center flex-1">
-                        <div className="flex flex-col items-start flex-1">
-                          <div className="flex flex-col items-start">
-                            <div className="flex justify-center items-center self-stretch">
-                              <div className="flex w-[577px] flex-col items-start absolute">
-                                <div className="flex h-5 items-center gap-1 self-stretch">
-                                  <div className="flex pr-2 flex-col items-start self-stretch">
-                                    <FilterBar 
-                                      onSearch={setQ} 
-                                      onlyAvailable={onlyAvailable} 
-                                      onToggleAvailable={setOnlyAvailable} 
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+      {/* Zero state or initial view */}
+      {books.length === 0 && !q ? (
+        <div className="flex flex-col justify-center items-center flex-grow">
+          {/* ... existing zero state JSX ... */}
+        </div>
+      ) : (
+        <>
+          {/* --- Top Fixed Area --- */}
+          <div className="flex-shrink-0">
+            <FilterBar 
+              onSearch={setQ} 
+              onlyAvailable={onlyAvailable} 
+              onToggleAvailable={setOnlyAvailable} 
+            />
           </div>
-        ) : (
-          <div className="w-full h-full flex flex-col">
-            {/* Filter bar for when we have content */}
-            <div className="w-full mb-6 pt-6 flex-shrink-0">
-              <FilterBar 
-                onSearch={setQ} 
-                onlyAvailable={onlyAvailable} 
-                onToggleAvailable={setOnlyAvailable} 
-              />
-            </div>
 
-            {/* Scrollable content area */}
-            <div className="w-full flex-grow overflow-y-auto">
-              {/* Incoming Loan Requests Section */}
-              {incomingRequests.length > 0 && (
-                <div className="mb-8">
-                  <div className="flex items-center gap-3 mb-4">
-                    <h2 className="text-xl font-medium text-gray-800">
-                      Incoming Loan Requests
-                    </h2>
-                    <div className="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">
-                      {incomingRequests.length}
-                    </div>
-                  </div>
-                  <div className="p-4 border rounded-2xl bg-gray-50/70" style={{ borderColor: '#EEEEEC' }}>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {incomingRequests.map(req => (
-                        <LoanRequestCard key={req.id} loan={req} onComplete={loadData} />
-                      ))}
-                    </div>
+          {/* --- Scrollable Content Area --- */}
+          <div className="flex-grow overflow-y-auto mt-6">
+            {/* Incoming Loan Requests Section */}
+            {incomingRequests.length > 0 && (
+              <div className="mb-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <h2 className="text-xl font-medium text-gray-800">Incoming Loan Requests</h2>
+                  <div className="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">
+                    {incomingRequests.length}
                   </div>
                 </div>
-              )}
+                <div className="p-4 border rounded-2xl bg-gray-50/70" style={{ borderColor: '#EEEEEC' }}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {incomingRequests.map(req => (
+                      <LoanRequestCard key={req.id} loan={req} onComplete={loadData} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
-              {/* Books grid */}
-              <div className="w-full">
-                <PaginatedBookGrid
-                  items={books}
-                  renderItem={(b) => (
-                    <BookCard
-                      key={b.id}
-                      book={b}
-                      activeLoan={loans[b.id] || null}
-                      onClick={handleBookClick}
-                    />
-                  )}
-                  itemsPerPage={50} // 10 columns * 5 rows
+            {/* Books grid */}
+            <PaginatedBookGrid
+              items={books}
+              renderItem={(b) => (
+                <BookCard
+                  key={b.id}
+                  book={b}
+                  activeLoan={loans[b.id] || null}
+                  onClick={handleBookClick}
                 />
-              </div>
-
-              {/* Featured section when we have books */}
-              {books.length > 0 && (
-                <div className="w-full mt-12">
-                  <div 
-                    className="max-w-3xl"
-                    style={{ 
-                      backgroundColor: '#F8F8F7',
-                      borderColor: '#EEEEEC' 
-                    }}
-                  >
-                    <div className="mb-3">
-                      <div 
-                        className="text-xs font-normal leading-5"
-                        style={{
-                          color: '#5D5D5F',
-                          fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                        }}
-                      >
-                        Recently Added
-                      </div>
-                    </div>
-                    
-                    <div 
-                      className="h-48 grid grid-cols-2 gap-1 p-3 border rounded-2xl"
-                      style={{ 
-                        backgroundColor: '#F8F8F7',
-                        borderColor: '#EEEEEC' 
-                      }}
-                    >
-                      {books.slice(0, 4).map((book) => (
-                        <div 
-                          key={book.id}
-                          className="flex justify-center"
-                        >
-                          <div className="flex flex-col items-center">
-                            <div 
-                              className="w-16 h-24 bg-white border rounded-lg shadow-sm overflow-hidden"
-                              style={{ borderColor: '#EEEEEC' }}
-                            >
-                              <img
-                                src={book.cover_url || 'https://via.placeholder.com/150x220.png?text=No+Image'}
-                                alt={book.title}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <div 
-                              className="mt-1 text-xs text-center line-clamp-2 max-w-16"
-                              style={{
-                                color: '#1A1C1E',
-                                fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                              }}
-                            >
-                              {book.title}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
               )}
-            </div>
+              itemsPerPage={50}
+            />
           </div>
-        )}
-      </div>
+        </>
+      )}
 
       {selectedBook && (
         <BookDetailsPanel

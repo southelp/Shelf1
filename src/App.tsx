@@ -38,37 +38,31 @@ export default function App() {
 
   return (
     <div 
-      // 'absolute' 클래스를 제거하여 레이아웃을 정상화합니다.
-      className="flex w-full h-screen flex-col justify-center items-start"
+      className="flex w-full h-screen"
       style={{
         background: 'linear-gradient(0deg, #FCFCFC 0%, #FCFCFC 100%), #FFF',
-        backdropFilter: 'blur(100px)'
       }}
     >
-      <div className="flex items-start flex-1 self-stretch">
-        <Sidebar 
-          isCollapsed={sidebarCollapsed} 
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
-        />
+      <Sidebar 
+        isCollapsed={sidebarCollapsed} 
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+      />
 
-        <div className="flex flex-col items-start flex-1 self-stretch">
-          <Header />
+      <div className="flex flex-col flex-1 h-screen">
+        <Header />
 
-          <div className="flex flex-col items-start flex-1 self-stretch overflow-hidden">
-            <main className="w-full h-full p-6">
-              <div className="max-w-7xl mx-auto h-full">
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/my" element={<MyLibrary />} />
-                  <Route path="/loans" element={<Loans />} />
-                  <Route path="/books/new" element={<MyNewBook />} />
-                  <Route path="/users/:userId" element={<UserLibrary />} />
-                  <Route path="/demo" element={<BookDisplayDemo />} />
-                </Routes>
-              </div>
-            </main>
+        <main className="flex-1 overflow-y-auto p-6">
+          <div className="max-w-7xl mx-auto h-full">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/my" element={<MyLibrary />} />
+              <Route path="/loans" element={<Loans />} />
+              <Route path="/books/new" element={<MyNewBook />} />
+              <Route path="/users/:userId" element={<UserLibrary />} />
+              <Route path="/demo" element={<BookDisplayDemo />} />
+            </Routes>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );
