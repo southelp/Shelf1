@@ -90,8 +90,8 @@ alter table public.notifications enable row level security;
 
 -- profiles
 drop policy if exists "profiles self read" on public.profiles;
-create policy "Authenticated users can read basic profile info" on public.profiles
-  for select to authenticated using (true); -- ✨ 이제 인증된 사용자는 프로필을 조회할 수 있습니다.
+create policy "profiles self read" on public.profiles
+  for select to authenticated using ( id = auth.uid() ); -- ✨ 자신의 프로필만 읽도록 수정
 
 create policy "profiles self upsert" on public.profiles for insert with check ( id = auth.uid() );
 create policy "profiles self update" on public.profiles for update using ( id = auth.uid() );
