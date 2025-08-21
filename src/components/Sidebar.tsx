@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useUser } from '@supabase/auth-helpers-react';
+import { Logo } from './Logo'; // New import
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -78,16 +79,10 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       }}
     >
       {/* Logo Section & Toggle Button */}
-      <div className="flex h-[76px] items-center px-[18px] justify-between">
+      <div className="flex h-[76px] items-center px-4 justify-between">
         {!isCollapsed && (
-          <div 
-            className="font-medium text-lg"
-            style={{
-              color: '#191919',
-              fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-            }}
-          >
-            Taejea Open Shelf
+          <div className="w-full pr-4">
+            <Logo />
           </div>
         )}
         <button

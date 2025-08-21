@@ -4,7 +4,8 @@ import FilterBar from '../components/FilterBar';
 import BookCard from '../components/BookCard';
 import PaginatedBookGrid from '../components/PaginatedBookGrid';
 import BookDetailsPanel from '../components/BookDetailsPanel';
-import LoanRequestCard from '../components/LoanRequestCard'; // New import
+import LoanRequestCard from '../components/LoanRequestCard';
+import { Logo } from '../components/Logo'; // New import
 import { Book, Loan } from '../types';
 import { useUser } from '@supabase/auth-helpers-react';
 
@@ -112,7 +113,10 @@ export default function Home() {
       ) : (
         <>
           {/* --- Top Fixed Area --- */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 flex flex-col items-center">
+            <div className="w-full max-w-sm mb-[70px]">
+              <Logo />
+            </div>
             <FilterBar 
               onSearch={setQ} 
               onlyAvailable={onlyAvailable} 
