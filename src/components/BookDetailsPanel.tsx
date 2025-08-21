@@ -63,7 +63,7 @@ export default function BookDetailsPanel({ book, activeLoan, userId, onClose }: 
         height: '96px', // Same height as book cover (h-24)
         top: '0', // Will be positioned by parent
         left: '100%', // To the right of the book cover
-        marginLeft: '10px', // Small gap
+        marginLeft: '30px', // Small gap
         borderColor: '#EEEEEC',
         fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif',
       }}
