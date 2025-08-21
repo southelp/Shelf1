@@ -1,6 +1,5 @@
 import { useUser } from '@supabase/auth-helpers-react';
 import { supabase } from '../lib/supabaseClient';
-import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import GoogleSignInButton from './GoogleSignInButton';
 
