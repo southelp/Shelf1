@@ -172,7 +172,6 @@ export default function Home() {
                     <BookCard
                       book={b}
                       activeLoan={loans[b.id] || null}
-                      userId={user?.id}
                       onClick={handleBookClick}
                     />
                     {selectedBook?.id === b.id && (
