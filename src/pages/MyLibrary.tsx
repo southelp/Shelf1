@@ -1,14 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom'; // Import Link
 import { supabase } from '../lib/supabaseClient.ts';
-import { BookWithLoan, Loan } from '../types.ts';
+import { BookWithLoan } from '../types.ts';
 import { useUser } from '@supabase/auth-helpers-react';
 import MyOwnedBookCard from '../components/MyOwnedBookCard.tsx';
-import LoanRequestCard from '../components/LoanRequestCard.tsx';
 
 export default function MyLibrary() {
   const [owned, setOwned] = useState<BookWithLoan[]>([]);
-  const [incomingRequests, setIncomingRequests] = useState<Loan[]>([]);
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   const user = useUser();
 
@@ -19,7 +17,6 @@ export default function MyLibrary() {
   const loadData = useCallback(async () => {
     if (!user) {
       setOwned([]);
-      setIncomingRequests([]);
       return;
     }
 
@@ -30,15 +27,6 @@ export default function MyLibrary() {
       .eq('owner_id', user.id)
       .order('created_at', { ascending: false });
     setOwned((allOwnedBooks as BookWithLoan[]) || []);
-
-    // Fetch incoming loan requests
-    const { data: requests } = await supabase
-      .from('loans')
-      .select('*, books(*), profiles:borrower_id(id, full_name)')
-      .eq('owner_id', user.id)
-      .eq('status', 'reserved')
-      .order('requested_at', { ascending: false });
-    setIncomingRequests(requests || []);
   }, [user]);
 
   useEffect(() => {
