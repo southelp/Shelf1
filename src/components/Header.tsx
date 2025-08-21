@@ -35,7 +35,7 @@ export default function Header() {
 
   return (
     <div 
-      className="relative flex px-3 pr-6 items-center gap-3 self-stretch"
+      className="relative flex px-2 pr-4 items-center gap-2 self-stretch"
       style={{ height: '76px' }}
     >
       {/* Hamburger Icon for Mobile */}
@@ -71,7 +71,7 @@ export default function Header() {
         `}
       >
         {/* Get API Key Button (placeholder for future) */}
-        <div className="flex px-1 flex-col items-start">
+        <div className="flex px-0 flex-col items-start">
           <div 
             className="flex h-9 px-3 items-center gap-1 rounded-xl border"
             style={{ 
@@ -99,7 +99,7 @@ export default function Header() {
         </div>
 
         {/* Navigation Links */}
-        <div className="flex px-1 flex-col items-start">
+        <div className="flex px-0 flex-col items-start">
           <div className="flex flex-col items-start">
             <div 
               className="text-sm font-bold leading-5"
@@ -113,7 +113,7 @@ export default function Header() {
           </div>
         </div>
 
-        <div className="flex px-1 flex-col items-start">
+        <div className="flex px-0 flex-col items-start">
           <div className="flex flex-col items-start">
             <div 
               className="text-sm leading-5"
@@ -128,7 +128,7 @@ export default function Header() {
         </div>
 
         {/* Auth Section */}
-        <div className="flex px-1 flex-col items-start">
+        <div className="flex px-0 flex-col items-start">
           {user ? (
             <button
               onClick={signOut}
