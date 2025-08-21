@@ -12,7 +12,6 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
   const user = useUser();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -46,10 +45,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
       {/* Hamburger Icon for Mobile */}
       <div className="md:hidden">
         <button 
-          onClick={() => {
-            onToggleSidebar();
-            setIsMobileMenuOpen(false);
-          }}
+          onClick={onToggleSidebar}
           className="text-2xl p-2 focus:outline-none"
         >
           ☰
