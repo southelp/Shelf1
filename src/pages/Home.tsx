@@ -90,18 +90,18 @@ export default function Home() {
 
   return (
     <div 
-      className="w-full h-full overflow-auto"
+      className="w-full h-full flex flex-col"
       style={{ 
         backgroundColor: '#FCFCFC',
         fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
       }}
     >
       {/* Main content area */}
-      <div className="flex flex-col items-start self-stretch">
+      <div className="flex flex-col items-start self-stretch h-full">
         {/* Zero state or search area */}
         {books.length === 0 && !q ? (
-          <div className="flex flex-col justify-center items-center gap-3 self-stretch py-80">
-            <div className="flex pt-80 flex-col items-center">
+          <div className="flex flex-col justify-center items-center gap-3 self-stretch flex-grow">
+            <div className="flex flex-col items-center">
               <div className="flex flex-col items-start">
                 {/* Logo similar to Google AI Studio */}
                 <div 
@@ -153,9 +153,9 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          <>
+          <div className="w-full h-full flex flex-col">
             {/* Filter bar for when we have content */}
-            <div className="w-full mb-6 pt-6">
+            <div className="w-full mb-6 pt-6 flex-shrink-0">
               <FilterBar 
                 onSearch={setQ} 
                 onlyAvailable={onlyAvailable} 
@@ -163,82 +163,85 @@ export default function Home() {
               />
             </div>
 
-            {/* Books grid */}
-            <div className="w-full">
-              <PaginatedBookGrid
-                items={books}
-                renderItem={(b) => (
-                  <BookCard
-                    key={b.id}
-                    book={b}
-                    activeLoan={loans[b.id] || null}
-                    onClick={handleBookClick}
-                  />
-                )}
-                itemsPerPage={50} // 10 columns * 5 rows
-              />
-            </div>
-          </>
-        )}
-
-        {/* Featured section when we have books */}
-        {books.length > 0 && (
-          <div className="w-full mt-12">
-            <div 
-              className="max-w-3xl"
-              style={{ 
-                backgroundColor: '#F8F8F7',
-                borderColor: '#EEEEEC' 
-              }}
-            >
-              <div className="mb-3">
-                <div 
-                  className="text-xs font-normal leading-5"
-                  style={{
-                    color: '#5D5D5F',
-                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                  }}
-                >
-                  Recently Added
-                </div>
+            {/* Scrollable content area */}
+            <div className="w-full flex-grow overflow-y-auto">
+              {/* Books grid */}
+              <div className="w-full">
+                <PaginatedBookGrid
+                  items={books}
+                  renderItem={(b) => (
+                    <BookCard
+                      key={b.id}
+                      book={b}
+                      activeLoan={loans[b.id] || null}
+                      onClick={handleBookClick}
+                    />
+                  )}
+                  itemsPerPage={50} // 10 columns * 5 rows
+                />
               </div>
-              
-              <div 
-                className="h-48 grid grid-cols-2 gap-1 p-3 border rounded-2xl"
-                style={{ 
-                  backgroundColor: '#F8F8F7',
-                  borderColor: '#EEEEEC' 
-                }}
-              >
-                {books.slice(0, 4).map((book) => (
+
+              {/* Featured section when we have books */}
+              {books.length > 0 && (
+                <div className="w-full mt-12">
                   <div 
-                    key={book.id}
-                    className="flex justify-center"
+                    className="max-w-3xl"
+                    style={{ 
+                      backgroundColor: '#F8F8F7',
+                      borderColor: '#EEEEEC' 
+                    }}
                   >
-                    <div className="flex flex-col items-center">
+                    <div className="mb-3">
                       <div 
-                        className="w-16 h-24 bg-white border rounded-lg shadow-sm overflow-hidden"
-                        style={{ borderColor: '#EEEEEC' }}
-                      >
-                        <img
-                          src={book.cover_url || 'https://via.placeholder.com/150x220.png?text=No+Image'}
-                          alt={book.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div 
-                        className="mt-1 text-xs text-center line-clamp-2 max-w-16"
+                        className="text-xs font-normal leading-5"
                         style={{
-                          color: '#1A1C1E',
+                          color: '#5D5D5F',
                           fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
                         }}
                       >
-                        {book.title}
+                        Recently Added
                       </div>
                     </div>
+                    
+                    <div 
+                      className="h-48 grid grid-cols-2 gap-1 p-3 border rounded-2xl"
+                      style={{ 
+                        backgroundColor: '#F8F8F7',
+                        borderColor: '#EEEEEC' 
+                      }}
+                    >
+                      {books.slice(0, 4).map((book) => (
+                        <div 
+                          key={book.id}
+                          className="flex justify-center"
+                        >
+                          <div className="flex flex-col items-center">
+                            <div 
+                              className="w-16 h-24 bg-white border rounded-lg shadow-sm overflow-hidden"
+                              style={{ borderColor: '#EEEEEC' }}
+                            >
+                              <img
+                                src={book.cover_url || 'https://via.placeholder.com/150x220.png?text=No+Image'}
+                                alt={book.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div 
+                              className="mt-1 text-xs text-center line-clamp-2 max-w-16"
+                              style={{
+                                color: '#1A1C1E',
+                                fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                              }}
+                            >
+                              {book.title}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         )}
