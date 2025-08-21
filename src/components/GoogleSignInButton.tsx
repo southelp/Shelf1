@@ -22,13 +22,13 @@ export default function GoogleSignInButton(){
     const email = user?.email?.toLowerCase();
     
     if (email) {
-      const domain = email.substring(email.lastIndexOf('@') + 1);
+      const domain = email.substring(email.lastIndexOf('@')); // Extracts "@domain.com"
       console.log('Checking email domain:', domain, 'against allowed suffix:', allowedDomain); // Debug log
 
       if (!domain.endsWith(allowedDomain)) {
         if (!alertShown) {
           alertShown = true;
-          alert(`You can only sign in using a school email (e.g., @*.${allowedDomain}).`);
+          alert(`You can only sign in with an academic email address (ending in ${allowedDomain}).`);
           await supabase.auth.signOut();
         }
       } else {
