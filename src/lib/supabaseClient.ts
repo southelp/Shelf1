@@ -5,4 +5,4 @@ export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY!
 )
 
-export const allowedDomain = (import.meta.env.VITE_ALLOWED_EMAIL_DOMAIN || 'com').toLowerCase();
+export const allowedDomain = (import.meta.env.VITE_ALLOWED_EMAIL_DOMAIN || 'ac.kr').toLowerCase();
