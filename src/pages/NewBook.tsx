@@ -203,7 +203,6 @@ export default function NewBook() {
 
   return (
     <div className="w-full h-full flex flex-col" style={{ backgroundColor: '#FCFCFC' }}>
-      {/* --- Top Fixed Area --- */}
       <div className="flex-shrink-0 px-6">
         <h1 className="text-2xl font-medium my-6 text-center" style={{ color: '#1A1C1E' }}>
           Add a Book
@@ -281,8 +280,6 @@ export default function NewBook() {
           )}
         </div>
       </div>
-
-      {/* --- Scrollable Area --- */}
       <div className="flex-grow overflow-y-auto mt-6 px-6 pb-6">
         <div className="max-w-md mx-auto">
           {error && (
