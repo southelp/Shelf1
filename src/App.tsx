@@ -38,7 +38,8 @@ export default function App() {
 
   return (
     <div 
-      className="flex w-full h-screen flex-col justify-center items-start absolute"
+      // 'absolute' 클래스를 제거하여 레이아웃을 정상화합니다.
+      className="flex w-full h-screen flex-col justify-center items-start"
       style={{
         background: 'linear-gradient(0deg, #FCFCFC 0%, #FCFCFC 100%), #FFF',
         backdropFilter: 'blur(100px)'
@@ -54,15 +55,17 @@ export default function App() {
           <Header />
 
           <div className="flex flex-col items-start flex-1 self-stretch overflow-hidden">
-            <main className="w-full h-full overflow-auto p-5">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/my" element={<MyLibrary />} />
-                <Route path="/loans" element={<Loans />} />
-                <Route path="/books/new" element={<MyNewBook />} />
-                <Route path="/users/:userId" element={<UserLibrary />} />
-                <Route path="/demo" element={<BookDisplayDemo />} />
-              </Routes>
+            <main className="w-full h-full overflow-auto p-6">
+              <div className="max-w-7xl mx-auto">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/my" element={<MyLibrary />} />
+                  <Route path="/loans" element={<Loans />} />
+                  <Route path="/books/new" element={<MyNewBook />} />
+                  <Route path="/users/:userId" element={<UserLibrary />} />
+                  <Route path="/demo" element={<BookDisplayDemo />} />
+                </Routes>
+              </div>
             </main>
           </div>
         </div>
