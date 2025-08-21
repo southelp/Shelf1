@@ -73,46 +73,6 @@ export default function MyLibrary() {
       }}
     >
       <div className="flex flex-col gap-8 flex-grow overflow-y-auto">
-        {/* Incoming Loan Requests Section */}
-        {incomingRequests.length > 0 && (
-          <div className="flex flex-col gap-4 flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <h2 
-                className="text-xl font-medium"
-                style={{
-                  color: '#1A1C1E',
-                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                }}
-              >
-                Incoming Loan Requests
-              </h2>
-              <div 
-                className="px-2 py-1 text-xs font-medium rounded-full"
-                style={{
-                  backgroundColor: '#ffedd5',
-                  color: '#9a3412'
-                }}
-              >
-                {incomingRequests.length}
-              </div>
-            </div>
-            
-            <div 
-              className="p-4 border rounded-2xl"
-              style={{ 
-                backgroundColor: '#F8F8F7',
-                borderColor: '#EEEEEC'
-              }}
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {incomingRequests.map(req => (
-                  <LoanRequestCard key={req.id} loan={req} onComplete={loadData} />
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* My Owned Books Section */}
         <div className="flex flex-col gap-4 flex-grow">
           <div className="flex items-center gap-3 flex-shrink-0">
