@@ -20,6 +20,7 @@ export default function GoogleSignInButton(){
   const checkDomain = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     const email = user?.email?.toLowerCase();
+    console.log('Checking email domain:', email, 'against allowed domain:', allowedDomain); // Debug log
     if (email && !email.endsWith(`@${allowedDomain}`)) {
       if (!alertShown) {
         alertShown = true;
