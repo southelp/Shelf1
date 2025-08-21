@@ -78,28 +78,13 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         background: '#F8F8F7'
       }}
     >
-      {/* Logo Section & Toggle Button */}
-      <div className="flex h-[76px] items-center px-4 justify-between">
+      {/* Logo Section */}
+      <div className="flex h-[76px] items-center px-4">
         {!isCollapsed && (
-          <div className="w-full pr-4">
+          <div className="w-full">
             <Logo />
           </div>
         )}
-        <button
-          onClick={onToggle}
-          className="p-2 rounded-full hover:bg-gray-200"
-        >
-          <svg 
-            width="20" 
-            height="20" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            xmlns="http://www.w3.org/2000/svg"
-            className={`transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
-          >
-            <path d="M15 18L9 12L15 6" stroke="#32302C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
       </div>
 
       {/* Navigation Menu */}
