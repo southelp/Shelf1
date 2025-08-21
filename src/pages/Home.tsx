@@ -121,7 +121,7 @@ export default function Home() {
           </div>
 
           {/* --- Scrollable Content Area --- */}
-          <div className="flex-grow overflow-y-auto mt-6">
+          <div className="flex-grow overflow-y-auto mt-6 px-6 md:px-0">
             {/* Incoming Loan Requests Section */}
             {incomingRequests.length > 0 && (
               <div className="mb-8">
