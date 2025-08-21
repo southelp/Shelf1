@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import FilterBar from '../components/FilterBar';
 import BookCard from '../components/BookCard';
 import PaginatedBookGrid from '../components/PaginatedBookGrid';
+import BookDetailsPanel from '../components/BookDetailsPanel'; // New import
 import { Book, Loan } from '../types';
 import { useUser } from '@supabase/auth-helpers-react';
 
@@ -15,6 +16,18 @@ export default function Home() {
   const [onlyAvailable, setOnlyAvailable] = useState(false);
   const [q, setQ] = useState('');
   const user = useUser();
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null); // New state
+  const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null); // New state
+
+  const handleBookClick = (book: Book, loan: Loan | null) => {
+    setSelectedBook(book);
+    setSelectedLoan(loan);
+  };
+
+  const handleCloseDetailsPanel = () => {
+    setSelectedBook(null);
+    setSelectedLoan(null);
+  };
 
   const loadData = useCallback(async () => {
     let query = supabase.from('books').select('*, profiles(id, full_name)');
@@ -155,12 +168,22 @@ export default function Home() {
               <PaginatedBookGrid
                 items={books}
                 renderItem={(b) => (
-                  <BookCard
-                    key={b.id}
-                    book={b}
-                    activeLoan={loans[b.id] || null}
-                    userId={user?.id}
-                  />
+                  <div key={b.id} className="relative">
+                    <BookCard
+                      book={b}
+                      activeLoan={loans[b.id] || null}
+                      userId={user?.id}
+                      onClick={handleBookClick}
+                    />
+                    {selectedBook?.id === b.id && (
+                      <BookDetailsPanel
+                        book={selectedBook}
+                        activeLoan={selectedLoan}
+                        userId={user?.id}
+                        onClose={handleCloseDetailsPanel}
+                      />
+                    )}
+                  </div>
                 )}
                 itemsPerPage={20} // 5 columns * 4 rows
               />
