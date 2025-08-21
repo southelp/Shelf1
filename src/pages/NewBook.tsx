@@ -215,7 +215,7 @@ export default function NewBook() {
 
   return (
     <div 
-      className="w-full h-full flex flex-col p-6"
+      className="w-full h-full flex flex-col"
       style={{ 
         backgroundColor: '#FCFCFC',
         fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
@@ -224,7 +224,7 @@ export default function NewBook() {
       <div className="max-w-4xl mx-auto w-full flex flex-col h-full">
         <div className="flex-shrink-0">
           <h1 
-            className="text-2xl font-medium mb-8 text-center"
+            className="text-2xl font-medium mb-8 text-center pt-6"
             style={{
               color: '#1A1C1E',
               fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
