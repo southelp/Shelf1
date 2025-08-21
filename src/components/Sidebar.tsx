@@ -1,12 +1,14 @@
+import { forwardRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useUser } from '@supabase/auth-helpers-react';
-import { Logo } from './Logo'; // New import
+import { Logo } from './Logo';
+import { motion } from 'framer-motion';
 
 interface SidebarProps {
   isCollapsed: boolean;
 }
 
-export default function Sidebar({ isCollapsed }: SidebarProps) {
+const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) => {
   const location = useLocation();
   const user = useUser();
 
@@ -64,7 +66,8 @@ export default function Sidebar({ isCollapsed }: SidebarProps) {
   };
 
   return (
-    <div 
+    <motion.div
+      ref={ref}
       className={`
         flex flex-col h-full
         ${isCollapsed ? 'w-[72px]' : 'w-[220px]'}
@@ -76,6 +79,8 @@ export default function Sidebar({ isCollapsed }: SidebarProps) {
         borderColor: '#EEEEEC',
         background: '#F8F8F7'
       }}
+      animate={{ width: isCollapsed ? 72 : 220 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
     >
       {/* Logo Section */}
       <div className="flex h-[76px] items-center px-4">
@@ -166,6 +171,8 @@ export default function Sidebar({ isCollapsed }: SidebarProps) {
           </Link>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
-}
+});
+
+export default Sidebar;
