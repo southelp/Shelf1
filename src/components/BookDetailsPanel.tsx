@@ -5,10 +5,9 @@ interface BookDetailsPanelProps {
   activeLoan: Loan | null;
   userId?: string;
   onClose: () => void;
-  position: { top: number, left: number };
 }
 
-export default function BookDetailsPanel({ book, activeLoan, userId, onClose, position }: BookDetailsPanelProps) {
+export default function BookDetailsPanel({ book, activeLoan, userId, onClose }: BookDetailsPanelProps) {
   const isOwner = userId !== undefined && book.owner_id === userId;
 
   let loanStatusText = 'Available';
@@ -23,12 +22,11 @@ export default function BookDetailsPanel({ book, activeLoan, userId, onClose, po
     return name.replace('(School of Innovation Foundations)', '').trim();
   };
 
-  // Placeholder for the button logic (Request Loan / My Book / Reserved)
   const renderActionButton = () => {
     if (isOwner) {
       return (
         <button
-          className="px-4 py-2 text-sm font-medium text-green-800 bg-green-100 border border-green-200 rounded-xl shadow-sm"
+          className="w-full px-4 py-2 mt-4 text-sm font-medium text-green-800 bg-green-100 border border-green-200 rounded-xl shadow-sm"
         >
           My Book
         </button>
@@ -36,7 +34,7 @@ export default function BookDetailsPanel({ book, activeLoan, userId, onClose, po
     } else if (activeLoan) {
       return (
         <button
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl shadow-sm"
+          className="w-full px-4 py-2 mt-4 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl shadow-sm"
           disabled
         >
           {loanStatusText}
@@ -45,8 +43,8 @@ export default function BookDetailsPanel({ book, activeLoan, userId, onClose, po
     } else {
       return (
         <button
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-xl shadow-sm hover:bg-blue-700"
-          onClick={() => alert('Request Loan functionality to be implemented')} // Placeholder
+          className="w-full px-4 py-2 mt-4 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-xl shadow-sm hover:bg-blue-700"
+          onClick={() => alert('Request Loan functionality to be implemented')}
         >
           Request Loan
         </button>
@@ -56,36 +54,48 @@ export default function BookDetailsPanel({ book, activeLoan, userId, onClose, po
 
   return (
     <div
-      className="absolute bg-white bg-opacity-80 backdrop-blur-sm p-3 rounded-lg shadow-lg flex flex-col justify-between z-10"
-      style={{
-        width: '192px', // Same as BookCard's original width, or adjust to fit content
-        height: '96px', // Same height as book cover (h-24)
-        top: `${position.top}px`,
-        left: `${position.left}px`,
-        borderColor: '#EEEEEC',
-        fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif',
-      }}
-      onClick={(e) => {
-        e.stopPropagation(); // Prevent click from bubbling up to the main container
-        onClose();
-      }}
+      className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+      onClick={onClose}
     >
-      <div>
-        <h4 className="font-medium text-sm line-clamp-1" style={{ color: '#1A1C1E' }}>
-          {book.title}
-        </h4>
-        <p className="text-xs text-gray-600 line-clamp-1" style={{ color: '#44474E' }}>
-          {book.authors?.join(', ') || 'Unknown Author'}
-        </p>
-        <p className="text-xs text-gray-500 mt-1">
-          Status: {loanStatusText}
-        </p>
-        <p className="text-xs text-gray-500">
-          Owner: {formatOwnerName(book.profiles?.full_name)}
-        </p>
-      </div>
-      <div className="mt-2">
-        {renderActionButton()}
+      <div
+        className="bg-white rounded-2xl shadow-xl p-6 flex gap-6 w-full max-w-2xl"
+        onClick={(e) => e.stopPropagation()} // Prevent click from closing modal
+        style={{
+          fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif',
+        }}
+      >
+        {/* Book Cover */}
+        <div className="w-1/3 flex-shrink-0">
+          <img
+            src={book.cover_url || 'https://via.placeholder.com/150x220.png?text=No+Image'}
+            alt={book.title}
+            className="w-full h-auto object-contain rounded-md bg-gray-50"
+          />
+        </div>
+
+        {/* Book Details */}
+        <div className="w-2/3 flex flex-col">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">{book.title}</h2>
+            <p className="text-md text-gray-600 mt-1">
+              {book.authors?.join(', ') || 'Unknown Author'}
+            </p>
+            <p className="text-sm text-gray-500 mt-4">
+              <span className="font-semibold">Owner:</span> {formatOwnerName(book.profiles?.full_name)}
+            </p>
+            <p className="text-sm text-gray-500">
+              <span className="font-semibold">Status:</span> {loanStatusText}
+            </p>
+            {book.description && (
+              <p className="text-sm text-gray-700 mt-4 max-h-40 overflow-y-auto">
+                {book.description}
+              </p>
+            )}
+          </div>
+          <div className="mt-auto">
+            {renderActionButton()}
+          </div>
+        </div>
       </div>
     </div>
   );
