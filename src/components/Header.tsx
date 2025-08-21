@@ -65,12 +65,20 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
       <div className="flex items-center gap-4">
         {user ? (
           <>
-            <div className="hidden md:flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium">
-                {user.email?.[0]?.toUpperCase() || 'U'}
-              </div>
+            <div className="hidden md:flex items-center gap-3">
+              {user.user_metadata.avatar_url ? (
+                <img
+                  src={user.user_metadata.avatar_url}
+                  alt="User profile"
+                  className="w-8 h-8 rounded-full"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">
+                  {user.user_metadata.full_name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'}
+                </div>
+              )}
               <span className="text-sm font-medium text-gray-700 max-w-[120px] truncate">
-                {user.email}
+                {user.user_metadata.full_name || user.email}
               </span>
             </div>
             <button
