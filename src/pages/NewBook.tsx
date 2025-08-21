@@ -177,6 +177,11 @@ export default function NewBook() {
     setCandidates([]);
     setError(null);
   };
+
+  const handleClearResults = () => {
+    setCandidates([]);
+    setError(null);
+  };
   
   const handleManualInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -502,15 +507,26 @@ export default function NewBook() {
         
         {!isLoading && candidates.length > 0 && (
           <div className="mt-8">
-            <h2 
-              className="text-xl font-medium text-center mb-6"
-              style={{
-                color: '#1A1C1E',
-                fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-              }}
-            >
-              Search Results
-            </h2>
+            <div className="flex justify-center items-center gap-2 mb-6">
+              <h2 
+                className="text-xl font-medium"
+                style={{
+                  color: '#1A1C1E',
+                  fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                }}
+              >
+                Search Results
+              </h2>
+              <button 
+                onClick={handleClearResults}
+                className="p-1 rounded-full text-gray-500 hover:bg-gray-200 transition-colors"
+                aria-label="Clear search results"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
             <div className="space-y-4">
               {candidates.map((c, idx) => (
                 <div 
