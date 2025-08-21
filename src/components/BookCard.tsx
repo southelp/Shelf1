@@ -7,7 +7,7 @@ export default function BookCard({
 }: {
   book: Book;
   activeLoan: Loan | null;
-  onClick: (book: Book, activeLoan: Loan | null) => void; // Define onClick prop type
+  onClick: (book: Book, activeLoan: Loan | null, event: React.MouseEvent<HTMLDivElement>) => void; // Define onClick prop type
 }) {
   // Determine if the book is currently unavailable (borrowed or reserved)
   const isUnavailable = activeLoan && (activeLoan.status === 'loaned' || activeLoan.status === 'reserved');
@@ -15,7 +15,7 @@ export default function BookCard({
   return (
     <div
       className="relative" // Make it relative for absolute positioning of the panel
-      onClick={() => onClick(book, activeLoan)} // Pass book and activeLoan on click
+      onClick={(event) => onClick(book, activeLoan, event)} // Pass book and activeLoan on click
     >
       <div
         className="

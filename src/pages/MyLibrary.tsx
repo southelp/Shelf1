@@ -8,7 +8,12 @@ import LoanRequestCard from '../components/LoanRequestCard.tsx';
 export default function MyLibrary() {
   const [owned, setOwned] = useState<BookWithLoan[]>([]);
   const [incomingRequests, setIncomingRequests] = useState<Loan[]>([]);
+  const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   const user = useUser();
+
+  const handleBookClick = (bookId: string) => {
+    setSelectedBookId(prevId => (prevId === bookId ? null : bookId));
+  };
 
   const loadData = useCallback(async () => {
     if (!user) {
@@ -159,18 +164,16 @@ export default function MyLibrary() {
               </div>
             </div>
           ) : (
-            <div 
-              className="p-4 border rounded-2xl"
-              style={{ 
-                backgroundColor: '#F8F8F7',
-                borderColor: '#EEEEEC'
-              }}
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {owned.map(b => (
-                  <MyOwnedBookCard key={b.id} book={b} onComplete={loadData} />
-                ))}
-              </div>
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
+              {owned.map(b => (
+                <MyOwnedBookCard 
+                  key={b.id} 
+                  book={b} 
+                  onComplete={loadData}
+                  isSelected={selectedBookId === b.id}
+                  onClick={() => handleBookClick(b.id)}
+                />
+              ))}
             </div>
           )}
         </div>

@@ -18,8 +18,23 @@ export default function Home() {
   const user = useUser();
   const [selectedBook, setSelectedBook] = useState<Book | null>(null); // New state
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null); // New state
+  const [panelPosition, setPanelPosition] = useState<{ top: number, left: number } | null>(null);
 
-  const handleBookClick = (book: Book, loan: Loan | null) => {
+  const handleBookClick = (book: Book, loan: Loan | null, event: React.MouseEvent<HTMLDivElement>) => {
+    if (selectedBook?.id === book.id) {
+      handleCloseDetailsPanel();
+      return;
+    }
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const grid = event.currentTarget.closest('.grid'); // Find the grid container
+    const gridRect = grid ? grid.getBoundingClientRect() : { top: 0, left: 0 };
+    
+    // Position the panel relative to the grid container to handle scrolling
+    setPanelPosition({
+      top: rect.top - gridRect.top,
+      left: rect.left - gridRect.left + rect.width + 12, // 12px gap
+    });
     setSelectedBook(book);
     setSelectedLoan(loan);
   };
@@ -27,6 +42,7 @@ export default function Home() {
   const handleCloseDetailsPanel = () => {
     setSelectedBook(null);
     setSelectedLoan(null);
+    setPanelPosition(null);
   };
 
   const loadData = useCallback(async () => {
@@ -94,6 +110,12 @@ export default function Home() {
       style={{ 
         backgroundColor: '#FCFCFC',
         fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+      }}
+      onClick={(e) => {
+        // Close panel if clicking outside of a book card
+        if (!(e.target as HTMLElement).closest('.relative')) {
+          handleCloseDetailsPanel();
+        }
       }}
     >
       {/* Main content area */}
@@ -164,28 +186,28 @@ export default function Home() {
             </div>
 
             {/* Books grid */}
-            <div className="w-full">
+            <div className="w-full relative">
               <PaginatedBookGrid
                 items={books}
                 renderItem={(b) => (
-                  <div key={b.id} className="relative">
-                    <BookCard
-                      book={b}
-                      activeLoan={loans[b.id] || null}
-                      onClick={handleBookClick}
-                    />
-                    {selectedBook?.id === b.id && (
-                      <BookDetailsPanel
-                        book={selectedBook}
-                        activeLoan={selectedLoan}
-                        userId={user?.id}
-                        onClose={handleCloseDetailsPanel}
-                      />
-                    )}
-                  </div>
+                  <BookCard
+                    key={b.id}
+                    book={b}
+                    activeLoan={loans[b.id] || null}
+                    onClick={handleBookClick}
+                  />
                 )}
                 itemsPerPage={20} // 5 columns * 4 rows
               />
+              {selectedBook && panelPosition && (
+                <BookDetailsPanel
+                  book={selectedBook}
+                  activeLoan={selectedLoan}
+                  userId={user?.id}
+                  onClose={handleCloseDetailsPanel}
+                  position={panelPosition}
+                />
+              )}
             </div>
           </>
         )}

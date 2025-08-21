@@ -5,11 +5,10 @@ interface BookDetailsPanelProps {
   activeLoan: Loan | null;
   userId?: string;
   onClose: () => void;
-  // Add position props if needed for absolute positioning
-  // For now, let's assume it's positioned by its parent
+  position: { top: number, left: number };
 }
 
-export default function BookDetailsPanel({ book, activeLoan, userId, onClose }: BookDetailsPanelProps) {
+export default function BookDetailsPanel({ book, activeLoan, userId, onClose, position }: BookDetailsPanelProps) {
   const isOwner = userId !== undefined && book.owner_id === userId;
 
   let loanStatusText = 'Available';
@@ -57,17 +56,19 @@ export default function BookDetailsPanel({ book, activeLoan, userId, onClose }: 
 
   return (
     <div
-      className="absolute bg-white bg-opacity-80 backdrop-blur-sm p-3 rounded-lg shadow-lg flex flex-col justify-between"
+      className="absolute bg-white bg-opacity-80 backdrop-blur-sm p-3 rounded-lg shadow-lg flex flex-col justify-between z-10"
       style={{
         width: '192px', // Same as BookCard's original width, or adjust to fit content
         height: '96px', // Same height as book cover (h-24)
-        top: '0', // Will be positioned by parent
-        left: '100%', // To the right of the book cover
-        marginLeft: '30px', // Small gap
+        top: `${position.top}px`,
+        left: `${position.left}px`,
         borderColor: '#EEEEEC',
         fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif',
       }}
-      onClick={onClose} // Click to dismiss
+      onClick={(e) => {
+        e.stopPropagation(); // Prevent click from bubbling up to the main container
+        onClose();
+      }}
     >
       <div>
         <h4 className="font-medium text-sm line-clamp-1" style={{ color: '#1A1C1E' }}>
