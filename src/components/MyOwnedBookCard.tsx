@@ -9,7 +9,8 @@ interface MyOwnedBookCardProps {
 }
 
 export default function MyOwnedBookCard({ book, onComplete, isSelected, onClick }: MyOwnedBookCardProps) {
-  const activeLoan = book.loans && book.loans.length > 0 ? book.loans[0] : null;
+  // Find the active loan ('reserved' or 'loaned') from all associated loans.
+  const activeLoan = book.loans?.find(loan => loan.status === 'reserved' || loan.status === 'loaned');
 
   let badgeText = 'Available';
   if (activeLoan) {
