@@ -20,11 +20,14 @@ export default function Home() {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
 
-  // --- Animation State ---
   const [isPcScreen, setIsPcScreen] = useState(window.innerWidth >= 1024);
-  const [isAnimationActive, setIsAnimationActive] = useState(false);
+  const [isAnimationReady, setIsAnimationReady] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const gridContentRef = useRef<HTMLDivElement>(null);
+  const positionRef = useRef(0);
+  const animationFrameRef = useRef<number>();
 
   const handleBookClick = (book: Book, loan: Loan | null) => {
     setSelectedBook(book);
@@ -58,11 +61,7 @@ export default function Home() {
       setIncomingRequests([]);
     }
 
-    const getStatus = (book: Book) => {
-      const loan = loansMap[book.id];
-      return loan ? (loan.status === 'loaned' ? 'Borrowed' : 'Reserved') : 'Available';
-    };
-
+    const getStatus = (book: Book) => (loansMap[book.id] ? (loansMap[book.id]?.status === 'loaned' ? 'Borrowed' : 'Reserved') : 'Available');
     const sortedBooks = (bookData || []).sort((a, b) => {
       const statusA = getStatus(a);
       const statusB = getStatus(b);
@@ -74,11 +73,8 @@ export default function Home() {
     setLoans(loansMap);
   }, [onlyAvailable, q, user]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useEffect(() => { loadData(); }, [loadData]);
 
-  // --- Animation Logic ---
   useEffect(() => {
     const handleResize = () => setIsPcScreen(window.innerWidth >= 1024);
     window.addEventListener('resize', handleResize);
@@ -89,13 +85,56 @@ export default function Home() {
     if (isPcScreen && gridContainerRef.current && gridContentRef.current) {
       const containerHeight = gridContainerRef.current.clientHeight;
       const contentHeight = gridContentRef.current.scrollHeight;
-      setIsAnimationActive(contentHeight > containerHeight);
+      setIsAnimationReady(contentHeight > containerHeight);
     } else {
-      setIsAnimationActive(false);
+      setIsAnimationReady(false);
     }
   }, [books, isPcScreen]);
 
-  const booksToRender = isAnimationActive ? [...books, ...books] : books;
+  useEffect(() => {
+    const animate = () => {
+      if (isHovered || !isAnimationReady || !gridContentRef.current) {
+        animationFrameRef.current = requestAnimationFrame(animate);
+        return;
+      }
+      const contentHeight = gridContentRef.current.scrollHeight / 2;
+      positionRef.current += 0.2; // Speed control
+      if (positionRef.current >= contentHeight) {
+        positionRef.current = 0;
+      }
+      gridContentRef.current.style.transform = `translateY(-${positionRef.current}px)`;
+      animationFrameRef.current = requestAnimationFrame(animate);
+    };
+
+    if (isPcScreen) {
+      animationFrameRef.current = requestAnimationFrame(animate);
+    }
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [isPcScreen, isAnimationReady, isHovered]);
+
+  const handleMouseEnter = () => {
+    if (!isPcScreen || !isAnimationReady) return;
+    setIsHovered(true);
+    if (gridContainerRef.current && gridContentRef.current) {
+      gridContentRef.current.style.transform = 'translateY(0)';
+      gridContainerRef.current.scrollTop = positionRef.current;
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (!isPcScreen || !isAnimationReady) return;
+    if (gridContainerRef.current) {
+      positionRef.current = gridContainerRef.current.scrollTop;
+    }
+    setIsHovered(false);
+  };
+
+  const booksToRender = isAnimationReady ? [...books, ...books] : books;
 
   return (
     <div className="w-full h-full flex flex-col" style={{ backgroundColor: '#FCFCFC', fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif' }}>
@@ -107,7 +146,6 @@ export default function Home() {
             <div className="w-full max-w-lg mb-8"><Logo /></div>
             <FilterBar onSearch={setQ} onlyAvailable={onlyAvailable} onToggleAvailable={setOnlyAvailable} />
           </div>
-
           <div className="flex-grow overflow-y-auto mt-6 px-6 md:px-0">
             {incomingRequests.length > 0 && (
               <div className="mb-8">
@@ -122,24 +160,21 @@ export default function Home() {
                 </div>
               </div>
             )}
-
-            {/* --- Books Grid (with animation logic) --- */}
-            <div ref={gridContainerRef} className={isPcScreen ? "scrolling-grid-container" : ""}>
-              <div ref={gridContentRef} className={`scrolling-grid ${isAnimationActive ? 'animate-scroll' : ''}`}>
+            <div
+              ref={gridContainerRef}
+              className={`scrolling-grid-container ${isHovered ? 'overflow-y-auto' : 'overflow-hidden'}`}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
+              <div ref={gridContentRef} className="scrolling-grid">
                 {booksToRender.map((b, index) => (
-                  <BookCard
-                    key={`${b.id}-${index}`}
-                    book={b}
-                    activeLoan={loans[b.id] || null}
-                    onClick={handleBookClick}
-                  />
+                  <BookCard key={`${b.id}-${index}`} book={b} activeLoan={loans[b.id] || null} onClick={handleBookClick} />
                 ))}
               </div>
             </div>
           </div>
         </>
       )}
-
       {selectedBook && (
         <BookDetailsPanel book={selectedBook} activeLoan={selectedLoan} userId={user?.id} onClose={handleCloseDetailsPanel} onLoanRequested={loadData} />
       )}
