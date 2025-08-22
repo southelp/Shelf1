@@ -44,7 +44,7 @@ export default function Home() {
     let bookQuery = supabase.from('books').select('*, profiles(id, full_name)');
     if (onlyAvailable) bookQuery = bookQuery.eq('available', true);
     if (q) {
-      bookQuery = bookQuery.or(`title.ilike.%${q}%,authors.cs.{${q}}`);
+      bookQuery = bookQuery.ilike('title', `%${q}%`);
     }
     
     const { data: bookData } = await bookQuery;
