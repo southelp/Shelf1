@@ -40,7 +40,7 @@ export default function FilterBar({ onSearch, onlyAvailable, onToggleAvailable }
                           >
                             <input
                               type="search"
-                              placeholder="Search by title, author, or ISBN..."
+                                      placeholder="Title, author"
                               value={searchValue}
                               onChange={handleSearchChange}
                               className="w-full border-none outline-none bg-transparent text-sm leading-5"

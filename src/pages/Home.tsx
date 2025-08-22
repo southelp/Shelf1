@@ -44,7 +44,10 @@ export default function Home() {
     setIsLoading(true);
     let bookQuery = supabase.from('books').select('*, profiles(id, full_name)');
     if (onlyAvailable) bookQuery = bookQuery.eq('available', true);
-    if (q) bookQuery = bookQuery.or(`title.ilike.%${q}%,authors.cs.{${q}},isbn.ilike.%${q}%`);
+    if (q) {
+      // Use `::text` to cast array to text for `ilike` search
+      bookQuery = bookQuery.or(`title.ilike.%${q}%,authors::text.ilike.%${q}%,isbn.ilike.%${q}%`);
+    }
     
     const { data: bookData } = await bookQuery;
     const bookIds = (bookData || []).map(b => b.id);
@@ -87,23 +90,22 @@ export default function Home() {
         return;
       }
       
+      const isContentScrollable = gridContentRef.current.scrollHeight > gridContainerRef.current.clientHeight;
       const maxScroll = gridContentRef.current.scrollHeight - gridContainerRef.current.clientHeight;
 
-      // Auto-scroll logic when not hovered and not searching
-      if (!isHovered && !q && isPcScreen) {
+      // Auto-scroll logic
+      if (!isHovered && !q && isPcScreen && isContentScrollable) {
         if (targetPositionRef.current < maxScroll) {
           targetPositionRef.current += scrollSpeed;
         }
         targetPositionRef.current = Math.min(targetPositionRef.current, maxScroll);
       }
 
-      // Smooth interpolation
+      // Smooth interpolation - always run to ensure smoothness and initial position
       const currentPos = positionRef.current;
       const targetPos = targetPositionRef.current;
-      if (Math.abs(targetPos - currentPos) > 0.01) {
-        positionRef.current = currentPos + (targetPos - currentPos) * LERP_FACTOR;
-        gridContentRef.current.style.transform = `translateY(-${positionRef.current}px)`;
-      }
+      positionRef.current = currentPos + (targetPos - currentPos) * LERP_FACTOR;
+      gridContentRef.current.style.transform = `translateY(-${positionRef.current}px)`;
       
       animationFrameRef.current = requestAnimationFrame(animate);
     };
