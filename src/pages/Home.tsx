@@ -22,6 +22,7 @@ export default function Home() {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const [isPcScreen, setIsPcScreen] = useState(window.innerWidth >= 1024);
   const [isHovered, setIsHovered] = useState(false);
@@ -29,8 +30,8 @@ export default function Home() {
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const gridContentRef = useRef<HTMLDivElement>(null);
   
-  const positionRef = useRef(-INITIAL_OFFSET);
-  const targetPositionRef = useRef(-INITIAL_OFFSET);
+  const positionRef = useRef(0);
+  const targetPositionRef = useRef(0);
   const animationFrameRef = useRef<number>();
   const scrollSpeed = 0.2;
 
@@ -45,7 +46,7 @@ export default function Home() {
     let bookQuery = supabase.from('books').select('*, profiles(id, full_name)');
     if (onlyAvailable) bookQuery = bookQuery.eq('available', true);
     if (q) {
-      bookQuery = bookQuery.or(`title.ilike.%${q}%,authors::text.ilike.%${q}%,isbn.ilike.%${q}%`);
+      bookQuery = bookQuery.or(`title.ilike.%${q}%,authors::text.ilike.%${q}%`);
     }
     
     const { data: bookData } = await bookQuery;
@@ -82,12 +83,14 @@ export default function Home() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // This effect triggers the initial animation once data is loaded
   useEffect(() => {
-    if (!isLoading && isPcScreen) {
+    if (!isLoading && !isInitialized && isPcScreen && books.length > 0 && gridContentRef.current) {
+      positionRef.current = -INITIAL_OFFSET;
       targetPositionRef.current = 0;
+      gridContentRef.current.style.transform = `translateY(-${positionRef.current}px)`;
+      setIsInitialized(true);
     }
-  }, [isLoading, isPcScreen]);
+  }, [isLoading, isInitialized, isPcScreen, books]);
 
   useEffect(() => {
     const animate = () => {
@@ -99,15 +102,12 @@ export default function Home() {
       const isContentScrollable = gridContentRef.current.scrollHeight > gridContainerRef.current.clientHeight;
       const maxScroll = gridContentRef.current.scrollHeight - gridContainerRef.current.clientHeight;
 
-      // Auto-scroll logic
-      if (!isHovered && !q && isPcScreen && isContentScrollable) {
-        // Only start auto-scrolling after the initial animation is complete (or user has scrolled)
+      if (isInitialized && !isHovered && !q && isPcScreen && isContentScrollable) {
         if (targetPositionRef.current >= 0 && targetPositionRef.current < maxScroll) {
           targetPositionRef.current += scrollSpeed;
         }
       }
 
-      // Smooth interpolation
       const currentPos = positionRef.current;
       const targetPos = targetPositionRef.current;
       if (Math.abs(targetPos - currentPos) > 0.01) {
@@ -120,7 +120,7 @@ export default function Home() {
 
     animationFrameRef.current = requestAnimationFrame(animate);
     return () => { if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current); };
-  }, [isPcScreen, isHovered, selectedBook, q]);
+  }, [isPcScreen, isHovered, selectedBook, q, isInitialized]);
 
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     if (!isPcScreen || !gridContentRef.current || !gridContainerRef.current || q) return;
@@ -128,7 +128,7 @@ export default function Home() {
 
     const maxScroll = gridContentRef.current.scrollHeight - gridContainerRef.current.clientHeight;
     let newTargetPosition = targetPositionRef.current + event.deltaY;
-    newTargetPosition = Math.max(0, Math.min(newTargetPosition, maxScroll)); // Allow scrolling up to the very top
+    newTargetPosition = Math.max(0, Math.min(newTargetPosition, maxScroll));
 
     targetPositionRef.current = newTargetPosition;
   };
