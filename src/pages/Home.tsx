@@ -41,16 +41,10 @@ export default function Home() {
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
-    
-    let bookQuery;
+    let bookQuery = supabase.from('books').select('*, profiles(id, full_name)');
+    if (onlyAvailable) bookQuery = bookQuery.eq('available', true);
     if (q) {
-      bookQuery = supabase.rpc('search_books', { search_term: q });
-    } else {
-      bookQuery = supabase.from('books').select('*, profiles(id, full_name)');
-    }
-
-    if (onlyAvailable) {
-      bookQuery = bookQuery.eq('available', true);
+      bookQuery = bookQuery.ilike('title', `%${q}%`);
     }
     
     const { data: bookData } = await bookQuery;
