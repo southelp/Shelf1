@@ -45,7 +45,6 @@ export default function Home() {
     let bookQuery = supabase.from('books').select('*, profiles(id, full_name)');
     if (onlyAvailable) bookQuery = bookQuery.eq('available', true);
     if (q) {
-      // Use `::text` to cast array to text for `ilike` search
       bookQuery = bookQuery.or(`title.ilike.%${q}%,authors::text.ilike.%${q}%,isbn.ilike.%${q}%`);
     }
     
@@ -83,6 +82,13 @@ export default function Home() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // This effect triggers the initial animation once data is loaded
+  useEffect(() => {
+    if (!isLoading && isPcScreen) {
+      targetPositionRef.current = 0;
+    }
+  }, [isLoading, isPcScreen]);
+
   useEffect(() => {
     const animate = () => {
       if (!gridContentRef.current || !gridContainerRef.current || selectedBook) {
@@ -95,17 +101,19 @@ export default function Home() {
 
       // Auto-scroll logic
       if (!isHovered && !q && isPcScreen && isContentScrollable) {
-        if (targetPositionRef.current < maxScroll) {
+        // Only start auto-scrolling after the initial animation is complete (or user has scrolled)
+        if (targetPositionRef.current >= 0 && targetPositionRef.current < maxScroll) {
           targetPositionRef.current += scrollSpeed;
         }
-        targetPositionRef.current = Math.min(targetPositionRef.current, maxScroll);
       }
 
-      // Smooth interpolation - always run to ensure smoothness and initial position
+      // Smooth interpolation
       const currentPos = positionRef.current;
       const targetPos = targetPositionRef.current;
-      positionRef.current = currentPos + (targetPos - currentPos) * LERP_FACTOR;
-      gridContentRef.current.style.transform = `translateY(-${positionRef.current}px)`;
+      if (Math.abs(targetPos - currentPos) > 0.01) {
+        positionRef.current = currentPos + (targetPos - currentPos) * LERP_FACTOR;
+        gridContentRef.current.style.transform = `translateY(-${positionRef.current}px)`;
+      }
       
       animationFrameRef.current = requestAnimationFrame(animate);
     };
@@ -120,7 +128,7 @@ export default function Home() {
 
     const maxScroll = gridContentRef.current.scrollHeight - gridContainerRef.current.clientHeight;
     let newTargetPosition = targetPositionRef.current + event.deltaY;
-    newTargetPosition = Math.max(-INITIAL_OFFSET, Math.min(newTargetPosition, maxScroll));
+    newTargetPosition = Math.max(0, Math.min(newTargetPosition, maxScroll)); // Allow scrolling up to the very top
 
     targetPositionRef.current = newTargetPosition;
   };
@@ -136,7 +144,6 @@ export default function Home() {
       if (q) {
         return <div className="flex-grow text-center py-10"><p>No books found matching your search for "{q}".</p></div>;
       }
-      // This is the true zero state for the entire library
       return (
         <div className="flex-grow flex flex-col justify-center items-center">
           <h2 className="text-2xl font-bold mb-4">Welcome to the Shelf!</h2>
