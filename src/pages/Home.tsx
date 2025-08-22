@@ -47,7 +47,7 @@ export default function Home() {
     const { data: bookData } = await supabase.rpc('search_books', { 
       search_term: q, 
       only_available: onlyAvailable 
-    });
+    }).returns<Book[]>();
     
     const bookIds = (bookData || []).map(b => b.id);
     let loansMap: Record<string, Loan | null> = {};
