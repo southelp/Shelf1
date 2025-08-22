@@ -114,7 +114,7 @@ export default function Home() {
         <>
           {/* --- Top Fixed Area --- */}
           <div className="flex-shrink-0 flex flex-col items-center pt-8">
-            <div className="w-full max-w-sm mb-8">
+            <div className="w-full max-w-lg mb-8">
               <Logo />
             </div>
             <FilterBar 
