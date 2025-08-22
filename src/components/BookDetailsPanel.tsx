@@ -1,5 +1,6 @@
 import { Book, Loan } from '../types';
 import { supabase } from '../lib/supabaseClient'; // Import supabase client
+import { Link } from 'react-router-dom';
 
 interface BookDetailsPanelProps {
   book: Book;
@@ -109,7 +110,18 @@ export default function BookDetailsPanel({ book, activeLoan, userId, onClose, on
               {book.authors?.join(', ') || 'Unknown Author'}
             </p>
             <p className="text-sm text-gray-500 mt-4">
-              <span className="font-semibold">Owner:</span> {formatOwnerName(book.profiles?.full_name)}
+              <span className="font-semibold">Owner:</span>{' '}
+              {book.profiles?.id ? (
+                <Link
+                  to={`/users/${book.profiles.id}`}
+                  onClick={onClose}
+                  className="text-blue-600 hover:underline"
+                >
+                  {formatOwnerName(book.profiles?.full_name)}
+                </Link>
+              ) : (
+                formatOwnerName(book.profiles?.full_name)
+              )}
             </p>
             <p className="text-sm text-gray-500">
               <span className="font-semibold">Status:</span> {loanStatusText}
