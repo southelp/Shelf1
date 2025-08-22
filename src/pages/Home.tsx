@@ -44,7 +44,6 @@ export default function Home() {
     let bookQuery = supabase.from('books').select('*, profiles(id, full_name)');
     if (onlyAvailable) bookQuery = bookQuery.eq('available', true);
     if (q) {
-      const searchString = q.split(' ').join(' & ');
       bookQuery = bookQuery.or(`title.ilike.%${q}%,authors.cs.{${q}}`);
     }
     
