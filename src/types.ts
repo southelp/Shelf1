@@ -18,7 +18,7 @@ export type Book = {
   available: boolean;
   created_at: string;
   source_api?: string;
-  profiles: { full_name: string | null } | null;
+  profiles: { id: string; full_name: string | null } | null;
 };
 
 export type LoanStatus = 'reserved' | 'loaned' | 'returned' | 'cancelled';
