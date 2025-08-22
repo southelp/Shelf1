@@ -54,7 +54,7 @@ export default function MyLibrary() {
       </div>
 
       {/* --- Scrollable Area --- */}
-      <div className="flex-grow overflow-y-auto px-6 pb-6">
+      <div className="flex-grow overflow-y-auto px-[50px] pb-6">
         {owned.length === 0 ? (
           <Link 
             to="/books/new"
@@ -70,7 +70,7 @@ export default function MyLibrary() {
             </div>
           </Link>
         ) : (
-          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
+          <div className="grid grid-cols-7 gap-4">
             {owned.map(b => (
               <MyOwnedBookCard 
                 key={b.id} 

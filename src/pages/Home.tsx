@@ -141,7 +141,7 @@ export default function Home() {
             <div className="w-full max-w-lg mb-8"><Logo /></div>
             <FilterBar onSearch={setQ} onlyAvailable={onlyAvailable} onToggleAvailable={setOnlyAvailable} />
           </div>
-          <div className="flex-grow overflow-y-auto mt-6 px-6 md:px-0">
+          <div className="flex-grow overflow-y-auto mt-6 px-[50px]">
             {incomingRequests.length > 0 && (
               <div className="mb-8">
                 <div className="flex items-center gap-3 mb-4">

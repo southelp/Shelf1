@@ -111,7 +111,7 @@ export default function Loans() {
   }
 
   return (
-    <div className="w-full h-full flex flex-col p-6">
+    <div className="w-full h-full flex flex-col px-[50px] py-6">
       <div className="mb-6 flex-shrink-0">
         <h2 className="text-xl font-semibold text-gray-800">
           My Borrows

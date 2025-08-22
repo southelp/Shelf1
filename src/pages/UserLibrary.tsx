@@ -80,7 +80,7 @@ export default function UserLibrary() {
         </h1>
       </div>
 
-      <div className="flex-grow overflow-y-auto">
+      <div className="flex-grow overflow-y-auto px-[50px]">
         <PaginatedBookGrid
           items={books}
           renderItem={(b) => (
