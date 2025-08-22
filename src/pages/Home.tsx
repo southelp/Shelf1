@@ -42,18 +42,12 @@ export default function Home() {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     
-    let bookQuery;
-    if (q) {
-      bookQuery = supabase.rpc('search_books', { search_term: q });
-    } else {
-      bookQuery = supabase.from('books').select('*, profiles(id, full_name)');
-    }
-
-    if (onlyAvailable) {
-      bookQuery = bookQuery.eq('available', true);
-    }
-    
-    const { data: bookData } = await bookQuery;
+    // Always use the RPC function for consistency. 
+    // The function is designed to handle empty search terms.
+    const { data: bookData } = await supabase.rpc('search_books', { 
+      search_term: q, 
+      only_available: onlyAvailable 
+    });
     
     const bookIds = (bookData || []).map(b => b.id);
     let loansMap: Record<string, Loan | null> = {};
