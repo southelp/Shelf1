@@ -16,6 +16,7 @@ const sampleBook: Book = {
   publisher: 'Basic Books',
   published_year: 2013,
   profiles: {
+    id: 'user-1-profile-id',
     full_name: 'Jane Smith'
   }
 };
