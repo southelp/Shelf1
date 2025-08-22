@@ -27,26 +27,18 @@ export default function Home() {
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const gridContentRef = useRef<HTMLDivElement>(null);
   const positionRef = useRef(0);
+  const dynamicSpeedRef = useRef(0.2); // Base speed
   const animationFrameRef = useRef<number>();
 
-  const handleBookClick = (book: Book, loan: Loan | null) => {
-    setSelectedBook(book);
-    setSelectedLoan(loan);
-  };
-
-  const handleCloseDetailsPanel = () => {
-    setSelectedBook(null);
-    setSelectedLoan(null);
-  };
+  const handleBookClick = (book: Book, loan: Loan | null) => setSelectedBook(book);
+  const handleCloseDetailsPanel = () => setSelectedBook(null);
 
   const loadData = useCallback(async () => {
     let bookQuery = supabase.from('books').select('*, profiles(id, full_name)');
     if (onlyAvailable) bookQuery = bookQuery.eq('available', true);
     if (q) bookQuery = bookQuery.or(`title.ilike.%${q}%,authors.cs.{${q}},isbn.ilike.%${q}%`);
     
-    const { data: bookData, error: bookError } = await bookQuery;
-    if (bookError) console.error('Error fetching books:', bookError);
-
+    const { data: bookData } = await bookQuery;
     const bookIds = (bookData || []).map(b => b.id);
     let loansMap: Record<string, Loan | null> = {};
     if (bookIds.length > 0) {
@@ -57,8 +49,6 @@ export default function Home() {
     if (user) {
       const { data: requestsData } = await supabase.from('loans').select('*, books(*), profiles:borrower_id(id, full_name)').eq('owner_id', user.id).eq('status', 'reserved').order('requested_at', { ascending: false });
       setIncomingRequests(requestsData || []);
-    } else {
-      setIncomingRequests([]);
     }
 
     const getStatus = (book: Book) => (loansMap[book.id] ? (loansMap[book.id]?.status === 'loaned' ? 'Borrowed' : 'Reserved') : 'Available');
@@ -83,9 +73,7 @@ export default function Home() {
 
   useEffect(() => {
     if (isPcScreen && gridContainerRef.current && gridContentRef.current) {
-      const containerHeight = gridContainerRef.current.clientHeight;
-      const contentHeight = gridContentRef.current.scrollHeight;
-      setIsAnimationReady(contentHeight > containerHeight);
+      setIsAnimationReady(gridContentRef.current.scrollHeight > gridContainerRef.current.clientHeight);
     } else {
       setIsAnimationReady(false);
     }
@@ -93,46 +81,50 @@ export default function Home() {
 
   useEffect(() => {
     const animate = () => {
-      if (isHovered || !isAnimationReady || !gridContentRef.current) {
+      if (isHovered || !isAnimationReady || !gridContentRef.current || selectedBook) {
         animationFrameRef.current = requestAnimationFrame(animate);
         return;
       }
       const contentHeight = gridContentRef.current.scrollHeight / 2;
-      positionRef.current += 0.2; // Speed control
-      if (positionRef.current >= contentHeight) {
-        positionRef.current = 0;
-      }
+      positionRef.current += dynamicSpeedRef.current;
+      
+      if (positionRef.current >= contentHeight) positionRef.current = 0;
+      if (positionRef.current < 0) positionRef.current = contentHeight;
+
       gridContentRef.current.style.transform = `translateY(-${positionRef.current}px)`;
       animationFrameRef.current = requestAnimationFrame(animate);
     };
 
-    if (isPcScreen) {
-      animationFrameRef.current = requestAnimationFrame(animate);
-    }
+    if (isPcScreen) animationFrameRef.current = requestAnimationFrame(animate);
+    return () => { if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current); };
+  }, [isPcScreen, isAnimationReady, isHovered, selectedBook]);
 
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [isPcScreen, isAnimationReady, isHovered]);
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!isPcScreen || !isAnimationReady || isHovered) return;
+    const container = gridContainerRef.current;
+    if (!container) return;
 
-  const handleMouseEnter = () => {
-    if (!isPcScreen || !isAnimationReady) return;
-    setIsHovered(true);
-    if (gridContainerRef.current && gridContentRef.current) {
-      gridContentRef.current.style.transform = 'translateY(0)';
-      gridContainerRef.current.scrollTop = positionRef.current;
+    const rect = container.getBoundingClientRect();
+    const y = event.clientY - rect.top;
+    const height = rect.height;
+    const topZone = height * 0.2;
+    const bottomZone = height * 0.8;
+    const maxSpeed = 2.5; // Max additional speed
+    const baseSpeed = 0.2;
+
+    if (y < topZone) {
+      const speedMultiplier = (topZone - y) / topZone;
+      dynamicSpeedRef.current = baseSpeed + maxSpeed * speedMultiplier;
+    } else if (y > bottomZone) {
+      const speedMultiplier = (y - bottomZone) / (height - bottomZone);
+      dynamicSpeedRef.current = baseSpeed - maxSpeed * speedMultiplier;
+    } else {
+      dynamicSpeedRef.current = baseSpeed;
     }
   };
 
-  const handleMouseLeave = () => {
-    if (!isPcScreen || !isAnimationReady) return;
-    if (gridContainerRef.current) {
-      positionRef.current = gridContainerRef.current.scrollTop;
-    }
-    setIsHovered(false);
-  };
+  const handleMouseEnter = () => { if (isPcScreen && isAnimationReady) setIsHovered(true); };
+  const handleMouseLeave = () => { if (isPcScreen && isAnimationReady) setIsHovered(false); };
 
   const booksToRender = isAnimationReady ? [...books, ...books] : books;
 
@@ -162,11 +154,12 @@ export default function Home() {
             )}
             <div
               ref={gridContainerRef}
-              className={`scrolling-grid-container ${isHovered ? 'overflow-y-auto' : 'overflow-hidden'}`}
+              className="scrolling-grid-container"
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
+              onMouseMove={handleMouseMove}
             >
-              <div ref={gridContentRef} className="scrolling-grid">
+              <div ref={gridContentRef} className="scrolling-grid" style={{ pointerEvents: isHovered ? 'auto' : 'none' }}>
                 {booksToRender.map((b, index) => (
                   <BookCard key={`${b.id}-${index}`} book={b} activeLoan={loans[b.id] || null} onClick={handleBookClick} />
                 ))}
