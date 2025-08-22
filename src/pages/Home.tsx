@@ -84,6 +84,16 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    // Reset scroll position when starting or clearing a search
+    if (gridContentRef.current) {
+      targetPositionRef.current = 0;
+      positionRef.current = 0;
+      // Apply transform directly to avoid waiting for the next animation frame
+      gridContentRef.current.style.transform = `translateY(0px)`;
+    }
+  }, [q]);
+
+  useEffect(() => {
     const animate = () => {
       if (!gridContentRef.current || !gridContainerRef.current || selectedBook) {
         animationFrameRef.current = requestAnimationFrame(animate);
