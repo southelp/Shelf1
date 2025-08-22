@@ -20,9 +20,10 @@ export default function Home() {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
 
-  // --- Animation State ---
+  // --- Interaction & Animation State ---
   const [isPcScreen, setIsPcScreen] = useState(window.innerWidth >= 1024);
   const [isAnimationActive, setIsAnimationActive] = useState(false);
+  const [isHovered, setIsHovered] = useState(false); // New state for hover
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const gridContentRef = useRef<HTMLDivElement>(null);
 
@@ -78,7 +79,7 @@ export default function Home() {
     loadData();
   }, [loadData]);
 
-  // --- Animation Logic ---
+  // --- Animation & Interaction Logic ---
   useEffect(() => {
     const handleResize = () => setIsPcScreen(window.innerWidth >= 1024);
     window.addEventListener('resize', handleResize);
@@ -86,16 +87,20 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    // Recalculate if animation should be active when books/screen size changes
     if (isPcScreen && gridContainerRef.current && gridContentRef.current) {
       const containerHeight = gridContainerRef.current.clientHeight;
-      const contentHeight = gridContentRef.current.scrollHeight;
+      // Use the original content height for calculation, not the doubled one
+      const contentHeight = gridContentRef.current.scrollHeight / (isAnimationActive && !isHovered ? 2 : 1);
       setIsAnimationActive(contentHeight > containerHeight);
     } else {
       setIsAnimationActive(false);
     }
-  }, [books, isPcScreen]);
+  }, [books, isPcScreen, isHovered]); // Rerun when hover state changes to get correct height
 
-  const booksToRender = isAnimationActive ? [...books, ...books] : books;
+  // Render original list for exploration, double list for animation
+  const booksToRender = isAnimationActive && !isHovered ? [...books, ...books] : books;
+  const shouldAnimate = isAnimationActive && !isHovered;
 
   return (
     <div className="w-full h-full flex flex-col" style={{ backgroundColor: '#FCFCFC', fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif' }}>
@@ -124,8 +129,16 @@ export default function Home() {
             )}
 
             {/* --- Books Grid (with animation logic) --- */}
-            <div ref={gridContainerRef} className={isPcScreen ? "scrolling-grid-container" : ""}>
-              <div ref={gridContentRef} className={`scrolling-grid ${isAnimationActive ? 'animate-scroll' : ''}`}>
+            <div 
+              ref={gridContainerRef} 
+              className={`
+                ${isPcScreen ? "scrolling-grid-container" : ""}
+                ${isHovered ? "overflow-y-auto" : "overflow-hidden"}
+              `}
+              onMouseEnter={() => isPcScreen && setIsHovered(true)}
+              onMouseLeave={() => isPcScreen && setIsHovered(false)}
+            >
+              <div ref={gridContentRef} className={`scrolling-grid ${shouldAnimate ? 'animate-scroll' : ''}`}>
                 {booksToRender.map((b, index) => (
                   <BookCard
                     key={`${b.id}-${index}`}
