@@ -10,7 +10,6 @@ import { useUser } from '@supabase/auth-helpers-react';
 
 const statusOrder = { 'Available': 0, 'Reserved': 1, 'Borrowed': 2 };
 const LERP_FACTOR = 0.1; // Smoothing factor for scrolling
-const INITIAL_OFFSET = 174; // Approx. one row height to start below the fold
 
 export default function Home() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -22,7 +21,6 @@ export default function Home() {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
 
   const [isPcScreen, setIsPcScreen] = useState(window.innerWidth >= 1024);
   const [isHovered, setIsHovered] = useState(false);
@@ -46,7 +44,8 @@ export default function Home() {
     let bookQuery = supabase.from('books').select('*, profiles(id, full_name)');
     if (onlyAvailable) bookQuery = bookQuery.eq('available', true);
     if (q) {
-      bookQuery = bookQuery.or(`title.ilike.%${q}%,authors::text.ilike.%${q}%`);
+      const searchString = q.split(' ').join(' & ');
+      bookQuery = bookQuery.or(`title.ilike.%${q}%,authors.cs.{${q}}`);
     }
     
     const { data: bookData } = await bookQuery;
@@ -84,15 +83,6 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!isLoading && !isInitialized && isPcScreen && books.length > 0 && gridContentRef.current) {
-      positionRef.current = -INITIAL_OFFSET;
-      targetPositionRef.current = 0;
-      gridContentRef.current.style.transform = `translateY(-${positionRef.current}px)`;
-      setIsInitialized(true);
-    }
-  }, [isLoading, isInitialized, isPcScreen, books]);
-
-  useEffect(() => {
     const animate = () => {
       if (!gridContentRef.current || !gridContainerRef.current || selectedBook) {
         animationFrameRef.current = requestAnimationFrame(animate);
@@ -102,8 +92,8 @@ export default function Home() {
       const isContentScrollable = gridContentRef.current.scrollHeight > gridContainerRef.current.clientHeight;
       const maxScroll = gridContentRef.current.scrollHeight - gridContainerRef.current.clientHeight;
 
-      if (isInitialized && !isHovered && !q && isPcScreen && isContentScrollable) {
-        if (targetPositionRef.current >= 0 && targetPositionRef.current < maxScroll) {
+      if (!isHovered && !q && isPcScreen && isContentScrollable) {
+        if (targetPositionRef.current < maxScroll) {
           targetPositionRef.current += scrollSpeed;
         }
       }
@@ -120,7 +110,7 @@ export default function Home() {
 
     animationFrameRef.current = requestAnimationFrame(animate);
     return () => { if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current); };
-  }, [isPcScreen, isHovered, selectedBook, q, isInitialized]);
+  }, [isPcScreen, isHovered, selectedBook, q]);
 
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     if (!isPcScreen || !gridContentRef.current || !gridContainerRef.current || q) return;
