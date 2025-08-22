@@ -1,2 +1,3 @@
 # .vercelignore
 node_modules
+supabase/migrations
