@@ -70,7 +70,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
       ref={ref}
       className={`
         flex flex-col h-full
-        ${isCollapsed ? 'w-[72px]' : 'w-[220px]'}
+        ${isCollapsed ? 'w-[108px]' : 'w-[330px]'}
         transition-all duration-200 ease-out
         border-r
         relative
@@ -79,7 +79,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
         borderColor: '#EEEEEC',
         background: '#F8F8F7'
       }}
-      animate={{ width: isCollapsed ? 72 : 220 }}
+      animate={{ width: isCollapsed ? 108 : 330 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
     >
       {/* Logo Section */}
