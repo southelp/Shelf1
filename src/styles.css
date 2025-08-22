@@ -1,32 +1,41 @@
-/* Using Tailwind CSS directives to include base styles */
+/* Existing styles */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Applying Google-style theme */
-body {
-  @apply bg-slate-50 text-gray-800;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+/* Add this for the scrolling animation */
+.scrolling-grid-container {
+  height: 100%;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
 }
 
-/* General container styles */
-.container {
-  @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+.scrolling-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1.5rem;
 }
 
-/* Custom component styles to match Google's feel */
-.g-search-input {
-  @apply w-full py-2 px-5 border border-gray-300 rounded-full hover:shadow-md focus:shadow-md focus:outline-none transition-shadow;
+@media (min-width: 768px) {
+  .scrolling-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
 }
 
-.g-button-blue {
-  @apply bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors;
+.animate-scroll {
+  animation: scrollUp 150s linear infinite;
 }
 
-.g-button-gray {
-  @apply bg-gray-100 text-gray-700 font-semibold py-2 px-6 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors;
+.scrolling-grid-container:hover .animate-scroll {
+  animation-play-state: paused;
 }
 
-.g-card {
-  @apply bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow p-4;
+@keyframes scrollUp {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
 }
