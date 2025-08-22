@@ -22,7 +22,6 @@ export default function Home() {
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [isPcScreen, setIsPcScreen] = useState(window.innerWidth >= 1024);
   const [isHovered, setIsHovered] = useState(false);
   
   const gridContainerRef = useRef<HTMLDivElement>(null);
@@ -78,12 +77,6 @@ export default function Home() {
   useEffect(() => { loadData(); }, [loadData]);
 
   useEffect(() => {
-    const handleResize = () => setIsPcScreen(window.innerWidth >= 1024);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
     // Reset scroll position when starting or clearing a search
     if (gridContentRef.current) {
       targetPositionRef.current = 0;
@@ -103,7 +96,7 @@ export default function Home() {
       const isContentScrollable = gridContentRef.current.scrollHeight > gridContainerRef.current.clientHeight;
       const maxScroll = gridContentRef.current.scrollHeight - gridContainerRef.current.clientHeight;
 
-      if (!isHovered && !q && isPcScreen && isContentScrollable) {
+      if (!isHovered && !q && isContentScrollable) {
         if (targetPositionRef.current < maxScroll) {
           targetPositionRef.current += scrollSpeed;
         }
@@ -121,10 +114,10 @@ export default function Home() {
 
     animationFrameRef.current = requestAnimationFrame(animate);
     return () => { if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current); };
-  }, [isPcScreen, isHovered, selectedBook, q]);
+  }, [isHovered, selectedBook, q]);
 
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
-    if (!isPcScreen || !gridContentRef.current || !gridContainerRef.current || q) return;
+    if (!gridContentRef.current || !gridContainerRef.current || q) return;
     event.preventDefault();
 
     const maxScroll = gridContentRef.current.scrollHeight - gridContainerRef.current.clientHeight;
@@ -134,8 +127,8 @@ export default function Home() {
     targetPositionRef.current = newTargetPosition;
   };
 
-  const handleMouseEnter = () => { if (isPcScreen) setIsHovered(true); };
-  const handleMouseLeave = () => { if (isPcScreen) setIsHovered(false); };
+  const handleMouseEnter = () => setIsHovered(true);
+  const handleMouseLeave = () => setIsHovered(false);
 
   const renderContent = () => {
     if (isLoading) {
@@ -153,7 +146,7 @@ export default function Home() {
       );
     }
     return (
-      <div className="flex-grow overflow-y-auto mt-6 px-[50px]">
+      <div className="flex-grow overflow-y-auto mt-6 px-[30px] lg:px-[50px]">
         {incomingRequests.length > 0 && (
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
