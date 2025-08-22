@@ -41,13 +41,21 @@ export default function Home() {
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
-    let bookQuery = supabase.from('books').select('*, profiles(id, full_name)');
-    if (onlyAvailable) bookQuery = bookQuery.eq('available', true);
+
+    let bookQuery;
     if (q) {
-      bookQuery = bookQuery.or(`title.ilike.%${q}%,authors.cs.{${q}}`);
+      // Use the RPC function for searching
+      bookQuery = supabase.rpc('search_books', { search_term: q });
+    } else {
+      // Standard select for non-search view
+      bookQuery = supabase.from('books').select('*, profiles(id, full_name)');
+    }
+    if (onlyAvailable) {
+      bookQuery = bookQuery.eq('available', true);
     }
     
     const { data: bookData } = await bookQuery;
+    
     const bookIds = (bookData || []).map(b => b.id);
     let loansMap: Record<string, Loan | null> = {};
     if (bookIds.length > 0) {
