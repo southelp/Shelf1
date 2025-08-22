@@ -95,13 +95,14 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
       <div className="flex flex-col items-start flex-1 pt-4">
         <div className="flex flex-col items-start self-stretch">
           {menuItems.map((item) => (
-            <div key={item.path} className="flex flex-col items-start self-stretch p-0.5">
+            <div key={item.path} className={`flex flex-col self-stretch p-0.5 ${isCollapsed ? 'items-center' : 'items-start'}`}>
               <Link
                 to={item.path}
                 onClick={(e) => handleNavClick(item, e)}
                 className={`
-                  flex items-center self-stretch px-1.5 py-1 rounded-xl
+                  flex items-center rounded-xl px-1.5 py-1
                   transition-all duration-200 ease-out
+                  ${!isCollapsed ? 'self-stretch' : ''}
                   ${item.variant === 4 
                     ? 'bg-gray-200' 
                     : 'hover:bg-gray-100/50'
@@ -113,7 +114,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
               >
                 <div className="flex w-9 min-w-9 justify-center items-center">
                   <div 
-                    className="flex flex-col items-start"
+                    className="flex flex-col items-center" // Changed items-start to items-center
                     style={{
                       color: item.variant === 4 ? '#32302C' : '#5D5D5F'
                     }}
