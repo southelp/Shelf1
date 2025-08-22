@@ -27,7 +27,9 @@
   animation: scrollUp 150s linear infinite;
 }
 
-
+.scrolling-grid-container:hover .animate-scroll {
+  animation-play-state: paused;
+}
 
 @keyframes scrollUp {
   from {
