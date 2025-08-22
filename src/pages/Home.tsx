@@ -44,10 +44,11 @@ export default function Home() {
     
     // Always use the RPC function for consistency. 
     // The function is designed to handle empty search terms and the available filter.
-    const { data: bookData } = await supabase.rpc('search_books', { 
+    const { data } = await supabase.rpc('search_books', { 
       search_term: q, 
       only_available: onlyAvailable 
-    }).returns<Book[]>();
+    });
+    const bookData = data as Book[];
     
     const bookIds = (bookData || []).map(b => b.id);
     let loansMap: Record<string, Loan | null> = {};
