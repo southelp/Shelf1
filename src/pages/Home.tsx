@@ -9,6 +9,8 @@ import { Book, Loan } from '../types';
 import { useUser } from '@supabase/auth-helpers-react';
 
 const statusOrder = { 'Available': 0, 'Reserved': 1, 'Borrowed': 2 };
+const LERP_FACTOR = 0.1; // Smoothing factor for scrolling
+const INITIAL_OFFSET = 174; // Approx. one row height to start below the fold
 
 export default function Home() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -19,16 +21,18 @@ export default function Home() {
   const user = useUser();
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [isPcScreen, setIsPcScreen] = useState(window.innerWidth >= 1024);
-  const [isScrollable, setIsScrollable] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const gridContentRef = useRef<HTMLDivElement>(null);
-  const positionRef = useRef(0);
+  
+  const positionRef = useRef(-INITIAL_OFFSET);
+  const targetPositionRef = useRef(-INITIAL_OFFSET);
   const animationFrameRef = useRef<number>();
-  const scrollSpeed = 0.2; // Constant speed
+  const scrollSpeed = 0.2;
 
   const handleBookClick = (book: Book, loan: Loan | null) => {
     setSelectedBook(book);
@@ -37,6 +41,7 @@ export default function Home() {
   const handleCloseDetailsPanel = () => setSelectedBook(null);
 
   const loadData = useCallback(async () => {
+    setIsLoading(true);
     let bookQuery = supabase.from('books').select('*, profiles(id, full_name)');
     if (onlyAvailable) bookQuery = bookQuery.eq('available', true);
     if (q) bookQuery = bookQuery.or(`title.ilike.%${q}%,authors.cs.{${q}},isbn.ilike.%${q}%`);
@@ -64,17 +69,10 @@ export default function Home() {
 
     setBooks(sortedBooks);
     setLoans(loansMap);
+    setIsLoading(false);
   }, [onlyAvailable, q, user]);
 
   useEffect(() => { loadData(); }, [loadData]);
-
-  useEffect(() => {
-    if (gridContentRef.current) {
-      // Start one "row" down (approx 150px book height + 24px gap)
-      const initialOffset = 174; 
-      gridContentRef.current.style.transform = `translateY(${initialOffset}px)`;
-    }
-  }, []);
 
   useEffect(() => {
     const handleResize = () => setIsPcScreen(window.innerWidth >= 1024);
@@ -83,89 +81,106 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (isPcScreen && gridContainerRef.current && gridContentRef.current) {
-      setIsScrollable(gridContentRef.current.scrollHeight > gridContainerRef.current.clientHeight);
-    } else {
-      setIsScrollable(false);
-    }
-  }, [books, isPcScreen]);
-
-  useEffect(() => {
     const animate = () => {
-      if (isHovered || !isScrollable || !gridContentRef.current || !gridContainerRef.current || selectedBook) {
+      if (!gridContentRef.current || !gridContainerRef.current || selectedBook) {
         animationFrameRef.current = requestAnimationFrame(animate);
         return;
       }
       
       const maxScroll = gridContentRef.current.scrollHeight - gridContainerRef.current.clientHeight;
-      if (positionRef.current < maxScroll) {
-        positionRef.current += scrollSpeed;
-        positionRef.current = Math.min(positionRef.current, maxScroll); // Clamp to max
+
+      // Auto-scroll logic when not hovered and not searching
+      if (!isHovered && !q && isPcScreen) {
+        if (targetPositionRef.current < maxScroll) {
+          targetPositionRef.current += scrollSpeed;
+        }
+        targetPositionRef.current = Math.min(targetPositionRef.current, maxScroll);
+      }
+
+      // Smooth interpolation
+      const currentPos = positionRef.current;
+      const targetPos = targetPositionRef.current;
+      if (Math.abs(targetPos - currentPos) > 0.01) {
+        positionRef.current = currentPos + (targetPos - currentPos) * LERP_FACTOR;
         gridContentRef.current.style.transform = `translateY(-${positionRef.current}px)`;
       }
       
       animationFrameRef.current = requestAnimationFrame(animate);
     };
 
-    if (isPcScreen) animationFrameRef.current = requestAnimationFrame(animate);
+    animationFrameRef.current = requestAnimationFrame(animate);
     return () => { if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current); };
-  }, [isPcScreen, isScrollable, isHovered, selectedBook]);
+  }, [isPcScreen, isHovered, selectedBook, q]);
 
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
-    if (!isPcScreen || !isScrollable || !gridContentRef.current || !gridContainerRef.current) return;
+    if (!isPcScreen || !gridContentRef.current || !gridContainerRef.current || q) return;
     event.preventDefault();
 
     const maxScroll = gridContentRef.current.scrollHeight - gridContainerRef.current.clientHeight;
-    let newPosition = positionRef.current + event.deltaY;
-    newPosition = Math.max(0, Math.min(newPosition, maxScroll)); // Clamp between 0 and maxScroll
+    let newTargetPosition = targetPositionRef.current + event.deltaY;
+    newTargetPosition = Math.max(-INITIAL_OFFSET, Math.min(newTargetPosition, maxScroll));
 
-    positionRef.current = newPosition;
-    gridContentRef.current.style.transform = `translateY(-${positionRef.current}px)`;
+    targetPositionRef.current = newTargetPosition;
   };
 
-  const handleMouseEnter = () => { if (isPcScreen && isScrollable) setIsHovered(true); };
-  const handleMouseLeave = () => { if (isPcScreen && isScrollable) setIsHovered(false); };
+  const handleMouseEnter = () => { if (isPcScreen) setIsHovered(true); };
+  const handleMouseLeave = () => { if (isPcScreen) setIsHovered(false); };
 
-  return (
-    <div className="w-full h-full flex flex-col" style={{ backgroundColor: '#FCFCFC', fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif' }}>
-      {books.length === 0 && !q ? (
-        <div className="flex flex-col justify-center items-center flex-grow">{/* Zero state */}</div>
-      ) : (
-        <>
-          <div className="flex-shrink-0 flex flex-col items-center pt-8">
-            <div className="w-full max-w-lg mb-8"><Logo /></div>
-            <FilterBar onSearch={setQ} onlyAvailable={onlyAvailable} onToggleAvailable={setOnlyAvailable} />
-          </div>
-          <div className="flex-grow overflow-y-auto mt-6 px-[50px]">
-            {incomingRequests.length > 0 && (
-              <div className="mb-8">
-                <div className="flex items-center gap-3 mb-4">
-                  <h2 className="text-xl font-medium text-gray-800">Incoming Loan Requests</h2>
-                  <div className="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">{incomingRequests.length}</div>
-                </div>
-                <div className="p-4 border rounded-2xl bg-gray-50/70" style={{ borderColor: '#EEEEEC' }}>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {incomingRequests.map(req => <LoanRequestCard key={req.id} loan={req} onComplete={loadData} />)}
-                  </div>
-                </div>
-              </div>
-            )}
-            <div
-              ref={gridContainerRef}
-              className="scrolling-grid-container"
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-              onWheel={handleWheel}
-            >
-              <div ref={gridContentRef} className="scrolling-grid" style={{ pointerEvents: isHovered ? 'auto' : 'none' }}>
-                {books.map((b, index) => (
-                  <BookCard key={`${b.id}-${index}`} book={b} activeLoan={loans[b.id] || null} onClick={(book, loan) => handleBookClick(book, loan)} />
-                ))}
+  const renderContent = () => {
+    if (isLoading) {
+      return <div className="flex-grow flex justify-center items-center"><p>Loading books...</p></div>;
+    }
+    if (books.length === 0) {
+      if (q) {
+        return <div className="flex-grow text-center py-10"><p>No books found matching your search for "{q}".</p></div>;
+      }
+      // This is the true zero state for the entire library
+      return (
+        <div className="flex-grow flex flex-col justify-center items-center">
+          <h2 className="text-2xl font-bold mb-4">Welcome to the Shelf!</h2>
+          <p className="text-gray-600">It looks like there are no books here yet. Be the first to add one!</p>
+        </div>
+      );
+    }
+    return (
+      <div className="flex-grow overflow-y-auto mt-6 px-[50px]">
+        {incomingRequests.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <h2 className="text-xl font-medium text-gray-800">Incoming Loan Requests</h2>
+              <div className="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">{incomingRequests.length}</div>
+            </div>
+            <div className="p-4 border rounded-2xl bg-gray-50/70" style={{ borderColor: '#EEEEEC' }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {incomingRequests.map(req => <LoanRequestCard key={req.id} loan={req} onComplete={loadData} />)}
               </div>
             </div>
           </div>
-        </>
-      )}
+        )}
+        <div
+          ref={gridContainerRef}
+          className={q ? "" : "scrolling-grid-container"}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onWheel={handleWheel}
+        >
+          <div ref={gridContentRef} className="scrolling-grid" style={{ pointerEvents: q ? 'auto' : (isHovered ? 'auto' : 'none') }}>
+            {books.map((b, index) => (
+              <BookCard key={`${b.id}-${index}`} book={b} activeLoan={loans[b.id] || null} onClick={(book, loan) => handleBookClick(book, loan)} />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="w-full h-full flex flex-col" style={{ backgroundColor: '#FCFCFC', fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif' }}>
+      <div className="flex-shrink-0 flex flex-col items-center pt-8">
+        <div className="w-full max-w-lg mb-8"><Logo /></div>
+        <FilterBar onSearch={setQ} onlyAvailable={onlyAvailable} onToggleAvailable={setOnlyAvailable} />
+      </div>
+      {renderContent()}
       {selectedBook && (
         <BookDetailsPanel book={selectedBook} activeLoan={selectedLoan} userId={user?.id} onClose={handleCloseDetailsPanel} onLoanRequested={loadData} />
       )}
