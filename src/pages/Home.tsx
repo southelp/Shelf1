@@ -69,6 +69,14 @@ export default function Home() {
   useEffect(() => { loadData(); }, [loadData]);
 
   useEffect(() => {
+    if (gridContentRef.current) {
+      // Start one "row" down (approx 150px book height + 24px gap)
+      const initialOffset = 174; 
+      gridContentRef.current.style.transform = `translateY(${initialOffset}px)`;
+    }
+  }, []);
+
+  useEffect(() => {
     const handleResize = () => setIsPcScreen(window.innerWidth >= 1024);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
