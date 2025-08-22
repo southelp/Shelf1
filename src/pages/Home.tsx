@@ -30,7 +30,10 @@ export default function Home() {
   const dynamicSpeedRef = useRef(0.2); // Base speed
   const animationFrameRef = useRef<number>();
 
-  const handleBookClick = (book: Book, loan: Loan | null) => setSelectedBook(book);
+  const handleBookClick = (book: Book, loan: Loan | null) => {
+    setSelectedBook(book);
+    setSelectedLoan(loan);
+  };
   const handleCloseDetailsPanel = () => setSelectedBook(null);
 
   const loadData = useCallback(async () => {
