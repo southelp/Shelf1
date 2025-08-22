@@ -13,11 +13,33 @@
 
 .scrolling-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(3, 1fr); /* Mobile default: 3 columns */
   gap: 1.5rem;
 }
 
+/* Small tablets */
+@media (min-width: 640px) {
+  .scrolling-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Tablets */
 @media (min-width: 768px) {
+  .scrolling-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* Laptops */
+@media (min-width: 1024px) {
+  .scrolling-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* Large screens */
+@media (min-width: 1280px) {
   .scrolling-grid {
     grid-template-columns: repeat(7, 1fr);
   }
