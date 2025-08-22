@@ -161,7 +161,7 @@ export default function Home() {
             >
               <div ref={gridContentRef} className="scrolling-grid" style={{ pointerEvents: isHovered ? 'auto' : 'none' }}>
                 {booksToRender.map((b, index) => (
-                  <BookCard key={`${b.id}-${index}`} book={b} activeLoan={loans[b.id] || null} onClick={handleBookClick} />
+                  <BookCard key={`${b.id}-${index}`} book={b} activeLoan={loans[b.id] || null} onClick={(book, loan) => handleBookClick(book, loan)} />
                 ))}
               </div>
             </div>
