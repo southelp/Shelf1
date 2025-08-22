@@ -21,14 +21,14 @@ export default function Home() {
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
 
   const [isPcScreen, setIsPcScreen] = useState(window.innerWidth >= 1024);
-  const [isAnimationReady, setIsAnimationReady] = useState(false);
+  const [isScrollable, setIsScrollable] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const gridContentRef = useRef<HTMLDivElement>(null);
   const positionRef = useRef(0);
-  const dynamicSpeedRef = useRef(0.2); // Base speed
   const animationFrameRef = useRef<number>();
+  const scrollSpeed = 0.2; // Constant speed
 
   const handleBookClick = (book: Book, loan: Loan | null) => {
     setSelectedBook(book);
@@ -76,60 +76,47 @@ export default function Home() {
 
   useEffect(() => {
     if (isPcScreen && gridContainerRef.current && gridContentRef.current) {
-      setIsAnimationReady(gridContentRef.current.scrollHeight > gridContainerRef.current.clientHeight);
+      setIsScrollable(gridContentRef.current.scrollHeight > gridContainerRef.current.clientHeight);
     } else {
-      setIsAnimationReady(false);
+      setIsScrollable(false);
     }
   }, [books, isPcScreen]);
 
   useEffect(() => {
     const animate = () => {
-      if (isHovered || !isAnimationReady || !gridContentRef.current || selectedBook) {
+      if (isHovered || !isScrollable || !gridContentRef.current || !gridContainerRef.current || selectedBook) {
         animationFrameRef.current = requestAnimationFrame(animate);
         return;
       }
-      const contentHeight = gridContentRef.current.scrollHeight / 2;
-      positionRef.current += dynamicSpeedRef.current;
       
-      if (positionRef.current >= contentHeight) positionRef.current = 0;
-      if (positionRef.current < 0) positionRef.current = contentHeight;
-
-      gridContentRef.current.style.transform = `translateY(-${positionRef.current}px)`;
+      const maxScroll = gridContentRef.current.scrollHeight - gridContainerRef.current.clientHeight;
+      if (positionRef.current < maxScroll) {
+        positionRef.current += scrollSpeed;
+        positionRef.current = Math.min(positionRef.current, maxScroll); // Clamp to max
+        gridContentRef.current.style.transform = `translateY(-${positionRef.current}px)`;
+      }
+      
       animationFrameRef.current = requestAnimationFrame(animate);
     };
 
     if (isPcScreen) animationFrameRef.current = requestAnimationFrame(animate);
     return () => { if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current); };
-  }, [isPcScreen, isAnimationReady, isHovered, selectedBook]);
+  }, [isPcScreen, isScrollable, isHovered, selectedBook]);
 
-  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!isPcScreen || !isAnimationReady || isHovered) return;
-    const container = gridContainerRef.current;
-    if (!container) return;
+  const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    if (!isPcScreen || !isScrollable || !gridContentRef.current || !gridContainerRef.current) return;
+    event.preventDefault();
 
-    const rect = container.getBoundingClientRect();
-    const y = event.clientY - rect.top;
-    const height = rect.height;
-    const topZone = height * 0.2;
-    const bottomZone = height * 0.8;
-    const maxSpeed = 2.5; // Max additional speed
-    const baseSpeed = 0.2;
+    const maxScroll = gridContentRef.current.scrollHeight - gridContainerRef.current.clientHeight;
+    let newPosition = positionRef.current + event.deltaY;
+    newPosition = Math.max(0, Math.min(newPosition, maxScroll)); // Clamp between 0 and maxScroll
 
-    if (y < topZone) {
-      const speedMultiplier = (topZone - y) / topZone;
-      dynamicSpeedRef.current = baseSpeed + maxSpeed * speedMultiplier;
-    } else if (y > bottomZone) {
-      const speedMultiplier = (y - bottomZone) / (height - bottomZone);
-      dynamicSpeedRef.current = baseSpeed - maxSpeed * speedMultiplier;
-    } else {
-      dynamicSpeedRef.current = baseSpeed;
-    }
+    positionRef.current = newPosition;
+    gridContentRef.current.style.transform = `translateY(-${positionRef.current}px)`;
   };
 
-  const handleMouseEnter = () => { if (isPcScreen && isAnimationReady) setIsHovered(true); };
-  const handleMouseLeave = () => { if (isPcScreen && isAnimationReady) setIsHovered(false); };
-
-  const booksToRender = isAnimationReady ? [...books, ...books] : books;
+  const handleMouseEnter = () => { if (isPcScreen && isScrollable) setIsHovered(true); };
+  const handleMouseLeave = () => { if (isPcScreen && isScrollable) setIsHovered(false); };
 
   return (
     <div className="w-full h-full flex flex-col" style={{ backgroundColor: '#FCFCFC', fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif' }}>
@@ -160,10 +147,10 @@ export default function Home() {
               className="scrolling-grid-container"
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
-              onMouseMove={handleMouseMove}
+              onWheel={handleWheel}
             >
               <div ref={gridContentRef} className="scrolling-grid" style={{ pointerEvents: isHovered ? 'auto' : 'none' }}>
-                {booksToRender.map((b, index) => (
+                {books.map((b, index) => (
                   <BookCard key={`${b.id}-${index}`} book={b} activeLoan={loans[b.id] || null} onClick={(book, loan) => handleBookClick(book, loan)} />
                 ))}
               </div>
@@ -176,4 +163,3 @@ export default function Home() {
       )}
     </div>
   );
-}
