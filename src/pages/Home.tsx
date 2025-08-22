@@ -43,7 +43,7 @@ export default function Home() {
     setIsLoading(true);
     
     // Always use the RPC function for consistency. 
-    // The function is designed to handle empty search terms.
+    // The function is designed to handle empty search terms and the available filter.
     const { data: bookData } = await supabase.rpc('search_books', { 
       search_term: q, 
       only_available: onlyAvailable 
