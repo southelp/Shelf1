@@ -107,7 +107,7 @@ export default function BookDetailsPanel({ book, activeLoan, userId, onClose, on
           <div>
             <h2 className="text-2xl font-bold text-gray-900">{book.title}</h2>
             <p className="text-md text-gray-600 mt-1">
-              {book.authors?.join(', ') || 'Unknown Author'}
+              {book.authors?.join('^').replace(/\^/g, ', ') || 'Unknown Author'}
             </p>
             <p className="text-sm text-gray-500 mt-4">
               <span className="font-semibold">Owner:</span>{' '}
