@@ -13,7 +13,8 @@ export default function FilterBar({ onSearch, onlyAvailable, onToggleAvailable }
     setSearchValue(e.target.value);
   };
 
-  const handleSearch = () => {
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     onSearch(searchValue);
   };
 
@@ -26,7 +27,7 @@ export default function FilterBar({ onSearch, onlyAvailable, onToggleAvailable }
   return (
     <div className="w-full">
       {/* Search Input Container */}
-      <div className="flex px-1 flex-col items-start max-w-3xl mx-auto">
+      <form onSubmit={handleSearch} className="flex px-1 flex-col items-start max-w-3xl mx-auto">
         <div 
           className="flex p-3 flex-col items-start border rounded-[40px] bg-white w-full"
           style={{ borderColor: '#EEEEEC' }}
@@ -60,7 +61,7 @@ export default function FilterBar({ onSearch, onlyAvailable, onToggleAvailable }
                             />
                           </div>
                         </div>
-                        <button onClick={handleSearch} className="flex h-6 flex-col items-start cursor-pointer">
+                        <button type="submit" className="flex h-6 flex-col items-start cursor-pointer">
                           <svg width="20" height="24" viewBox="0 0 21 21" fill="none">
                             <path d="M17.0134 15.7607V6.17741H18.2634V15.7607H17.0134ZM10.4925 15.6774L9.59669 14.8024L12.805 11.5941H2.43002V10.3441H12.7842L9.61752 7.13574L10.4925 6.26074L15.18 10.9691L10.4925 15.6774Z" fill="#44474E"/>
                           </svg>
@@ -73,7 +74,7 @@ export default function FilterBar({ onSearch, onlyAvailable, onToggleAvailable }
             </div>
           </div>
         </div>
-      </div>
+      </form>
 
       {/* Filter Options */}
       <div className="flex justify-center mt-4">
