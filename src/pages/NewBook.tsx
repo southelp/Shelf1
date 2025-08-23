@@ -72,15 +72,24 @@ const SearchResultsModal = ({ candidates, onRegister, onClose }: { candidates: B
 
 export default function NewBook() {
   const user = useUser();
-  const [mode, setMode] = useState<'isbn' | 'manual' | 'scan'>('isbn');
+  const [mode, setMode] = useState<'title' | 'isbn' | 'manual' | 'scan'>('title');
   const [candidates, setCandidates] = useState<BookCandidate[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingMessage, setLoadingMessage] = useState('');
+  
+  const [titleQuery, setTitleQuery] = useState('');
+  const [authorQuery, setAuthorQuery] = useState('');
   const [isbnQuery, setIsbnQuery] = useState('');
+
   const webcamRef = useRef<Webcam>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [manualBook, setManualBook] = useState<BookCandidate>({ title: '', authors: [] });
+  
+  const [manualBook, setManualBook] = useState<BookCandidate>({
+    title: '',
+    authors: [],
+    cover_url: ''
+  });
 
   const handleRegister = async (book: BookCandidate) => {
     if (!user) return alert('You must be logged in to register a book.');
@@ -111,13 +120,51 @@ export default function NewBook() {
     } else {
       alert('Book registered successfully!');
       setCandidates([]);
+      setTitleQuery('');
+      setAuthorQuery('');
       setIsbnQuery('');
       setCapturedImage(null);
-      setMode('isbn');
-      setManualBook({ title: '', authors: [] });
+      setMode('title');
+      setManualBook({ title: '', authors: [], cover_url: '' });
     }
   };
 
+  const handleSearch = async () => {
+    if (!titleQuery.trim()) return alert('Title is required for search.');
+    setIsLoading(true);
+    setLoadingMessage('Searching...');
+    setError(null);
+    setCandidates([]);
+
+    try {
+      const searchResponse = await fetch('/api/search-book-by-title', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: titleQuery,
+          author: authorQuery,
+        }),
+      });
+
+      if (!searchResponse.ok) {
+        const errorText = await searchResponse.text();
+        throw new Error(`Search failed: ${errorText}`);
+      }
+
+      const { candidates: foundCandidates } = await searchResponse.json();
+      setCandidates(foundCandidates ?? []);
+
+      if (!foundCandidates || foundCandidates.length === 0) {
+        setError(`Book not found for the given criteria.`);
+      }
+
+    } catch (e: any) {
+      setError(e.message || 'Failed to search for the book.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   const handleIsbnSearch = async () => {
     if (!isbnQuery.trim()) return alert('ISBN is required for search.');
     setIsLoading(true);
@@ -152,6 +199,7 @@ export default function NewBook() {
   };
 
   const handleCapture = useCallback(async () => {
+    // This function remains complex, keeping it as is for now.
     if (isLoading) return;
     const imageSrc = webcamRef.current?.getScreenshot();
     if (!imageSrc) {
@@ -257,29 +305,11 @@ export default function NewBook() {
               ) : (
                 <button onClick={handleCapture} disabled={isLoading} className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-sm">Capture</button>
               )}
-              <button onClick={() => setMode('isbn')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">Close</button>
-            </div>
-          </div>
-        );
-      case 'manual':
-        return (
-          <div className="max-w-md mx-auto space-y-4">
-            <div className="p-6 border rounded-2xl space-y-4" style={{ backgroundColor: '#F8F8F7', borderColor: '#EEEEEC' }}>
-              <input type="text" name="title" placeholder="Title (required)" value={manualBook.title} onChange={handleManualInputChange} className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <input type="text" name="authors" placeholder="Authors (comma-separated)" value={manualBook.authors?.join(', ')} onChange={handleManualInputChange} className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
-            <div className="flex justify-center gap-4">
-              <button onClick={() => handleRegister(manualBook)} disabled={isLoading || !manualBook.title} className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm">
-                Register Manually
-              </button>
-              <button onClick={() => setMode('isbn')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">
-                Back to ISBN
-              </button>
+              <button onClick={() => setMode('title')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">Close</button>
             </div>
           </div>
         );
       case 'isbn':
-      default:
         return (
           <div className="space-y-4">
             <div className="p-6 border rounded-2xl space-y-4" style={{ backgroundColor: '#F8F8F7', borderColor: '#EEEEEC' }}>
@@ -289,11 +319,50 @@ export default function NewBook() {
               <button onClick={handleIsbnSearch} disabled={isLoading || !isbnQuery.trim()} className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm">
                 Search
               </button>
+              <button onClick={() => setMode('title')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">
+                Back
+              </button>
+              <button onClick={() => setMode('manual')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm ml-auto">
+                Manual
+              </button>
+            </div>
+          </div>
+        );
+      case 'manual':
+        return (
+          <div className="max-w-md mx-auto space-y-4">
+            <div className="p-6 border rounded-2xl space-y-4" style={{ backgroundColor: '#F8F8F7', borderColor: '#EEEEEC' }}>
+              <input type="text" name="title" placeholder="Title (required)" value={manualBook.title} onChange={handleManualInputChange} className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <input type="text" name="authors" placeholder="Authors (required, comma-separated)" value={manualBook.authors?.join(', ')} onChange={handleManualInputChange} className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <input type="text" name="cover_url" placeholder="Cover Image URL (optional)" value={manualBook.cover_url} onChange={handleManualInputChange} className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div className="flex justify-center gap-4">
+              <button onClick={() => handleRegister(manualBook)} disabled={isLoading || !manualBook.title || !manualBook.authors?.length} className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm">
+                Register Manually
+              </button>
+              <button onClick={() => setMode('title')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">
+                Cancel
+              </button>
+            </div>
+          </div>
+        );
+      case 'title':
+      default:
+        return (
+          <div className="space-y-4">
+            <div className="p-6 border rounded-2xl space-y-4" style={{ backgroundColor: '#F8F8F7', borderColor: '#EEEEEC' }}>
+              <input type="text" value={titleQuery} onChange={e => setTitleQuery(e.target.value)} placeholder="Title" className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <input type="text" value={authorQuery} onChange={e => setAuthorQuery(e.target.value)} placeholder="Author" className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div className="flex justify-center gap-3 pt-2">
+              <button onClick={handleSearch} disabled={isLoading || !titleQuery.trim()} className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm">
+                Search
+              </button>
               <button onClick={() => setMode('scan')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">
                 Camera
               </button>
-              <button onClick={() => setMode('manual')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">
-                Enter Manually
+              <button onClick={() => setMode('isbn')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">
+                ISBN
               </button>
             </div>
           </div>
