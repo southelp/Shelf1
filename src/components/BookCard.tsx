@@ -12,11 +12,6 @@ export default function BookCard({
   // Determine if the book is currently unavailable (borrowed or reserved)
   const isUnavailable = activeLoan && (activeLoan.status === 'loaned' || activeLoan.status === 'reserved');
 
-  const capitalize = (s: string | null | undefined) => {
-    if (!s) return '';
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  };
-
   return (
     <div
       className="relative" // Make it relative for absolute positioning of the panel
@@ -66,18 +61,6 @@ export default function BookCard({
             boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.05)'
           }}
         />
-        
-        {/* Source API Badge */}
-        {book.source_api && (
-          <div className="absolute bottom-2 left-2">
-            <span 
-              className="text-white text-xs opacity-50"
-              style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}
-            >
-              Source: {capitalize(book.source_api)} API
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );
