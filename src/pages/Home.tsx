@@ -144,8 +144,6 @@ export default function Home() {
   const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
     if (!isDraggingRef.current || !gridContentRef.current || !gridContainerRef.current || q) return;
     
-    event.preventDefault();
-
     const touchCurrent = event.touches[0].clientY;
     const deltaY = touchStartRef.current - touchCurrent;
     touchStartRef.current = touchCurrent;
@@ -195,7 +193,7 @@ export default function Home() {
         )}
         <div
           ref={gridContainerRef}
-          className={q ? "" : "scrolling-grid-container"}
+          className={`scrolling-grid-container overscroll-y-contain ${q ? "" : ""}`}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           onWheel={handleWheel}
