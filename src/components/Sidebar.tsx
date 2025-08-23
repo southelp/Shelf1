@@ -58,8 +58,8 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
 
   return (
     <div ref={ref} className="flex flex-col h-full w-full">
-      <div className={`flex h-[120px] items-center transition-all duration-200 ${isCollapsed ? 'px-[15px]' : 'px-[20px]'}`}>
-        <div className={`transition-all duration-200 ease-out ${isCollapsed ? 'w-0 opacity-0 group-hover:w-full group-hover:opacity-100' : 'w-full opacity-100'}`}>
+      <div className={`flex h-[120px] items-center justify-center transition-all duration-200 ${isCollapsed ? 'px-[15px]' : 'px-[20px]'}`}>
+        <div className={`transition-all duration-200 ease-out w-3/4 ${isCollapsed ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
           <Logo />
         </div>
       </div>
