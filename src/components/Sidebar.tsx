@@ -68,7 +68,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
       transition={{ duration: 0.2, ease: 'easeOut' }}
     >
       {/* Logo Section */}
-      <div className="flex h-[99px] items-center justify-center">
+      <div className="flex h-[120px] items-center justify-center">
         {!isCollapsed && (
           <div className="w-full transform scale-[1.3]">
             <Logo />
@@ -80,7 +80,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
       <div className="flex flex-col items-start flex-1 pt-4">
         <div className="flex flex-col items-start self-stretch">
           {menuItems.map((item) => (
-            <div key={item.path} className={`flex flex-col self-stretch p-0.5 ${isCollapsed ? 'items-center' : 'items-start'}`}>
+            <div key={item.path} className="flex flex-col self-stretch p-0.5 items-start">
               <Link
                 to={item.path}
                 onClick={(e) => handleNavClick(item, e)}
