@@ -87,13 +87,13 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
       <div className={`flex flex-col items-start flex-1 pt-4 ${!isCollapsed ? 'px-[20px]' : 'px-[15px]'}`}>
         <div className="flex flex-col items-start self-stretch">
           {menuItems.map((item) => (
-            <div key={item.path} className="flex flex-col self-stretch items-start mb-1">
+            <div key={item.path} className={`flex flex-col self-stretch mb-1 ${isCollapsed ? 'items-center' : 'items-start'}`}>
               <Link
                 to={item.path}
                 onClick={(e) => handleNavClick(item, e)}
                 className={`
                   flex items-center rounded-xl py-2
-                  ${isCollapsed ? 'px-2 self-center' : 'px-3 self-stretch'}
+                  ${isCollapsed ? 'px-2' : 'px-3 self-stretch'}
                   transition-colors duration-200 ease-out
                   ${item.variant === 4 
                     ? 'bg-gray-200' 
@@ -144,12 +144,12 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
         <div className="flex-1"></div>
 
         {/* Terms of Use Link */}
-        <div className="flex flex-col self-stretch items-start pb-4">
+        <div className={`flex flex-col self-stretch pb-4 mb-1 ${isCollapsed ? 'items-center' : 'items-start'}`}>
           <Link
             to="/terms"
             className={`
               flex items-center rounded-xl py-2
-              ${isCollapsed ? 'px-2 self-center' : 'px-3 self-stretch'}
+              ${isCollapsed ? 'px-2' : 'px-3 self-stretch'}
               transition-colors duration-200 ease-out
               hover:bg-gray-100/50
             `}
