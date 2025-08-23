@@ -144,6 +144,8 @@ export default function Home() {
   const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
     if (!isDraggingRef.current || !gridContentRef.current || !gridContainerRef.current || q) return;
     
+    event.preventDefault();
+
     const touchCurrent = event.touches[0].clientY;
     const deltaY = touchStartRef.current - touchCurrent;
     touchStartRef.current = touchCurrent;
