@@ -54,37 +54,38 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
       ref={ref}
       className={`
         flex flex-col h-full
-        ${isCollapsed ? 'w-[75px]' : 'w-[250px]'}
+        ${isCollapsed ? 'w-[75px]' : 'w-[260px]'}
         transition-all duration-200 ease-out
         border-r
         relative
+        px-[20px]
       `}
       style={{
         borderColor: '#EEEEEC',
         background: '#F8F8F7'
       }}
-      animate={{ width: isCollapsed ? 75 : 250 }}
+      animate={{ width: isCollapsed ? 75 : 260 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
     >
       {/* Logo Section */}
-      <div className="flex h-[120px] items-center px-[15px]">
+      <div className="flex h-[120px] items-center">
         {!isCollapsed && (
-          <div className="w-full transform scale-[1.3]">
+          <div className="w-full">
             <Logo />
           </div>
         )}
       </div>
 
       {/* Navigation Menu */}
-      <div className="flex flex-col items-start flex-1 pt-4 px-[15px]">
+      <div className="flex flex-col items-start flex-1 pt-4">
         <div className="flex flex-col items-start self-stretch">
           {menuItems.map((item) => (
-            <div key={item.path} className={`flex flex-col self-stretch ${isCollapsed ? 'items-center' : 'items-start'}`}>
+            <div key={item.path} className="flex flex-col self-stretch items-start mb-1">
               <Link
                 to={item.path}
                 onClick={(e) => handleNavClick(item, e)}
                 className={`
-                  flex items-center rounded-xl px-3 py-1
+                  flex items-center rounded-xl px-3 py-2
                   transition-all duration-200 ease-out
                   ${!isCollapsed ? 'self-stretch' : ''}
                   ${item.variant === 4 
@@ -107,7 +108,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
                   </div>
                 </div>
                 {!isCollapsed && (
-                  <div className="flex flex-col items-start">
+                  <div className="flex flex-col items-start ml-2">
                     <div 
                       className="text-sm font-medium leading-5"
                       style={{
@@ -128,10 +129,15 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
         <div className="flex-1"></div>
 
         {/* Terms of Use Link */}
-        <div className={`flex flex-col self-stretch pb-4 ${isCollapsed ? 'items-center' : 'items-start'}`}>
+        <div className="flex flex-col self-stretch items-start pb-4">
           <Link
             to="/terms"
-            className="flex items-center self-stretch px-3 py-1 rounded-xl hover:bg-gray-100/50 transition-colors duration-200 ease-out"
+            className={`
+              flex items-center rounded-xl px-3 py-2
+              transition-all duration-200 ease-out
+              hover:bg-gray-100/50
+              ${!isCollapsed ? 'self-stretch' : ''}
+            `}
           >
             <div className="flex w-9 min-w-9 justify-center items-center">
               <div className="flex flex-col items-start text-gray-500">
@@ -139,7 +145,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
               </div>
             </div>
             {!isCollapsed && (
-              <div className="flex flex-col items-start">
+              <div className="flex flex-col items-start ml-2">
                 <div 
                   className="text-sm font-medium leading-5"
                   style={{
