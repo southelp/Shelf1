@@ -3,19 +3,19 @@ import type { Book, Loan } from '../types';
 export default function BookCard({
   book,
   activeLoan,
-  onClick, // New prop for click handler
+  onClick,
 }: {
   book: Book;
   activeLoan: Loan | null;
-  onClick: (book: Book, activeLoan: Loan | null, event: React.MouseEvent<HTMLDivElement>) => void; // Define onClick prop type
+  onClick: (book: Book, activeLoan: Loan | null) => void;
 }) {
   // Determine if the book is currently unavailable (borrowed or reserved)
   const isUnavailable = activeLoan && (activeLoan.status === 'loaned' || activeLoan.status === 'reserved');
 
   return (
     <div
-      className="relative" // Make it relative for absolute positioning of the panel
-      onClick={(event) => onClick(book, activeLoan, event)} // Pass book and activeLoan on click
+      className="relative cursor-pointer"
+      onClick={() => onClick(book, activeLoan)}
     >
       <div
         className="
@@ -27,7 +27,6 @@ export default function BookCard({
           shadow-sm
           overflow-hidden
           relative
-          cursor-pointer // Indicate it's clickable
         "
         style={{
           boxShadow: '0 2px 6px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
