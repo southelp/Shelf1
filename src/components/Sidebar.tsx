@@ -2,7 +2,7 @@ import { forwardRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useUser } from '@supabase/auth-helpers-react';
 import { Logo } from './Logo';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -49,6 +49,13 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
     }
   };
 
+  const textAnimation = {
+    initial: { opacity: 0, x: -10 },
+    animate: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -10 },
+    transition: { duration: 0.2, ease: 'easeOut' }
+  };
+
   return (
     <motion.div
       ref={ref}
@@ -68,18 +75,20 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
     >
       {/* Logo Section */}
       <div className="flex h-[120px] items-center px-[20px]">
-        {!isCollapsed && (
-          <div className="w-full">
-            <Logo />
-          </div>
-        )}
+        <AnimatePresence>
+          {!isCollapsed && (
+            <motion.div className="w-full" {...textAnimation}>
+              <Logo />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Navigation Menu */}
-      <div className={`flex flex-col items-start flex-1 pt-4 ${!isCollapsed && 'px-[20px]'}`}>
+      <div className={`flex flex-col items-start flex-1 pt-4 ${!isCollapsed ? 'px-[20px]' : 'px-[15px]'}`}>
         <div className="flex flex-col items-start self-stretch">
           {menuItems.map((item) => (
-            <div key={item.path} className={`flex flex-col self-stretch items-start mb-1 ${isCollapsed && 'items-center'}`}>
+            <div key={item.path} className="flex flex-col self-stretch items-start mb-1">
               <Link
                 to={item.path}
                 onClick={(e) => handleNavClick(item, e)}
@@ -106,19 +115,21 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
                     {item.icon}
                   </div>
                 </div>
-                {!isCollapsed && (
-                  <div className="flex flex-col items-start ml-2">
-                    <div 
-                      className="text-sm font-medium leading-5"
-                      style={{
-                        color: item.variant === 4 ? '#32302C' : '#5D5D5F',
-                        fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                      }}
-                    >
-                      {item.label}
-                    </div>
-                  </div>
-                )}
+                <AnimatePresence>
+                  {!isCollapsed && (
+                    <motion.div className="flex flex-col items-start ml-2" {...textAnimation}>
+                      <div 
+                        className="text-sm font-medium leading-5 whitespace-nowrap"
+                        style={{
+                          color: item.variant === 4 ? '#32302C' : '#5D5D5F',
+                          fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                        }}
+                      >
+                        {item.label}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </Link>
             </div>
           ))}
@@ -128,7 +139,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
         <div className="flex-1"></div>
 
         {/* Terms of Use Link */}
-        <div className={`flex flex-col self-stretch items-start pb-4 ${isCollapsed && 'items-center'}`}>
+        <div className="flex flex-col self-stretch items-start pb-4">
           <Link
             to="/terms"
             className={`
@@ -143,19 +154,21 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
                 <span className="material-symbols-outlined">gavel</span>
               </div>
             </div>
-            {!isCollapsed && (
-              <div className="flex flex-col items-start ml-2">
-                <div 
-                  className="text-sm font-medium leading-5"
-                  style={{
-                    color: '#5D5D5F',
-                    fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
-                  }}
-                >
-                  Terms of Use
-                </div>
-              </div>
-            )}
+            <AnimatePresence>
+              {!isCollapsed && (
+                <motion.div className="flex flex-col items-start ml-2" {...textAnimation}>
+                  <div 
+                    className="text-sm font-medium leading-5 whitespace-nowrap"
+                    style={{
+                      color: '#5D5D5F',
+                      fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
+                    }}
+                  >
+                    Terms of Use
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </Link>
         </div>
       </div>
