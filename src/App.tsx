@@ -15,20 +15,25 @@ import Header from './components/Header.tsx';
 const DESKTOP_BREAKPOINT = 1024;
 
 export default function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= DESKTOP_BREAKPOINT);
   const [isHovered, setIsHovered] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= DESKTOP_BREAKPOINT);
   const location = useLocation();
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   const handleResize = () => {
     const desktop = window.innerWidth >= DESKTOP_BREAKPOINT;
     setIsDesktop(desktop);
-    setIsSidebarOpen(false); // Always close on resize to avoid weird states
+    if (desktop) {
+      setIsSidebarOpen(false); // Default to collapsed on desktop
+    } else {
+      setIsSidebarOpen(false); // Default to collapsed on mobile
+    }
   };
 
   useEffect(() => {
     window.addEventListener('resize', handleResize);
-    handleResize();
+    handleResize(); // Initial check
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
@@ -48,56 +53,49 @@ export default function App() {
     rubberband: true,
   });
 
-  const sidebarIsCollapsed = isDesktop ? !isHovered : !isSidebarOpen;
-  const sidebarWidth = isDesktop ? (isHovered ? '260px' : '75px') : '0px';
+  const isCollapsed = isDesktop ? !isHovered : !isSidebarOpen;
+  const sidebarWidth = isCollapsed ? '75px' : '260px';
 
   return (
     <div className="flex w-full h-screen bg-[#FCFCFC] overflow-hidden">
       <AnimatePresence>
-        {!isDesktop && isSidebarOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsSidebarOpen(false)}
-              className="fixed inset-0 bg-black bg-opacity-50 z-10"
-            />
-            <motion.div
-              className="absolute top-0 left-0 h-full z-20"
-              initial={{ x: '-100%' }}
-              animate={{ x: '0%' }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              {...bind()}
-            >
-              <Sidebar isCollapsed={false} />
-            </motion.div>
-          </>
+        {isSidebarOpen && !isDesktop && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 bg-black bg-opacity-50 z-10 lg:hidden"
+          />
         )}
       </AnimatePresence>
 
-      {isDesktop && (
-        <div
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          className="relative z-20 transition-all duration-200 ease-out"
-          style={{ width: sidebarWidth }}
-        >
-          <Sidebar isCollapsed={sidebarIsCollapsed} />
-        </div>
-      )}
+      <div
+        onMouseEnter={() => isDesktop && setIsHovered(true)}
+        onMouseLeave={() => isDesktop && setIsHovered(false)}
+        className={`
+          absolute top-0 left-0 h-full z-20 lg:relative lg:z-auto
+          transition-transform duration-300 ease-out lg:transition-none
+          ${isSidebarOpen && !isDesktop ? 'translate-x-0' : ''}
+          ${!isSidebarOpen && !isDesktop ? '-translate-x-full' : ''}
+        `}
+        style={{
+          width: isDesktop ? sidebarWidth : (isSidebarOpen ? '260px' : '0'),
+          transition: isDesktop ? 'width 0.2s ease-out' : 'transform 0.3s ease-out',
+        }}
+        {...(!isDesktop ? bind() : {})}
+        ref={sidebarRef}
+      >
+        <Sidebar isCollapsed={isCollapsed} />
+      </div>
 
       <div 
-        className="flex flex-col flex-1 h-screen"
-        style={{ 
-          marginLeft: isDesktop ? sidebarWidth : '0',
-          transition: isDesktop ? 'margin-left 0.2s ease-out' : 'none'
-        }}
+        className="flex flex-col flex-1 h-screen transition-all duration-200 ease-out"
+        style={{ marginLeft: isDesktop ? sidebarWidth : '0' }}
       >
         <Header 
           onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} 
-          isCollapsed={sidebarIsCollapsed}
+          isCollapsed={isCollapsed}
           isDesktop={isDesktop}
         />
 
