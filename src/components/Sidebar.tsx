@@ -54,21 +54,20 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
       ref={ref}
       className={`
         flex flex-col h-full
-        ${isCollapsed ? 'w-[73px]' : 'w-[223px]'}
+        ${isCollapsed ? 'w-[75px]' : 'w-[250px]'}
         transition-all duration-200 ease-out
         border-r
         relative
-        px-[15px]
       `}
       style={{
         borderColor: '#EEEEEC',
         background: '#F8F8F7'
       }}
-      animate={{ width: isCollapsed ? 73 : 223 }}
+      animate={{ width: isCollapsed ? 75 : 250 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
     >
       {/* Logo Section */}
-      <div className="flex h-[120px] items-center justify-center">
+      <div className="flex h-[120px] items-center px-[15px]">
         {!isCollapsed && (
           <div className="w-full transform scale-[1.3]">
             <Logo />
@@ -77,15 +76,15 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
       </div>
 
       {/* Navigation Menu */}
-      <div className="flex flex-col items-start flex-1 pt-4">
+      <div className="flex flex-col items-start flex-1 pt-4 px-[15px]">
         <div className="flex flex-col items-start self-stretch">
           {menuItems.map((item) => (
-            <div key={item.path} className="flex flex-col self-stretch p-0.5 items-start">
+            <div key={item.path} className={`flex flex-col self-stretch ${isCollapsed ? 'items-center' : 'items-start'}`}>
               <Link
                 to={item.path}
                 onClick={(e) => handleNavClick(item, e)}
                 className={`
-                  flex items-center rounded-xl px-[15px] py-1
+                  flex items-center rounded-xl px-3 py-1
                   transition-all duration-200 ease-out
                   ${!isCollapsed ? 'self-stretch' : ''}
                   ${item.variant === 4 
@@ -99,7 +98,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
               >
                 <div className="flex w-9 min-w-9 justify-center items-center">
                   <div 
-                    className="flex flex-col items-center" // Changed items-start to items-center
+                    className="flex flex-col items-center"
                     style={{
                       color: item.variant === 4 ? '#32302C' : '#5D5D5F'
                     }}
@@ -129,10 +128,10 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
         <div className="flex-1"></div>
 
         {/* Terms of Use Link */}
-        <div className="flex flex-col items-start self-stretch p-0.5 pb-4">
+        <div className={`flex flex-col self-stretch pb-4 ${isCollapsed ? 'items-center' : 'items-start'}`}>
           <Link
             to="/terms"
-            className="flex items-center self-stretch px-[15px] py-1 rounded-xl hover:bg-gray-100/50 transition-colors duration-200 ease-out"
+            className="flex items-center self-stretch px-3 py-1 rounded-xl hover:bg-gray-100/50 transition-colors duration-200 ease-out"
           >
             <div className="flex w-9 min-w-9 justify-center items-center">
               <div className="flex flex-col items-start text-gray-500">
