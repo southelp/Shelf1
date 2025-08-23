@@ -214,7 +214,7 @@ export default function Home() {
   return (
     <div className="w-full h-full flex flex-col" style={{ backgroundColor: '#FCFCFC', fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif' }}>
       <div className="flex-shrink-0 flex flex-col items-center pt-8">
-        <div className="w-full max-w-lg mb-8"><Logo /></div>
+        <div className="w-full max-w-lg mb-8 px-[70px]"><Logo /></div>
         <FilterBar onSearch={setQ} onlyAvailable={onlyAvailable} onToggleAvailable={setOnlyAvailable} />
       </div>
       {renderContent()}
