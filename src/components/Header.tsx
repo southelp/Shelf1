@@ -22,7 +22,7 @@ export default function Header({ onToggleSidebar, isCollapsed, isDesktop }: Head
   const getPageTitle = () => {
     switch (location.pathname) {
       case '/':
-        return null; // Hide title on home page
+        return null;
       case '/my':
         return 'My Library';
       case '/loans':
@@ -45,37 +45,14 @@ export default function Header({ onToggleSidebar, isCollapsed, isDesktop }: Head
       style={{ height: '76px', borderColor: '#EEEEEC' }}
     >
       {!isDesktop && (
-        <>
-          {/* Hamburger Icon for Mobile */}
-          <div className="md:hidden">
-            <button 
-              onClick={onToggleSidebar}
-              className="text-2xl p-2 focus:outline-none"
-            >
-              <span className="material-symbols-outlined">menu</span>
-            </button>
-          </div>
-          
-          {/* Collapse Button for Tablet */}
-          <button
-            onClick={onToggleSidebar}
-            className="p-2 rounded-full hover:bg-gray-200 hidden md:block"
-          >
-            <svg 
-              width="20" 
-              height="20" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              xmlns="http://www.w3.org/2000/svg"
-              className={`transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
-            >
-              <path d="M15 18L9 12L15 6" stroke="#32302C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        </>
+        <button 
+          onClick={onToggleSidebar}
+          className="text-2xl p-2 focus:outline-none"
+        >
+          <span className="material-symbols-outlined">menu</span>
+        </button>
       )}
       
-      {/* Page Title */}
       <div className="flex-1 flex items-center gap-2">
         <h1 
           className="text-base font-semibold leading-6"
@@ -85,7 +62,6 @@ export default function Header({ onToggleSidebar, isCollapsed, isDesktop }: Head
         </h1>
       </div>
 
-      {/* Auth Section */}
       <div className="flex items-center gap-4">
         {user ? (
           <>
