@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { useDrag } from 'react-use-gesture';
 import { motion, AnimatePresence } from 'framer-motion';
 import Home from './pages/Home.tsx';
 import MyLibrary from './pages/MyLibrary.tsx';
@@ -15,90 +14,72 @@ import Header from './components/Header.tsx';
 const DESKTOP_BREAKPOINT = 1024;
 
 export default function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= DESKTOP_BREAKPOINT);
-  const [isHovered, setIsHovered] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= DESKTOP_BREAKPOINT);
   const location = useLocation();
-  const sidebarRef = useRef<HTMLDivElement>(null);
 
   const handleResize = () => {
     const desktop = window.innerWidth >= DESKTOP_BREAKPOINT;
     setIsDesktop(desktop);
-    if (desktop) {
-      setIsSidebarOpen(false); // Default to collapsed on desktop
-    } else {
-      setIsSidebarOpen(false); // Default to collapsed on mobile
+    if (isMobileMenuOpen) {
+      setIsMobileMenuOpen(false); // Close mobile menu on resize
     }
   };
 
   useEffect(() => {
     window.addEventListener('resize', handleResize);
-    handleResize(); // Initial check
+    handleResize();
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Close mobile sidebar on navigation
   useEffect(() => {
-    if (!isDesktop) {
-      setIsSidebarOpen(false);
+    if (isMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
     }
-  }, [location.pathname, isDesktop]);
-
-  const bind = useDrag(({ down, movement: [mx], direction: [xDir], velocity }) => {
-    if (isDesktop) return;
-    if (!down && xDir < 0 && velocity > 0.2) setIsSidebarOpen(false);
-    if (!down && mx < -50) setIsSidebarOpen(false);
-  }, {
-    axis: 'x',
-    filterTaps: true,
-    rubberband: true,
-  });
-
-  const isCollapsed = isDesktop ? !isHovered : !isSidebarOpen;
-  const sidebarWidth = isCollapsed ? '75px' : '260px';
+  }, [location.pathname]);
 
   return (
     <div className="flex w-full h-screen bg-[#FCFCFC] overflow-hidden">
+      {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
-        {isSidebarOpen && !isDesktop && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsSidebarOpen(false)}
-            className="fixed inset-0 bg-black bg-opacity-50 z-10 lg:hidden"
-          />
+        {!isDesktop && isMobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            />
+            <motion.div
+              className="fixed top-0 left-0 h-full z-50 bg-white"
+              initial={{ x: '-100%' }}
+              animate={{ x: '0%' }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            >
+              <Sidebar isCollapsed={false} />
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
-      <div
-        onMouseEnter={() => isDesktop && setIsHovered(true)}
-        onMouseLeave={() => isDesktop && setIsHovered(false)}
-        className={`
-          absolute top-0 left-0 h-full z-20 lg:relative lg:z-auto
-          transition-transform duration-300 ease-out lg:transition-none
-          ${isSidebarOpen && !isDesktop ? 'translate-x-0' : ''}
-          ${!isSidebarOpen && !isDesktop ? '-translate-x-full' : ''}
-        `}
-        style={{
-          width: isDesktop ? sidebarWidth : (isSidebarOpen ? '260px' : '0'),
-          transition: isDesktop ? 'width 0.2s ease-out' : 'transform 0.3s ease-out',
-        }}
-        {...(!isDesktop ? bind() : {})}
-        ref={sidebarRef}
-      >
-        <Sidebar isCollapsed={isCollapsed} />
-      </div>
+      {/* Desktop Sidebar */}
+      {isDesktop && (
+        <div
+          className="group relative z-30 flex-shrink-0 bg-white transition-all duration-200 ease-out w-[75px] hover:w-[260px] border-r border-gray-200"
+        >
+          <Sidebar isCollapsed={true} />
+        </div>
+      )}
 
-      <div 
-        className="flex flex-col flex-1 h-screen transition-all duration-200 ease-out"
-        style={{ marginLeft: isDesktop ? sidebarWidth : '0' }}
-      >
+      <div className="flex flex-col flex-1 h-screen">
         <Header 
-          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} 
-          isCollapsed={isCollapsed}
+          onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
           isDesktop={isDesktop}
         />
-
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto h-full p-4 md:p-6">
             <Routes>
