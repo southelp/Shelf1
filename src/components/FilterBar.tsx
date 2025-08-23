@@ -9,10 +9,18 @@ type Props = {
 export default function FilterBar({ onSearch, onlyAvailable, onToggleAvailable }: Props) {
   const [searchValue, setSearchValue] = useState('');
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchValue(value);
-    onSearch(value);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchValue(e.target.value);
+  };
+
+  const handleSearch = () => {
+    onSearch(searchValue);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
   };
 
   return (
@@ -40,9 +48,10 @@ export default function FilterBar({ onSearch, onlyAvailable, onToggleAvailable }
                           >
                             <input
                               type="search"
-                                      placeholder="Title, author"
+                              placeholder="Title, author"
                               value={searchValue}
-                              onChange={handleSearchChange}
+                              onChange={handleInputChange}
+                              onKeyDown={handleKeyDown}
                               className="w-full border-none outline-none bg-transparent text-sm leading-5"
                               style={{
                                 color: '#1A1C1E',
@@ -51,11 +60,11 @@ export default function FilterBar({ onSearch, onlyAvailable, onToggleAvailable }
                             />
                           </div>
                         </div>
-                        <div className="flex h-6 flex-col items-start">
+                        <button onClick={handleSearch} className="flex h-6 flex-col items-start cursor-pointer">
                           <svg width="20" height="24" viewBox="0 0 21 21" fill="none">
                             <path d="M17.0134 15.7607V6.17741H18.2634V15.7607H17.0134ZM10.4925 15.6774L9.59669 14.8024L12.805 11.5941H2.43002V10.3441H12.7842L9.61752 7.13574L10.4925 6.26074L15.18 10.9691L10.4925 15.6774Z" fill="#44474E"/>
                           </svg>
-                        </div>
+                        </button>
                       </div>
                     </div>
                   </div>

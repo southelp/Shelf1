@@ -32,8 +32,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     imageBase64 = stripDataUrl(imageBase64)
 
     const prompt =
-      `이 이미지는 책 표지입니다. 이미지에서 책 제목과 저자를 추출하여 JSON 형식으로 응답해주세요. 저자 정보가 명확하지 않으면 null로 처리해도 됩니다. 응답은 하나의 JSON 객체여야 합니다.
-출력 예시: {"title":"책 제목","author":"저자 이름"}`
+      `이 이미지는 책 표지입니다. 이미지에서 부제나 시리즈명을 제외한 메인 제목과 저자를 추출하여 JSON 형식으로 응답해주세요. 저자 정보가 명확하지 않으면 null로 처리해도 됩니다. 응답은 하나의 JSON 객체여야 합니다.
+출력 예시: {"title":"메인 제목","author":"저자 이름"}`
 
     const geminiResp = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`,
