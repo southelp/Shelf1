@@ -6,9 +6,10 @@ import GoogleSignInButton from './GoogleSignInButton';
 interface HeaderProps {
   onToggleSidebar: () => void;
   isCollapsed: boolean;
+  isDesktop: boolean;
 }
 
-export default function Header({ onToggleSidebar, isCollapsed }: HeaderProps) {
+export default function Header({ onToggleSidebar, isCollapsed, isDesktop }: HeaderProps) {
   const user = useUser();
   const navigate = useNavigate();
   const location = useLocation();
@@ -43,17 +44,38 @@ export default function Header({ onToggleSidebar, isCollapsed }: HeaderProps) {
       className="relative flex px-4 items-center gap-2 self-stretch border-b"
       style={{ height: '76px', borderColor: '#EEEEEC' }}
     >
-      {/* Hamburger Icon for Mobile */}
-      <div className="md:hidden">
-        <button 
-          onClick={onToggleSidebar}
-          className="text-2xl p-2 focus:outline-none"
-        >
-          ☰
-        </button>
-      </div>
+      {!isDesktop && (
+        <>
+          {/* Hamburger Icon for Mobile */}
+          <div className="md:hidden">
+            <button 
+              onClick={onToggleSidebar}
+              className="text-2xl p-2 focus:outline-none"
+            >
+              ☰
+            </button>
+          </div>
+          
+          {/* Collapse Button for Tablet */}
+          <button
+            onClick={onToggleSidebar}
+            className="p-2 rounded-full hover:bg-gray-200 hidden md:block"
+          >
+            <svg 
+              width="20" 
+              height="20" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              xmlns="http://www.w3.org/2000/svg"
+              className={`transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
+            >
+              <path d="M15 18L9 12L15 6" stroke="#32302C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </>
+      )}
       
-      {/* Page Title & Collapse Button */}
+      {/* Page Title */}
       <div className="flex-1 flex items-center gap-2">
         <h1 
           className="text-base font-semibold leading-6"
@@ -61,21 +83,6 @@ export default function Header({ onToggleSidebar, isCollapsed }: HeaderProps) {
         >
           {getPageTitle()}
         </h1>
-        <button
-          onClick={onToggleSidebar}
-          className="p-2 rounded-full hover:bg-gray-200 hidden md:block" // Hide on mobile
-        >
-          <svg 
-            width="20" 
-            height="20" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            xmlns="http://www.w3.org/2000/svg"
-            className={`transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
-          >
-            <path d="M15 18L9 12L15 6" stroke="#32302C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
       </div>
 
       {/* Auth Section */}
