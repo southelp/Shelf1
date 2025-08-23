@@ -198,6 +198,77 @@ export default function NewBook() {
     }
   };
 
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!titleQuery.trim()) return alert('Title is required for search.');
+    setIsLoading(true);
+    setLoadingMessage('Searching...');
+    setError(null);
+    setCandidates([]);
+
+    try {
+      const searchResponse = await fetch('/api/search-book-by-title', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: titleQuery,
+          author: authorQuery,
+        }),
+      });
+
+      if (!searchResponse.ok) {
+        const errorText = await searchResponse.text();
+        throw new Error(`Search failed: ${errorText}`);
+      }
+
+      const { candidates: foundCandidates } = await searchResponse.json();
+      setCandidates(foundCandidates ?? []);
+
+      if (!foundCandidates || foundCandidates.length === 0) {
+        setError(`Book not found for the given criteria.`);
+      }
+
+    } catch (e: any) {
+      setError(e.message || 'Failed to search for the book.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleIsbnSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!isbnQuery.trim()) return alert('ISBN is required for search.');
+    setIsLoading(true);
+    setLoadingMessage('Searching by ISBN...');
+    setError(null);
+    setCandidates([]);
+
+    try {
+      const searchResponse = await fetch('/api/search-book-by-title', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isbn: isbnQuery }),
+      });
+
+      if (!searchResponse.ok) {
+        const errorText = await searchResponse.text();
+        throw new Error(`Search failed: ${errorText}`);
+      }
+
+      const { candidates: foundCandidates } = await searchResponse.json();
+      setCandidates(foundCandidates ?? []);
+
+      if (!foundCandidates || foundCandidates.length === 0) {
+        setError(`Book not found for the given ISBN.`);
+      }
+
+    } catch (e: any) {
+      setError(e.message || 'Failed to search for the book.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleCapture = useCallback(async () => {
     // This function remains complex, keeping it as is for now.
     if (isLoading) return;
@@ -246,6 +317,155 @@ export default function NewBook() {
       setIsLoading(false);
     }
   }, [isLoading, webcamRef]);
+
+  const handleRetake = () => {
+    setCapturedImage(null);
+    setCandidates([]);
+    setError(null);
+  };
+
+  const handleClearResults = () => {
+    setCandidates([]);
+    setError(null);
+  };
+  
+  const handleManualInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    if (name === 'authors') {
+      setManualBook(prev => ({ ...prev, [name]: value.split(',').map(s => s.trim()) }));
+    } else {
+      setManualBook(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="flex flex-col justify-center items-center gap-6 self-stretch py-20">
+        <div className="text-lg font-medium">Please log in to add books</div>
+      </div>
+    );
+  }
+
+  const renderContent = () => {
+    switch (mode) {
+      case 'scan':
+        return (
+          <div className="max-w-md mx-auto">
+            <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden border shadow-lg" style={{ backgroundColor: '#000', borderColor: '#EEEEEC' }}>
+              {capturedImage ? (
+                <img src={capturedImage} alt="Captured book cover" className="w-full h-full object-contain" />
+              ) : (
+                <>
+                  <Webcam audio={false} ref={webcamRef} screenshotFormat="image/jpeg" videoConstraints={videoConstraints} className="w-full h-full object-contain" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <p className="text-white text-lg mb-4">Align with the book title</p>
+                    <div className="w-[85%] h-[30%] border-2 border-white rounded-2xl" style={{ boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)' }}></div>
+                  </div>
+                </>
+              )}
+              {isLoading && (
+                <div className="absolute inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center text-white z-10">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+                  <p className="text-lg text-center">{loadingMessage}</p>
+                </div>
+              )}
+            </div>
+            <div className="mt-6 flex justify-center gap-4">
+              {capturedImage ? (
+                <button onClick={handleRetake} disabled={isLoading} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">Retake</button>
+              ) : (
+                <button onClick={handleCapture} disabled={isLoading} className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-sm">Capture</button>
+              )}
+              <button onClick={() => setMode('title')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">Close</button>
+            </div>
+          </div>
+        );
+      case 'isbn':
+        return (
+          <form onSubmit={handleIsbnSearch} className="space-y-4">
+            <div className="p-6 border rounded-2xl space-y-4" style={{ backgroundColor: '#F8F8F7', borderColor: '#EEEEEC' }}>
+              <input type="text" value={isbnQuery} onChange={e => setIsbnQuery(e.target.value)} placeholder="Search by ISBN" className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div className="flex justify-center gap-3 pt-2">
+              <button type="submit" disabled={isLoading || !isbnQuery.trim()} className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm">
+                Search
+              </button>
+              <button type="button" onClick={() => setMode('title')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">
+                Back
+              </button>
+              <button type="button" onClick={() => setMode('manual')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm ml-auto">
+                Manual
+              </button>
+            </div>
+          </form>
+        );
+      case 'manual':
+        return (
+          <div className="max-w-md mx-auto space-y-4">
+            <div className="p-6 border rounded-2xl space-y-4" style={{ backgroundColor: '#F8F8F7', borderColor: '#EEEEEC' }}>
+              <input type="text" name="title" placeholder="Title (required)" value={manualBook.title} onChange={handleManualInputChange} className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <input type="text" name="authors" placeholder="Authors (required, comma-separated)" value={manualBook.authors?.join(', ')} onChange={handleManualInputChange} className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <input type="text" name="cover_url" placeholder="Cover Image URL (optional)" value={manualBook.cover_url} onChange={handleManualInputChange} className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div className="flex justify-center gap-4">
+              <button onClick={() => handleRegister(manualBook)} disabled={isLoading || !manualBook.title || !manualBook.authors?.length} className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm">
+                Register Manually
+              </button>
+              <button onClick={() => setMode('title')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">
+                Cancel
+              </button>
+            </div>
+          </div>
+        );
+      case 'title':
+      default:
+        return (
+          <form onSubmit={handleSearch} className="space-y-4">
+            <div className="p-6 border rounded-2xl space-y-4" style={{ backgroundColor: '#F8F8F7', borderColor: '#EEEEEC' }}>
+              <input type="text" value={titleQuery} onChange={e => setTitleQuery(e.target.value)} placeholder="Title" className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <input type="text" value={authorQuery} onChange={e => setAuthorQuery(e.target.value)} placeholder="Author" className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div className="flex justify-center gap-3 pt-2">
+              <button type="submit" disabled={isLoading || !titleQuery.trim()} className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm">
+                Search
+              </button>
+              <button type="button" onClick={() => setMode('scan')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">
+                Camera
+              </button>
+              <button type="button" onClick={() => setMode('isbn')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">
+                ISBN
+              </button>
+            </div>
+          </form>
+        );
+    }
+  };
+
+  return (
+    <div className="w-full" style={{ backgroundColor: '#FCFCFC' }}>
+      <div>
+        <h1 className="text-2xl font-medium my-6 text-center" style={{ color: '#1A1C1E' }}>
+          Add a Book
+        </h1>
+        <div className="max-w-md mx-auto">
+          {renderContent()}
+        </div>
+      </div>
+      
+      {error && (
+        <div className="max-w-md mx-auto text-center p-4 rounded-2xl border mt-6" style={{ color: '#991b1b', backgroundColor: '#fee2e2', borderColor: '#fecaca' }}>
+          {error}
+        </div>
+      )}
+
+      <SearchResultsModal 
+        candidates={candidates}
+        onRegister={handleRegister}
+        onClose={handleClearResults}
+      />
+    </div>
+  );
+}
 
   const handleRetake = () => {
     setCapturedImage(null);
