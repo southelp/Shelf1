@@ -4,12 +4,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import GoogleSignInButton from './GoogleSignInButton';
 
 interface HeaderProps {
-  onToggleSidebar: () => void;
-  isCollapsed: boolean;
+  onToggleMobileMenu: () => void;
   isDesktop: boolean;
 }
 
-export default function Header({ onToggleSidebar, isCollapsed, isDesktop }: HeaderProps) {
+export default function Header({ onToggleMobileMenu, isDesktop }: HeaderProps) {
   const user = useUser();
   const navigate = useNavigate();
   const location = useLocation();
@@ -21,16 +20,11 @@ export default function Header({ onToggleSidebar, isCollapsed, isDesktop }: Head
 
   const getPageTitle = () => {
     switch (location.pathname) {
-      case '/':
-        return null; // Hide title on home page
-      case '/my':
-        return 'My Library';
-      case '/loans':
-        return 'My Loans';
-      case '/books/new':
-        return 'Add Book';
-      case '/terms':
-        return 'Terms of Use';
+      case '/': return null;
+      case '/my': return 'My Library';
+      case '/loans': return 'My Loans';
+      case '/books/new': return 'Add Book';
+      case '/terms': return 'Terms of Use';
       default:
         if (location.pathname.startsWith('/users/')) {
           return 'User Library';
@@ -41,51 +35,24 @@ export default function Header({ onToggleSidebar, isCollapsed, isDesktop }: Head
 
   return (
     <div 
-      className="relative flex px-4 items-center gap-2 self-stretch border-b"
-      style={{ height: '76px', borderColor: '#EEEEEC' }}
+      className="relative flex px-4 items-center gap-2 self-stretch border-b h-16 flex-shrink-0"
+      style={{ borderColor: '#EEEEEC' }}
     >
       {!isDesktop && (
-        <>
-          {/* Hamburger Icon for Mobile */}
-          <div className="md:hidden">
-            <button 
-              onClick={onToggleSidebar}
-              className="text-2xl p-2 focus:outline-none"
-            >
-              <span className="material-symbols-outlined">menu</span>
-            </button>
-          </div>
-          
-          {/* Collapse Button for Tablet */}
-          <button
-            onClick={onToggleSidebar}
-            className="p-2 rounded-full hover:bg-gray-200 hidden md:block"
-          >
-            <svg 
-              width="20" 
-              height="20" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              xmlns="http://www.w3.org/2000/svg"
-              className={`transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
-            >
-              <path d="M15 18L9 12L15 6" stroke="#32302C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        </>
+        <button 
+          onClick={onToggleMobileMenu}
+          className="p-2 focus:outline-none"
+        >
+          <span className="material-symbols-outlined text-2xl">menu</span>
+        </button>
       )}
       
-      {/* Page Title */}
       <div className="flex-1 flex items-center gap-2">
-        <h1 
-          className="text-base font-semibold leading-6"
-          style={{ color: '#1A1C1E' }}
-        >
+        <h1 className="text-base font-semibold leading-6 text-gray-800">
           {getPageTitle()}
         </h1>
       </div>
 
-      {/* Auth Section */}
       <div className="flex items-center gap-4">
         {user ? (
           <>
