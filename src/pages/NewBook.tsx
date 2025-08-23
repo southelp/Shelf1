@@ -129,7 +129,8 @@ export default function NewBook() {
     }
   };
 
-  const handleSearch = async () => {
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!titleQuery.trim()) return alert('Title is required for search.');
     setIsLoading(true);
     setLoadingMessage('Searching...');
@@ -165,7 +166,8 @@ export default function NewBook() {
     }
   };
   
-  const handleIsbnSearch = async () => {
+  const handleIsbnSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!isbnQuery.trim()) return alert('ISBN is required for search.');
     setIsLoading(true);
     setLoadingMessage('Searching by ISBN...');
@@ -199,7 +201,6 @@ export default function NewBook() {
   };
 
   const handleCapture = useCallback(async () => {
-    // This function remains complex, keeping it as is for now.
     if (isLoading) return;
     const imageSrc = webcamRef.current?.getScreenshot();
     if (!imageSrc) {
@@ -311,22 +312,22 @@ export default function NewBook() {
         );
       case 'isbn':
         return (
-          <div className="space-y-4">
+          <form onSubmit={handleIsbnSearch} className="space-y-4">
             <div className="p-6 border rounded-2xl space-y-4" style={{ backgroundColor: '#F8F8F7', borderColor: '#EEEEEC' }}>
               <input type="text" value={isbnQuery} onChange={e => setIsbnQuery(e.target.value)} placeholder="Search by ISBN" className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
             <div className="flex justify-center gap-3 pt-2">
-              <button onClick={handleIsbnSearch} disabled={isLoading || !isbnQuery.trim()} className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm">
+              <button type="submit" disabled={isLoading || !isbnQuery.trim()} className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm">
                 Search
               </button>
-              <button onClick={() => setMode('title')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">
+              <button type="button" onClick={() => setMode('title')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">
                 Back
               </button>
-              <button onClick={() => setMode('manual')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm ml-auto">
+              <button type="button" onClick={() => setMode('manual')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm ml-auto">
                 Manual
               </button>
             </div>
-          </div>
+          </form>
         );
       case 'manual':
         return (
@@ -349,23 +350,23 @@ export default function NewBook() {
       case 'title':
       default:
         return (
-          <div className="space-y-4">
+          <form onSubmit={handleSearch} className="space-y-4">
             <div className="p-6 border rounded-2xl space-y-4" style={{ backgroundColor: '#F8F8F7', borderColor: '#EEEEEC' }}>
               <input type="text" value={titleQuery} onChange={e => setTitleQuery(e.target.value)} placeholder="Title" className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
               <input type="text" value={authorQuery} onChange={e => setAuthorQuery(e.target.value)} placeholder="Author" className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
             <div className="flex justify-center gap-3 pt-2">
-              <button onClick={handleSearch} disabled={isLoading || !titleQuery.trim()} className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm">
+              <button type="submit" disabled={isLoading || !titleQuery.trim()} className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm">
                 Search
               </button>
-              <button onClick={() => setMode('scan')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">
+              <button type="button" onClick={() => setMode('scan')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">
                 Camera
               </button>
-              <button onClick={() => setMode('isbn')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">
+              <button type="button" onClick={() => setMode('isbn')} className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border rounded-xl hover:bg-gray-50 shadow-sm">
                 ISBN
               </button>
             </div>
-          </div>
+          </form>
         );
     }
   };
