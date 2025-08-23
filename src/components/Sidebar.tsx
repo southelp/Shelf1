@@ -16,43 +16,27 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
     {
       path: '/',
       label: 'Browse Books',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-        </svg>
-      ),
+      icon: <span className="material-symbols-outlined">auto_stories</span>,
       variant: location.pathname === '/' ? 4 : 1
     },
     {
       path: '/my',
       label: 'My Books',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 12l4.179 2.25M21.75 12l-4.179-2.25v4.5l4.179-2.25zM2.25 12l4.179 2.25m0 0l5.571 3m5.571-3l4.179-2.25M17.571 14.25l5.571-3M4.429 14.25l5.571 3m5.571-3l-5.571 3" />
-        </svg>
-      ),
+      icon: <span className="material-symbols-outlined">library_books</span>,
       variant: location.pathname === '/my' ? 4 : 1,
       requiresAuth: true
     },
     {
       path: '/loans',
       label: 'My Borrows',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m-3 0l-3-3m0 0l3 3m-3-3h9" />
-        </svg>
-      ),
+      icon: <span className="material-symbols-outlined">sync</span>,
       variant: location.pathname === '/loans' ? 4 : 1,
       requiresAuth: true
     },
     {
       path: '/books/new',
       label: 'Add Books',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
+      icon: <span className="material-symbols-outlined">add_circle</span>,
       variant: location.pathname === '/books/new' ? 4 : 1,
       requiresAuth: true
     }
@@ -151,9 +135,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
           >
             <div className="flex w-9 min-w-9 justify-center items-center">
               <div className="flex flex-col items-start text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z" />
-                </svg>
+                <span className="material-symbols-outlined">gavel</span>
               </div>
             </div>
             {!isCollapsed && (
