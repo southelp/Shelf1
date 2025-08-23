@@ -100,6 +100,13 @@ export default function BookDetailsPanel({ book, activeLoan, userId, onClose, on
             alt={book.title}
             className="w-full h-auto object-contain rounded-md bg-gray-50"
           />
+          {book.source_api && (
+            <div className="text-left mt-2">
+              <span className="text-xs text-gray-500 opacity-50">
+                Source: {book.source_api.charAt(0).toUpperCase() + book.source_api.slice(1)} API
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Book Details */}
@@ -126,11 +133,6 @@ export default function BookDetailsPanel({ book, activeLoan, userId, onClose, on
             <p className="text-sm text-gray-500">
               <span className="font-semibold">Status:</span> {loanStatusText}
             </p>
-            {book.source_api && (
-              <p className="text-sm text-gray-500">
-                <span className="font-semibold">Source:</span> {book.source_api} api
-              </p>
-            )}
             {book.description && (
               <p className="text-sm text-gray-700 mt-4 max-h-40 overflow-y-auto">
                 {book.description}
