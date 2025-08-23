@@ -67,9 +67,9 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
       transition={{ duration: 0.2, ease: 'easeOut' }}
     >
       {/* Logo Section */}
-      <div className="flex h-[99px] items-center px-[30px]">
+      <div className="flex h-[99px] items-center justify-center px-[30px]">
         {!isCollapsed && (
-          <div className="w-full">
+          <div className="w-full transform scale-[1.3]">
             <Logo />
           </div>
         )}
