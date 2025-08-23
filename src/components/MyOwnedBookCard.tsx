@@ -112,7 +112,7 @@ export default function MyOwnedBookCard({ book, onComplete, isSelected, onClick 
       </div>
 
       <h3 className="font-bold truncate">{book.title}</h3>
-      {book.authors && <p className="text-gray-600 truncate text-xs mb-2">{book.authors.join(', ')}</p>}
+      {book.authors && <p className="text-gray-600 truncate text-xs mb-2">{book.authors.join('^').replace(/\^/g, ', ')}</p>}
       
       <div className="mt-auto pt-2 border-t border-gray-100">
         <div className="text-xs text-gray-500 mb-2">
