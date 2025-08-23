@@ -9,9 +9,14 @@ import { Book, Loan } from '../types';
 import { useUser } from '@supabase/auth-helpers-react';
 
 const statusOrder = { 'Available': 0, 'Reserved': 1, 'Borrowed': 2 };
-const LERP_FACTOR = 0.1; // Smoothing factor for scrolling
+const LERP_FACTOR = 0.1;
+const AUTO_SCROLL_SPEED = 0.2;
 
-export default function Home() {
+interface HomeProps {
+  isDesktop: boolean;
+}
+
+export default function Home({ isDesktop }: HomeProps) {
   const [books, setBooks] = useState<Book[]>([]);
   const [loans, setLoans] = useState<Record<string, Loan | null>>({});
   const [incomingRequests, setIncomingRequests] = useState<Loan[]>([]);
@@ -21,7 +26,6 @@ export default function Home() {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
   const [isHovered, setIsHovered] = useState(false);
   
   const gridContainerRef = useRef<HTMLDivElement>(null);
@@ -30,8 +34,6 @@ export default function Home() {
   const positionRef = useRef(0);
   const targetPositionRef = useRef(0);
   const animationFrameRef = useRef<number>();
-  const scrollSpeed = 0.2;
-
   const touchStartRef = useRef(0);
   const isDraggingRef = useRef(false);
 
@@ -43,13 +45,7 @@ export default function Home() {
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
-    
-    // Always use the RPC function for consistency. 
-    // The function is designed to handle empty search terms and the available filter.
-    const { data } = await supabase.rpc('search_books', { 
-      search_term: q, 
-      only_available: onlyAvailable 
-    });
+    const { data } = await supabase.rpc('search_books', { search_term: q, only_available: onlyAvailable });
     const bookData = data as Book[];
     
     const bookIds = (bookData || []).map(b => b.id);
@@ -80,11 +76,9 @@ export default function Home() {
   useEffect(() => { loadData(); }, [loadData]);
 
   useEffect(() => {
-    // Reset scroll position when starting or clearing a search
     if (gridContentRef.current) {
       targetPositionRef.current = 0;
       positionRef.current = 0;
-      // Apply transform directly to avoid waiting for the next animation frame
       gridContentRef.current.style.transform = `translateY(0px)`;
     }
   }, [q]);
@@ -99,9 +93,10 @@ export default function Home() {
       const isContentScrollable = gridContentRef.current.scrollHeight > gridContainerRef.current.clientHeight;
       const maxScroll = gridContentRef.current.scrollHeight - gridContainerRef.current.clientHeight;
 
-      if (!isHovered && !isDraggingRef.current && !q && isContentScrollable) {
+      // Only auto-scroll on desktop
+      if (isDesktop && !isHovered && !isDraggingRef.current && !q && isContentScrollable) {
         if (targetPositionRef.current < maxScroll) {
-          targetPositionRef.current += scrollSpeed;
+          targetPositionRef.current += AUTO_SCROLL_SPEED;
         }
       }
 
@@ -117,17 +112,14 @@ export default function Home() {
 
     animationFrameRef.current = requestAnimationFrame(animate);
     return () => { if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current); };
-  }, [isHovered, selectedBook, q]);
+  }, [isHovered, selectedBook, q, isDesktop]);
 
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     if (!gridContentRef.current || !gridContainerRef.current || q) return;
     event.preventDefault();
-
     const maxScroll = gridContentRef.current.scrollHeight - gridContainerRef.current.clientHeight;
     let newTargetPosition = targetPositionRef.current + event.deltaY;
-    newTargetPosition = Math.max(0, Math.min(newTargetPosition, maxScroll));
-
-    targetPositionRef.current = newTargetPosition;
+    targetPositionRef.current = Math.max(0, Math.min(newTargetPosition, maxScroll));
   };
 
   const handleMouseEnter = () => setIsHovered(true);
@@ -137,30 +129,30 @@ export default function Home() {
     if (!gridContentRef.current || !gridContainerRef.current || q) return;
     isDraggingRef.current = true;
     touchStartRef.current = event.touches[0].clientY;
-    // Stop the auto-scroll on touch
     setIsHovered(true); 
   };
 
   const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
     if (!isDraggingRef.current || !gridContentRef.current || !gridContainerRef.current || q) return;
-    
     event.preventDefault();
-
     const touchCurrent = event.touches[0].clientY;
     const deltaY = touchStartRef.current - touchCurrent;
     touchStartRef.current = touchCurrent;
-
     const maxScroll = gridContentRef.current.scrollHeight - gridContainerRef.current.clientHeight;
     let newTargetPosition = targetPositionRef.current + deltaY;
-    newTargetPosition = Math.max(0, Math.min(newTargetPosition, maxScroll));
-
-    targetPositionRef.current = newTargetPosition;
+    targetPositionRef.current = Math.max(0, Math.min(newTargetPosition, maxScroll));
   };
 
   const handleTouchEnd = () => {
     isDraggingRef.current = false;
-    // Resume auto-scroll
     setIsHovered(false);
+  };
+
+  const getPointerEvents = () => {
+    if (!isDesktop || q || isHovered) {
+      return 'auto';
+    }
+    return 'none';
   };
 
   const renderContent = () => {
@@ -168,13 +160,10 @@ export default function Home() {
       return <div className="flex-grow flex justify-center items-center"><p>Loading books...</p></div>;
     }
     if (books.length === 0) {
-      if (q) {
-        return <div className="flex-grow text-center py-10"><p>No books found matching your search for "{q}".</p></div>;
-      }
       return (
-        <div className="flex-grow flex flex-col justify-center items-center">
+        <div className="flex-grow flex flex-col justify-center items-center text-center p-4">
           <h2 className="text-2xl font-bold mb-4">Welcome to the Shelf!</h2>
-          <p className="text-gray-600">It looks like there are no books here yet. Be the first to add one!</p>
+          <p className="text-gray-600">{q ? `No books found for "${q}".` : "No books here yet. Be the first to add one!"}</p>
         </div>
       );
     }
@@ -195,7 +184,7 @@ export default function Home() {
         )}
         <div
           ref={gridContainerRef}
-          className={`scrolling-grid-container overscroll-y-contain ${q ? "" : ""}`}
+          className="scrolling-grid-container overscroll-y-contain"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           onWheel={handleWheel}
@@ -203,9 +192,9 @@ export default function Home() {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <div ref={gridContentRef} className="scrolling-grid" style={{ pointerEvents: q ? 'auto' : (isHovered ? 'auto' : 'none') }}>
+          <div ref={gridContentRef} className="scrolling-grid" style={{ pointerEvents: getPointerEvents() }}>
             {books.map((b, index) => (
-              <BookCard key={`${b.id}-${index}`} book={b} activeLoan={loans[b.id] || null} onClick={(book, loan) => handleBookClick(book, loan)} />
+              <BookCard key={`${b.id}-${index}`} book={b} activeLoan={loans[b.id] || null} onClick={handleBookClick} />
             ))}
           </div>
         </div>

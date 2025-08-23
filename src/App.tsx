@@ -54,7 +54,7 @@ export default function App() {
               className="fixed inset-0 bg-black bg-opacity-50 z-40"
             />
             <motion.div
-              className="fixed top-0 left-0 h-full z-50 bg-white"
+              className="fixed top-0 left-0 h-full z-50 bg-white w-64"
               initial={{ x: '-100%' }}
               animate={{ x: '0%' }}
               exit={{ x: '-100%' }}
@@ -83,7 +83,7 @@ export default function App() {
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto h-full p-4 md:p-6">
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<Home isDesktop={isDesktop} />} />
               <Route path="/my" element={<MyLibrary />} />
               <Route path="/loans" element={<Loans />} />
               <Route path="/books/new" element={<MyNewBook />} />
