@@ -52,7 +52,7 @@ export default function Header({ onToggleSidebar, isCollapsed, isDesktop }: Head
               onClick={onToggleSidebar}
               className="text-2xl p-2 focus:outline-none"
             >
-              ☰
+              <span className="material-symbols-outlined">menu</span>
             </button>
           </div>
           
