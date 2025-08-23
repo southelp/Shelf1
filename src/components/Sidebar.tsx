@@ -49,13 +49,6 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
     }
   };
 
-  const textAnimation = {
-    initial: { opacity: 0, x: -10 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: -10 },
-    transition: { duration: 0.2, ease: 'easeOut' }
-  };
-
   return (
     <motion.div
       ref={ref}
@@ -77,7 +70,13 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
       <div className="flex h-[120px] items-center px-[20px]">
         <AnimatePresence>
           {!isCollapsed && (
-            <motion.div className="w-full" {...textAnimation}>
+            <motion.div
+              className="w-full"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15, ease: 'linear' }}
+            >
               <Logo />
             </motion.div>
           )}
@@ -94,8 +93,8 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
                 onClick={(e) => handleNavClick(item, e)}
                 className={`
                   flex items-center rounded-xl py-2
-                  ${isCollapsed ? 'px-2' : 'px-3 self-stretch'}
-                  transition-all duration-200 ease-out
+                  ${isCollapsed ? 'px-2 self-center' : 'px-3 self-stretch'}
+                  transition-colors duration-200 ease-out
                   ${item.variant === 4 
                     ? 'bg-gray-200' 
                     : 'hover:bg-gray-100/50'
@@ -117,9 +116,15 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
                 </div>
                 <AnimatePresence>
                   {!isCollapsed && (
-                    <motion.div className="flex flex-col items-start ml-2" {...textAnimation}>
+                    <motion.div
+                      className="flex flex-col items-start ml-2 overflow-hidden whitespace-nowrap"
+                      initial={{ opacity: 0, width: 0 }}
+                      animate={{ opacity: 1, width: 'auto' }}
+                      exit={{ opacity: 0, width: 0 }}
+                      transition={{ duration: 0.15, ease: 'linear' }}
+                    >
                       <div 
-                        className="text-sm font-medium leading-5 whitespace-nowrap"
+                        className="text-sm font-medium leading-5"
                         style={{
                           color: item.variant === 4 ? '#32302C' : '#5D5D5F',
                           fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
@@ -144,8 +149,8 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
             to="/terms"
             className={`
               flex items-center rounded-xl py-2
-              ${isCollapsed ? 'px-2' : 'px-3 self-stretch'}
-              transition-all duration-200 ease-out
+              ${isCollapsed ? 'px-2 self-center' : 'px-3 self-stretch'}
+              transition-colors duration-200 ease-out
               hover:bg-gray-100/50
             `}
           >
@@ -156,9 +161,15 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
             </div>
             <AnimatePresence>
               {!isCollapsed && (
-                <motion.div className="flex flex-col items-start ml-2" {...textAnimation}>
+                <motion.div
+                  className="flex flex-col items-start ml-2 overflow-hidden whitespace-nowrap"
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ duration: 0.15, ease: 'linear' }}
+                >
                   <div 
-                    className="text-sm font-medium leading-5 whitespace-nowrap"
+                    className="text-sm font-medium leading-5"
                     style={{
                       color: '#5D5D5F',
                       fontFamily: 'Inter, -apple-system, Roboto, Helvetica, sans-serif'
