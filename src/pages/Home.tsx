@@ -32,6 +32,9 @@ export default function Home() {
   const animationFrameRef = useRef<number>();
   const scrollSpeed = 0.2;
 
+  const touchStartRef = useRef(0);
+  const isDraggingRef = useRef(false);
+
   const handleBookClick = (book: Book, loan: Loan | null) => {
     setSelectedBook(book);
     setSelectedLoan(loan);
@@ -96,7 +99,7 @@ export default function Home() {
       const isContentScrollable = gridContentRef.current.scrollHeight > gridContainerRef.current.clientHeight;
       const maxScroll = gridContentRef.current.scrollHeight - gridContainerRef.current.clientHeight;
 
-      if (!isHovered && !q && isContentScrollable) {
+      if (!isHovered && !isDraggingRef.current && !q && isContentScrollable) {
         if (targetPositionRef.current < maxScroll) {
           targetPositionRef.current += scrollSpeed;
         }
@@ -130,6 +133,34 @@ export default function Home() {
   const handleMouseEnter = () => setIsHovered(true);
   const handleMouseLeave = () => setIsHovered(false);
 
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (!gridContentRef.current || !gridContainerRef.current || q) return;
+    isDraggingRef.current = true;
+    touchStartRef.current = event.touches[0].clientY;
+    // Stop the auto-scroll on touch
+    setIsHovered(true); 
+  };
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current || !gridContentRef.current || !gridContainerRef.current || q) return;
+    
+    const touchCurrent = event.touches[0].clientY;
+    const deltaY = touchStartRef.current - touchCurrent;
+    touchStartRef.current = touchCurrent;
+
+    const maxScroll = gridContentRef.current.scrollHeight - gridContainerRef.current.clientHeight;
+    let newTargetPosition = targetPositionRef.current + deltaY;
+    newTargetPosition = Math.max(0, Math.min(newTargetPosition, maxScroll));
+
+    targetPositionRef.current = newTargetPosition;
+  };
+
+  const handleTouchEnd = () => {
+    isDraggingRef.current = false;
+    // Resume auto-scroll
+    setIsHovered(false);
+  };
+
   const renderContent = () => {
     if (isLoading) {
       return <div className="flex-grow flex justify-center items-center"><p>Loading books...</p></div>;
@@ -146,7 +177,7 @@ export default function Home() {
       );
     }
     return (
-      <div className="flex-grow overflow-y-auto mt-6 px-[30px] lg:px-[50px]">
+      <div className="flex-grow overflow-y-auto mt-6 px-6 lg:px-[50px]">
         {incomingRequests.length > 0 && (
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
@@ -166,6 +197,9 @@ export default function Home() {
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           onWheel={handleWheel}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           <div ref={gridContentRef} className="scrolling-grid" style={{ pointerEvents: q ? 'auto' : (isHovered ? 'auto' : 'none') }}>
             {books.map((b, index) => (
