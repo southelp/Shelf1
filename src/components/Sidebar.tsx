@@ -54,20 +54,21 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
       ref={ref}
       className={`
         flex flex-col h-full
-        ${isCollapsed ? 'w-[81px]' : 'w-[248px]'}
+        ${isCollapsed ? 'w-[73px]' : 'w-[223px]'}
         transition-all duration-200 ease-out
         border-r
         relative
+        px-[15px]
       `}
       style={{
         borderColor: '#EEEEEC',
         background: '#F8F8F7'
       }}
-      animate={{ width: isCollapsed ? 81 : 248 }}
+      animate={{ width: isCollapsed ? 73 : 223 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
     >
       {/* Logo Section */}
-      <div className="flex h-[99px] items-center justify-center px-[30px]">
+      <div className="flex h-[99px] items-center justify-center">
         {!isCollapsed && (
           <div className="w-full transform scale-[1.3]">
             <Logo />
@@ -84,7 +85,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
                 to={item.path}
                 onClick={(e) => handleNavClick(item, e)}
                 className={`
-                  flex items-center rounded-xl px-1.5 py-1
+                  flex items-center rounded-xl px-[15px] py-1
                   transition-all duration-200 ease-out
                   ${!isCollapsed ? 'self-stretch' : ''}
                   ${item.variant === 4 
@@ -131,7 +132,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
         <div className="flex flex-col items-start self-stretch p-0.5 pb-4">
           <Link
             to="/terms"
-            className="flex items-center self-stretch px-1.5 py-1 rounded-xl hover:bg-gray-100/50 transition-colors duration-200 ease-out"
+            className="flex items-center self-stretch px-[15px] py-1 rounded-xl hover:bg-gray-100/50 transition-colors duration-200 ease-out"
           >
             <div className="flex w-9 min-w-9 justify-center items-center">
               <div className="flex flex-col items-start text-gray-500">
