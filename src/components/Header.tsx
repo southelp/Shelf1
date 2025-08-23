@@ -47,35 +47,31 @@ export default function Header({ onToggleSidebar, isCollapsed, isDesktop }: Head
       {!isDesktop && (
         <>
           {/* Hamburger Icon for Mobile */}
-          {!isDesktop && (
-            <div className="md:hidden">
-              <button 
-                onClick={onToggleSidebar}
-                className="text-2xl p-2 focus:outline-none"
-              >
-                <span className="material-symbols-outlined">menu</span>
-              </button>
-            </div>
-          )}
+          <div className="md:hidden">
+            <button 
+              onClick={onToggleSidebar}
+              className="text-2xl p-2 focus:outline-none"
+            >
+              <span className="material-symbols-outlined">menu</span>
+            </button>
+          </div>
           
           {/* Collapse Button for Tablet */}
-          {!isDesktop && (
-            <button
-              onClick={onToggleSidebar}
-              className="p-2 rounded-full hover:bg-gray-200 hidden md:block"
+          <button
+            onClick={onToggleSidebar}
+            className="p-2 rounded-full hover:bg-gray-200 hidden md:block"
+          >
+            <svg 
+              width="20" 
+              height="20" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              xmlns="http://www.w3.org/2000/svg"
+              className={`transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
             >
-              <svg 
-                width="20" 
-                height="20" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                xmlns="http://www.w3.org/2000/svg"
-                className={`transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
-              >
-                <path d="M15 18L9 12L15 6" stroke="#32302C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-          )}
+              <path d="M15 18L9 12L15 6" stroke="#32302C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
         </>
       )}
       
