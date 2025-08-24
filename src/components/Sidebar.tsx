@@ -44,8 +44,11 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
         </div>
         <div 
           className={`
-            ml-2 overflow-hidden whitespace-nowrap transition-all duration-200 ease-out
-            ${isCollapsed ? 'w-0 opacity-0 group-hover:w-full group-hover:opacity-100' : 'w-full opacity-100'}
+            overflow-hidden whitespace-nowrap transition-all duration-200 ease-out
+            ${isCollapsed
+              ? 'w-0 opacity-0 group-hover:ml-2 group-hover:w-full group-hover:opacity-100'
+              : 'ml-2 w-full opacity-100'
+            }
           `}
         >
           <span className={`text-sm font-medium leading-5 ${isActive ? 'text-gray-800' : 'text-gray-600'}`}>
