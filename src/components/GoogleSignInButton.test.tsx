@@ -29,7 +29,7 @@ describe('GoogleSignInButton', () => {
     (supabaseClient.supabase.auth.signInWithOAuth as vi.Mock).mockResolvedValue({ error: null });
 
     // When the component calls onAuthStateChange, we capture the callback function it provides.
-    (supabaseClient.supabase.auth.onAuthStateChange as vi.Mock).mockImplementation((callback) => {
+    (supabaseClient.supabase.auth.onAuthStateChange as vi.Mock).mockImplementation((_event: string, callback: (event: string, session: any) => Promise<void>) => {
       onAuthStateChangeCallback = callback;
       // Return the subscription object that the real function would return.
       return {

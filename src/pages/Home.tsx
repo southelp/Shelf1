@@ -12,11 +12,7 @@ const statusOrder = { 'Available': 0, 'Reserved': 1, 'Borrowed': 2 };
 const LERP_FACTOR = 0.1;
 const AUTO_SCROLL_SPEED = 0.2;
 
-interface HomeProps {
-  isDesktop: boolean;
-}
-
-export default function Home({ isDesktop }: HomeProps) {
+export default function Home() {
   const [books, setBooks] = useState<Book[]>([]);
   const [loans, setLoans] = useState<Record<string, Loan | null>>({});
   const [incomingRequests, setIncomingRequests] = useState<Loan[]>([]);

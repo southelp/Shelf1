@@ -43,10 +43,32 @@ describe('Loans Page', () => {
   });
 
   it('should allow a user to cancel a reservation', async () => {
-    const mockLoan: Partial<Loan> = {
+    const mockLoan: Loan = {
       id: 'loan-to-cancel',
       status: 'reserved',
-      books: { title: 'Reserved Book Title', cover_url: null, profiles: { full_name: 'Owner' } },
+      book_id: 'book-1',
+      owner_id: 'owner-1',
+      borrower_id: 'borrower-1',
+      requested_at: new Date().toISOString(),
+      approved_at: null,
+      due_at: null,
+      returned_at: null,
+      cancel_reason: null,
+      books: {
+        id: 'book-1',
+        owner_id: 'owner-1',
+        title: 'Reserved Book Title',
+        authors: [],
+        publisher: null,
+        published_year: null,
+        description: null,
+        cover_url: null,
+        available: false,
+        created_at: new Date().toISOString(),
+        isbn: null,
+        profiles: { id: 'owner-1', full_name: 'Owner' }
+      },
+      profiles: null,
     };
 
     // Mock the chained query builder: .select(...).eq(...).in(...).order(...)
@@ -79,11 +101,32 @@ describe('Loans Page', () => {
   });
 
   it('should allow a user to return a loaned book', async () => {
-    const mockLoan: Partial<Loan> = {
+    const mockLoan: Loan = {
       id: 'loan-to-return',
       status: 'loaned',
+      book_id: 'book-2',
+      owner_id: 'owner-2',
+      borrower_id: 'borrower-1',
+      requested_at: new Date().toISOString(),
+      approved_at: new Date().toISOString(),
       due_at: new Date().toISOString(),
-      books: { title: 'Loaned Book Title', cover_url: null, profiles: { full_name: 'Owner' } },
+      returned_at: null,
+      cancel_reason: null,
+      books: {
+        id: 'book-2',
+        owner_id: 'owner-2',
+        title: 'Loaned Book Title',
+        authors: [],
+        publisher: null,
+        published_year: null,
+        description: null,
+        cover_url: null,
+        available: false,
+        created_at: new Date().toISOString(),
+        isbn: null,
+        profiles: { id: 'owner-2', full_name: 'Owner' }
+      },
+      profiles: null,
     };
 
     const mockQueryBuilder = {

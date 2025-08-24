@@ -19,8 +19,8 @@ describe('Loan Process', () => {
   const mockInvoke = supabaseClient.supabase.functions.invoke as vi.Mock;
 
   // Mock user and book data
-  const ownerProfile: Profile = { id: 'user-a-owner', full_name: 'Owner A' };
-  const borrowerProfile: Profile = { id: 'user-b-borrower', full_name: 'Borrower B' };
+  const ownerProfile: Profile = { id: 'user-a-owner', full_name: 'Owner A' , email: 'owner@test.com', role: 'user'};
+  const borrowerProfile: Profile = { id: 'user-b-borrower', full_name: 'Borrower B' , email: 'borrower@test.com', role: 'user'};
 
   const mockBook: Book = {
     id: 'book-1',
@@ -34,7 +34,8 @@ describe('Loan Process', () => {
     profiles: ownerProfile, // The book owner's profile
     publisher: null,
     published_year: null,
-    source_api: null,
+    source_api: undefined,
+    description: 'A book to borrow',
   };
 
   beforeEach(() => {
@@ -85,6 +86,12 @@ describe('Loan Process', () => {
         owner_id: ownerProfile.id!,
         status: 'reserved',
         requested_at: new Date().toISOString(),
+        approved_at: null,
+        due_at: null,
+        returned_at: null,
+        cancel_reason: null,
+        books: null,
+        profiles: null,
       };
 
       render(
@@ -117,6 +124,10 @@ describe('Loan Process', () => {
       owner_id: ownerProfile.id!,
       status: 'reserved',
       requested_at: new Date().toISOString(),
+      approved_at: null,
+      due_at: null,
+      returned_at: null,
+      cancel_reason: null,
       books: mockBook, // Nested book info
       profiles: borrowerProfile, // Borrower's profile
     };

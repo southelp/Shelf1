@@ -83,7 +83,7 @@ export default function App() {
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto h-full p-4 md:p-6">
             <Routes>
-              <Route path="/" element={<Home isDesktop={isDesktop} />} />
+              <Route path="/" element={<Home />} />
               <Route path="/my" element={<MyLibrary />} />
               <Route path="/loans" element={<Loans />} />
               <Route path="/books/new" element={<MyNewBook />} />
