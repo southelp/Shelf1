@@ -45,8 +45,24 @@ export default function Home({ isDesktop }: HomeProps) {
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
-    const { data } = await supabase.rpc('search_books', { search_term: q, only_available: onlyAvailable });
-    const bookData = data as Book[];
+
+    let query = supabase.from('books').select('*, profiles(id, full_name)');
+
+    if (q) {
+      query = query.ilike('title', `%${q}%`);
+    }
+
+    if (onlyAvailable) {
+      query = query.eq('available', true);
+    }
+
+    const { data: bookData, error } = await query;
+
+    if (error) {
+      console.error('Error fetching books:', error);
+      setIsLoading(false);
+      return;
+    }
     
     const bookIds = (bookData || []).map(b => b.id);
     let loansMap: Record<string, Loan | null> = {};
