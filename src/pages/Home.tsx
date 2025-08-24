@@ -94,7 +94,7 @@ export default function Home({ isDesktop }: HomeProps) {
       const maxScroll = gridContentRef.current.scrollHeight - gridContainerRef.current.clientHeight;
 
       // Only auto-scroll on desktop
-      if (isDesktop && !isHovered && !isDraggingRef.current && !q && isContentScrollable) {
+      if (!isHovered && !isDraggingRef.current && !q && isContentScrollable) {
         if (targetPositionRef.current < maxScroll) {
           targetPositionRef.current += AUTO_SCROLL_SPEED;
         }
@@ -112,7 +112,7 @@ export default function Home({ isDesktop }: HomeProps) {
 
     animationFrameRef.current = requestAnimationFrame(animate);
     return () => { if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current); };
-  }, [isHovered, selectedBook, q, isDesktop]);
+  }, [isHovered, selectedBook, q]);
 
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     if (!gridContentRef.current || !gridContainerRef.current || q) return;
@@ -146,13 +146,6 @@ export default function Home({ isDesktop }: HomeProps) {
   const handleTouchEnd = () => {
     isDraggingRef.current = false;
     setIsHovered(false);
-  };
-
-  const getPointerEvents = () => {
-    if (!isDesktop || q || isHovered) {
-      return 'auto';
-    }
-    return 'none';
   };
 
   const renderContent = () => {
@@ -192,7 +185,7 @@ export default function Home({ isDesktop }: HomeProps) {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <div ref={gridContentRef} className="scrolling-grid" style={{ pointerEvents: getPointerEvents() }}>
+          <div ref={gridContentRef} className="scrolling-grid" >
             {books.map((b, index) => (
               <BookCard key={`${b.id}-${index}`} book={b} activeLoan={loans[b.id] || null} onClick={handleBookClick} />
             ))}

@@ -143,3 +143,55 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 -- ✨ 추가된 코드 끝
+
+-- 책 검색 함수 (소유자 정보 포함)
+create or replace function public.search_books(
+  search_term text,
+  only_available boolean
+)
+returns table (
+  id uuid,
+  owner_id uuid,
+  isbn text,
+  title text,
+  authors text[],
+  publisher text,
+  published_year int,
+  cover_url text,
+  available boolean,
+  source_api text,
+  created_at timestamptz,
+  profiles json
+) as $$
+begin
+  return query
+  select
+    b.id,
+    b.owner_id,
+    b.isbn,
+    b.title,
+    b.authors,
+    b.publisher,
+    b.published_year,
+    b.cover_url,
+    b.available,
+    b.source_api,
+    b.created_at,
+    json_build_object('id', p.id, 'full_name', p.full_name)
+  from
+    public.books b
+    join public.profiles p on b.owner_id = p.id
+  where
+    (search_term is null or search_term = '' or
+     b.title ilike '%' || search_term || '%' or
+     exists (
+        select 1
+        from unnest(b.authors) author
+        where author ilike '%' || search_term || '%'
+     )
+    ) and
+    (not only_available or b.available = true)
+  order by
+    b.created_at desc;
+end;
+$$ language plpgsql;
