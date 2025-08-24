@@ -352,7 +352,7 @@ export default function NewBook() {
         return (
           <form onSubmit={handleSearch} className="space-y-4">
             <div className="p-6 border rounded-2xl space-y-4" style={{ backgroundColor: '#F8F8F7', borderColor: '#EEEEEC' }}>
-              <input type="text" value={titleQuery} onChange={e => setTitleQuery(e.target.value)} placeholder="Title" className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <input type="text" value={titleQuery} onChange={e => setTitleQuery(e.target.value)} placeholder="Title(required)" className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
               <input type="text" value={authorQuery} onChange={e => setAuthorQuery(e.target.value)} placeholder="Author" className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
             <div className="flex justify-center gap-3 pt-2">
