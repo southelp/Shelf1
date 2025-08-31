@@ -219,7 +219,7 @@ export default function NewBook() {
 
     const recognitionPromise = (async () => {
       setLoadingMessage('Extracting book info...');
-      const geminiResponse = await fetch('/api/gemini-cover-to-book', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ imageBase64: imageSrc }) });
+      const geminiResponse = await fetch('/api/book-ai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'cover-to-book', payload: { imageBase64: imageSrc } }) });
       if (!geminiResponse.ok) throw new Error(`Failed to extract info: ${await geminiResponse.text()}`);
       const { title } = await geminiResponse.json();
       if (!title) throw new Error('Could not find a title on the cover.');

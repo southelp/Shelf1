@@ -91,10 +91,10 @@ export default function Scan() {
     setCapturedImage(dataUrl);
 
     try {
-      const response = await fetch('/api/gemini-cover-to-book', {
+      const response = await fetch('/api/book-ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: dataUrl, maxCandidates: 5 }),
+        body: JSON.stringify({ action: 'cover-to-book', payload: { imageBase64: dataUrl, maxCandidates: 5 } }),
       });
       if (!response.ok) {
         const txt = await response.text().catch(() => '');
