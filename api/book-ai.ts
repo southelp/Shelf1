@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 // --- Security Enhancements ---
 
 // 1. Supabase Server-side Client for Authentication
-const supabaseUrl = process.env.VITE_SUPABASE_URL
+const supabaseUrl = process.env.SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error('Supabase URL or Service Role Key is missing.')
