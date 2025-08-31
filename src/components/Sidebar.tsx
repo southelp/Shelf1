@@ -34,12 +34,12 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
         className={`
           flex items-center rounded-xl py-2 w-full
           transition-colors duration-400 ease-out
-          ${isCollapsed ? 'px-2 justify-center' : 'px-3'}
+          ${isCollapsed ? 'px-3 justify-start' : 'px-3'}
           ${isActive ? 'bg-gray-200' : 'hover:bg-gray-100/50'}
         `}
         style={{ backgroundColor: isActive ? '#E4E4E2' : undefined }}
       >
-        <div className={`flex justify-center items-center w-9 min-w-9 ${isActive ? 'text-gray-800' : 'text-gray-600'}`}>
+        <div className={`flex items-center w-9 min-w-9 ${isActive ? 'text-gray-800' : 'text-gray-600'}`}>
           <span className="material-symbols-outlined">{icon}</span>
         </div>
         <div 
