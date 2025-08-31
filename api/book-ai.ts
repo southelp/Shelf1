@@ -1,6 +1,39 @@
-
 // api/book-ai.ts
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { createClient } from '@supabase/supabase-js'
+
+// --- Security Enhancements ---
+
+// 1. Supabase Server-side Client for Authentication
+const supabaseUrl = process.env.VITE_SUPABASE_URL
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('Supabase URL or Service Role Key is missing.')
+}
+const supabase = supabaseUrl && supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : null
+
+// 2. In-memory Rate Limiting
+const rateLimitStore: Record<string, { count: number; timestamp: number }> = {}
+const RATE_LIMIT_WINDOW = 60 * 1000 // 1 minute in milliseconds
+const RATE_LIMIT_MAX_REQUESTS = 10 // Max requests per window
+
+function isRateLimited(userId: string): boolean {
+  const now = Date.now()
+  const userData = rateLimitStore[userId]
+
+  if (userData && now - userData.timestamp < RATE_LIMIT_WINDOW) {
+    if (userData.count >= RATE_LIMIT_MAX_REQUESTS) {
+      return true // Rate limited
+    }
+    rateLimitStore[userId].count++
+  } else {
+    // Reset or create new entry
+    rateLimitStore[userId] = { count: 1, timestamp: now }
+  }
+  return false
+}
+
+// --- CORS and Helper Functions ---
 
 function cors(res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -8,11 +41,12 @@ function cors(res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 }
 
-// Data URL에서 Base64 데이터만 추출하는 함수
 function stripDataUrl(b64: string) {
   const i = b64.indexOf('base64,')
   return i >= 0 ? b64.slice(i + 'base64,'.length) : b64
 }
+
+// --- Gemini API Logic ---
 
 async function handleCoverToBook(req: VercelRequest, res: VercelResponse) {
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY
@@ -143,12 +177,35 @@ async function handleRefineQuery(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ refinedQuery: extracted.title, refinedAuthor: extracted.author || null })
 }
 
+// --- Main Handler ---
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   cors(res)
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Use POST' })
 
   try {
+    // 1. Authentication
+    if (!supabase) {
+      return res.status(500).json({ error: 'Authentication service is not available.' })
+    }
+    const authHeader = req.headers.authorization
+    if (!authHeader) {
+      return res.status(401).json({ error: 'Authorization header is missing.' })
+    }
+    const token = authHeader.split(' ')[1]
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token)
+
+    if (userError || !user) {
+      return res.status(401).json({ error: 'Unauthorized', details: userError?.message })
+    }
+
+    // 2. Rate Limiting
+    if (isRateLimited(user.id)) {
+      return res.status(429).json({ error: 'Too many requests. Please try again later.' })
+    }
+
+    // 3. Action Handling
     const { action } = req.body || {}
     
     switch (action) {

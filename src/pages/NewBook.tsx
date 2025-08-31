@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { useUser } from '@supabase/auth-helpers-react';
+import { useUser, useSessionContext } from '@supabase/auth-helpers-react';
 import Webcam from 'react-webcam';
 
 type BookCandidate = {
@@ -72,6 +72,7 @@ const SearchResultsModal = ({ candidates, onRegister, onClose }: { candidates: B
 
 export default function NewBook() {
   const user = useUser();
+  const { session } = useSessionContext();
   const [mode, setMode] = useState<'title' | 'isbn' | 'manual' | 'scan'>('title');
   const [candidates, setCandidates] = useState<BookCandidate[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -201,7 +202,7 @@ export default function NewBook() {
   };
 
   const handleCapture = useCallback(async () => {
-    if (isLoading) return;
+    if (isLoading || !session) return;
     const imageSrc = webcamRef.current?.getScreenshot();
     if (!imageSrc) {
       setError("Could not get image from camera.");
@@ -219,7 +220,14 @@ export default function NewBook() {
 
     const recognitionPromise = (async () => {
       setLoadingMessage('Extracting book info...');
-      const geminiResponse = await fetch('/api/book-ai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'cover-to-book', payload: { imageBase64: imageSrc } }) });
+      const geminiResponse = await fetch('/api/book-ai', {
+        method: 'POST', 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        }, 
+        body: JSON.stringify({ action: 'cover-to-book', payload: { imageBase64: imageSrc } })
+      });
       if (!geminiResponse.ok) throw new Error(`Failed to extract info: ${await geminiResponse.text()}`);
       const { title } = await geminiResponse.json();
       if (!title) throw new Error('Could not find a title on the cover.');
@@ -246,7 +254,8 @@ export default function NewBook() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, webcamRef]);
+  }, [isLoading, webcamRef, session]);
+
 
   const handleRetake = () => {
     setCapturedImage(null);

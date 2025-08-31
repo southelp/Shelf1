@@ -93,7 +93,10 @@ export default function Scan() {
     try {
       const response = await fetch('/api/book-ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({ action: 'cover-to-book', payload: { imageBase64: dataUrl, maxCandidates: 5 } }),
       });
       if (!response.ok) {
