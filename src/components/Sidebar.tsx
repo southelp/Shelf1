@@ -33,7 +33,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
         onClick={onClick}
         className={`
           flex items-center rounded-xl py-2 w-full
-          transition-colors duration-200 ease-out
+          transition-colors duration-400 ease-out
           ${isCollapsed ? 'px-2 justify-center' : 'px-3'}
           ${isActive ? 'bg-gray-200' : 'hover:bg-gray-100/50'}
         `}
@@ -44,7 +44,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
         </div>
         <div 
           className={`
-            overflow-hidden whitespace-nowrap transition-all duration-200 ease-out
+            overflow-hidden whitespace-nowrap transition-all duration-400 ease-out
             ${isCollapsed
               ? 'w-0 opacity-0 group-hover:ml-2 group-hover:w-full group-hover:opacity-100'
               : 'ml-2 w-full opacity-100'
@@ -61,13 +61,13 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(({ isCollapsed }, ref) 
 
   return (
     <div ref={ref} className="flex flex-col h-full w-full">
-      <div className={`flex h-[120px] items-center justify-center transition-all duration-200 ${isCollapsed ? 'px-[15px]' : 'px-[20px]'}`}>
-        <div className={`transition-all duration-200 ease-out w-3/4 ${isCollapsed ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
+      <div className={`flex h-[120px] items-center justify-center transition-all duration-400 ${isCollapsed ? 'px-[15px]' : 'px-[20px]'}`}>
+        <div className={`transition-all duration-400 ease-out w-3/4 ${isCollapsed ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
           <Logo />
         </div>
       </div>
 
-      <div className={`flex flex-col items-start flex-1 pt-4 transition-all duration-200 ${isCollapsed ? 'px-[15px]' : 'px-[20px]'}`}>
+      <div className={`flex flex-col items-start flex-1 pt-4 transition-all duration-400 ${isCollapsed ? 'px-[15px]' : 'px-[20px]'}`}>
         <div className="flex flex-col items-start self-stretch space-y-1">
           {menuItems.map((item) => (
             <NavLink 
