@@ -46,10 +46,12 @@ export default function Home({ isDesktop }: HomeProps) {
   const loadData = useCallback(async () => {
     setIsLoading(true);
 
-    let query = supabase.from('books').select('*, profiles(id, full_name)');
+    let query;
 
     if (q) {
-      query = query.ilike('title', `%${q}%`);
+      query = supabase.rpc('search_books', { search_term: q }).select('*, profiles(id, full_name)');
+    } else {
+      query = supabase.from('books').select('*, profiles(id, full_name)');
     }
 
     if (onlyAvailable) {
