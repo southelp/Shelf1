@@ -52,10 +52,9 @@ export default function Home({ isDesktop }: HomeProps) {
       query = supabase.rpc('search_books', { search_term: q }).select('*, profiles(id, full_name)');
     } else {
       query = supabase.from('books').select('*, profiles(id, full_name)');
-    }
-
-    if (onlyAvailable) {
-      query = query.eq('available', true);
+      if (onlyAvailable) {
+        query = query.eq('available', true);
+      }
     }
 
     const { data: bookData, error } = await query;
@@ -66,7 +65,9 @@ export default function Home({ isDesktop }: HomeProps) {
       return;
     }
     
-    const bookIds = (bookData || []).map(b => b.id);
+    const finalBooks = (q && onlyAvailable) ? (bookData || []).filter(b => b.available) : (bookData || []);
+
+    const bookIds = (finalBooks || []).map(b => b.id);
     let loansMap: Record<string, Loan | null> = {};
     if (bookIds.length > 0) {
       const { data: loansData } = await supabase.from('loans').select('*').in('book_id', bookIds).in('status', ['reserved', 'loaned']);
@@ -79,7 +80,7 @@ export default function Home({ isDesktop }: HomeProps) {
     }
 
     const getStatus = (book: Book) => (loansMap[book.id] ? (loansMap[book.id]?.status === 'loaned' ? 'Borrowed' : 'Reserved') : 'Available');
-    const sortedBooks = (bookData || []).sort((a, b) => {
+    const sortedBooks = (finalBooks || []).sort((a, b) => {
       const statusA = getStatus(a);
       const statusB = getStatus(b);
       if (statusOrder[statusA] !== statusOrder[statusB]) return statusOrder[statusA] - statusOrder[statusB];
